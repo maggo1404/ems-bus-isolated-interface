@@ -1164,6 +1164,81 @@ else:
         print("       %s.%-2d %-7s net=%-8s %s" % (USB_REF, n, LABEL[n], "/".join(names) or "-", status))
     (FAIL if bad else OK)("USB-C pads%s" % (": " + "; ".join(bad) if bad else " all on the right nets and connected by copper"))
 
+# =====================================================================
+# E1: JLCPCB Economic PCBA compliance (rules + sources: docs/JLC_ECONOMIC.md, data: scripts/jlc_economic.py)
+# =====================================================================
+print("\n-- Economic PCBA compliance --")
+import jlc_economic as JE
+_pre = os.path.join(os.path.dirname(os.path.abspath(gz)), "EMSinterface_V2.0")
+_bomf, _cplf = _pre + "-BOM_JLCPCB.csv", _pre + "-CPL_JLCPCB.csv"
+if not (os.path.exists(_bomf) and os.path.exists(_cplf)):
+    FAIL("Economic: BOM/CPL csv not found next to the gerber zip (%s)" % _bomf)
+else:
+    _bom = list(csv.DictReader(open(_bomf)))
+    _cpl = list(csv.DictReader(open(_cplf)))
+    _bomrefs = {d.strip() for r in _bom for d in r["Designator"].split(",")}
+    _cplrefs = {r["Designator"] for r in _cpl}
+    _board = [e for e in cj if e["type"] == "pcb_board"][0]
+    _dnp = {s["name"] for e in cj if e["type"] == "pcb_component" and e.get("do_not_place")
+            for s in cj if s["type"] == "source_component" and s["source_component_id"] == e["source_component_id"]}
+    # board: layers, thickness, size, single side
+    (OK if _board.get("num_layers") in JE.ECON["layers"] else FAIL)("Economic: %s copper layers (allowed 2/4/6)" % _board.get("num_layers"))
+    (OK if JE.ECON["thick"][0] <= _board.get("thickness", 1.6) <= JE.ECON["thick"][1] else FAIL)("Economic: board thickness %.1f mm (0.8..1.6)" % _board.get("thickness", 0))
+    _bw, _bh = _board["width"], _board["height"]
+    (OK if _bw >= 10 and _bh >= 10 and max(_bw, _bh) <= 500 and min(_bw, _bh) <= 470 else FAIL)("Economic: board %.0f x %.0f mm (10x10 .. 470x500)" % (_bw, _bh))
+    _layers = {r["Layer"] for r in _cpl}
+    (OK if _layers <= {"Top"} else FAIL)("Economic: single-sided placement, CPL layers = %s (must be Top only)" % sorted(_layers))
+    (OK if _bomrefs == _cplrefs else FAIL)("Economic: BOM and CPL list the same %d designators%s" % (len(_cplrefs), "" if _bomrefs == _cplrefs else " (diff %s)" % sorted(_bomrefs ^ _cplrefs)))
+    _both = sorted(_dnp & _bomrefs)
+    (OK if not _both else FAIL)("Economic: DNP parts %s are not in BOM/CPL%s" % (sorted(_dnp), "" if not _both else " (STILL IN BOM: %s)" % _both))
+    # every assembled part: has an LCSC number and PCBA Type "Economic and Standard"
+    _badp, _wave = [], []
+    for r in _bom:
+        c = r["LCSC Part #"].strip()
+        t = JE.PARTS.get(c)
+        if not re.fullmatch(r"C\d+", c):
+            _badp.append("%s (no LCSC number)" % r["Designator"])
+        elif t is None:
+            _badp.append("%s %s (not in scripts/jlc_economic.py: look up jlcpcb.com/partdetail/%s 'PCBA Type', or run jlc_economic.py --live)" % (r["Designator"], c, c))
+        elif t[1] != JE.ES:
+            _badp.append("%s %s is '%s'" % (r["Designator"], c, t[1]))
+        elif t[0] == "Wave Soldering":
+            _wave.append(r["Designator"])
+    (FAIL if _badp else OK)("Economic: all %d BOM lines are 'Economic and Standard' parts%s" % (len(_bom), "" if not _badp else ": " + "; ".join(_badp)))
+    if _wave:
+        print("       info: THT parts assembled by wave soldering (allowed in Economic, 'Single sided placement (SMT/Thru-hole)'): %s" % ", ".join(_wave))
+    # smallest package 0402 / IC pitch >= 0.4 mm among assembled parts (pad pitch of every assembled part's smt pads)
+    _sc = {s["source_component_id"]: s["name"] for s in cj if s["type"] == "source_component"}
+    _pitch = []
+    _pads = collections.defaultdict(list)
+    for e in cj:
+        if e["type"] == "pcb_smtpad" and e.get("shape") == "rect":
+            pr = pin_str(e.get("pcb_port_id"))
+            if pr and pr.split(".")[0] in _bomrefs and pr.split(".")[0][0] in "UO":
+                _pads[pr.split(".")[0]].append((e["x"], e["y"]))
+    for ref, ps in _pads.items():
+        m = min((math.hypot(a[0] - b[0], a[1] - b[1]) for i, a in enumerate(ps) for b in ps[i + 1:] if abs(a[0] - b[0]) < 0.01 or abs(a[1] - b[1]) < 0.01), default=9)
+        if m < JE.ECON["min_ic_pitch"] - 1e-6:
+            _pitch.append("%s %.2f mm" % (ref, m))
+    (FAIL if _pitch else OK)("Economic: IC pad pitch of assembled ICs >= 0.4 mm%s" % ("" if not _pitch else ": " + ", ".join(_pitch)))
+    _pk = [r["Designator"] for r in _bom if r["Footprint"].strip() in ("0201", "01005")]
+    (FAIL if _pk else OK)("Economic: smallest package 0402 (no 0201/01005 in BOM)%s" % ("" if not _pk else ": " + ", ".join(_pk)))
+    # body-to-board-edge >= 2.5 mm (JLC terms 'Notes on DFM' no. 3; pad bbox is a conservative proxy, connectors at the edge are exempt)
+    _poly = Polygon([(p["x"], p["y"]) for p in _board["outline"]]) if _board.get("outline") else box(-_bw / 2, -_bh / 2, _bw / 2, _bh / 2)
+    _edge = []
+    for e in cj:
+        if e["type"] == "pcb_component" and e["source_component_id"] in _sc and _sc[e["source_component_id"]] in _bomrefs:
+            n = _sc[e["source_component_id"]]
+            c_, w_, h_ = e["center"], e["width"], e["height"]
+            d = _poly.exterior.distance(box(c_["x"] - w_ / 2, c_["y"] - h_ / 2, c_["x"] + w_ / 2, c_["y"] + h_ / 2))
+            if d < JE.ECON["edge_body_mm"] and n not in ("J2",):
+                _edge.append("%s %.2f mm" % (n, d))
+    if _edge:
+        WARN("Economic/JLC DFM: part pads closer than 2.5 mm to the board edge (body distance is larger; JLC terms 'body to edge >= 2.5 mm', verify in the order DFM preview): " + ", ".join(_edge))
+    else:
+        OK("Economic: all assembled parts >= 2.5 mm from the board edge (J2 USB-C edge connector exempt)")
+    print("       info: Economic needs no edge rails/fiducials (JLC adds mouse-bite rails); order: 2-50 pcs, 1.6 mm, HASL or ENIG, standard stack-up")
+
 print("\n%d FAIL, %d WARN" % (len(fails), len(warns)))
 print("ALL FAB CHECKS OK" if not fails else "FAB CHECKS FAILED")
 sys.exit(1 if fails else 0)

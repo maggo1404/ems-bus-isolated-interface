@@ -53,6 +53,9 @@ Toolchain/API: `docs/TOOLCHAIN.md`, `docs/TSCIRCUIT_API.md`. Parts: `docs/JLCPCB
 - No copper pour, trace, via, mounting-hole copper, silkscreen-only is ok, crossing the barrier. Mounting holes non-plated or per-side.
 - USB shield/GND, ESP32, LDO are all MCU side.
 
+## Assembly service: Economic PCBA (docs/JLC_ECONOMIC.md)
+The board is orderable with JLCPCB **Economic** PCBA (single-sided top, 2 layers, 1.6 mm). The only blocking part was U3 (ESP32-S3-WROOM-1-N16R8, "Standard Only"): it is `doNotPlace` (kept in design/Gerbers, excluded from BOM/CPL) and hand-soldered; list in `fab/EMSinterface_V2.0-HANDSOLDER.csv`. P1/P2 (wave soldering) and J2 (SMT) remain assembled. Checked by `scripts/check_fab.py` (Economic section).
+
 ## Board
 Size free (suggestion ~100 × 50 mm), 2 layers, 1.6 mm, JLC capabilities (≥0.15 mm track/space, 0.3 mm drill). EMS terminal P1 at one edge, USB-C at an edge on MCU side, ESP32 antenna at another edge on MCU side. 4 × M3 mounting holes.
 

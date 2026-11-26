@@ -66,3 +66,17 @@ with open(prefix + "-CPL_JLCPCB.csv", "w", newline="") as f:
 print("BOM lines:", len(groups), "parts:", len(keep), "CPL rows:", len(keep), "dropped (no LCSC):", sorted({r["Designator"] for r in bom} - keep))
 missing = [lc for lc in groups if lc not in INFO]
 print("no INFO for:", missing)
+
+# Hand-solder list: parts marked doNotPlace in the design (Economic PCBA: JLC cannot assemble them, see docs/JLC_ECONOMIC.md).
+# They are NOT in the BOM/CPL above; this separate list tells you what to order/solder yourself.
+_cj = cpl_check.load(sys.argv[3] if len(sys.argv) > 3 else "dist/index/circuit.json")
+_sc = {e["source_component_id"]: e for e in _cj if e["type"] == "source_component"}
+_dnp = [(_sc[e["source_component_id"]]["name"], _sc[e["source_component_id"]]) for e in _cj
+        if e["type"] == "pcb_component" and e.get("do_not_place") and e["source_component_id"] in _sc]
+with open(prefix + "-HANDSOLDER.csv", "w", newline="") as f:
+    w = csv.writer(f)
+    w.writerow(["Designator", "Part", "LCSC Part #", "Reason"])
+    for n, s in sorted(_dnp, key=lambda t: key(t[0])):
+        lc = (s.get("supplier_part_numbers") or {}).get("jlcpcb", [""])[0]
+        w.writerow([n, s.get("manufacturer_part_number", ""), lc, 'DNP: JLC PCBA type "Standard Only" (not assemblable with Economic PCBA); order the part separately and hand-solder'])
+print("hand-solder (DNP) parts:", [n for n, _ in _dnp])

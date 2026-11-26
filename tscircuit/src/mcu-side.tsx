@@ -31,7 +31,7 @@ const TestPad = (p: { name: string; x: number; y: number; sx: number; sy: number
 export const McuSide = () => (
   <group name="mcu" pcbX={0} pcbY={0}>
     {/* ---------------- ESP32-S3 module: antenna to +X board edge ---------------- */}
-    <Esp32S3Wroom1 name="U3" pcbX={42.25} pcbY={0} pcbRotation={-90} schX={0} schY={0} />
+    <Esp32S3Wroom1 name="U3" pcbX={42.25} pcbY={0} pcbRotation={-90} schX={0} schY={0} doNotPlace />
     {/* GND pads + EPAD */}
     {T(".U3 > .GND1", "net.GND")}{T(".U3 > .GND2", "net.GND")}
     {/* EPAD = 9 separate pads (ports GND_EP1..9), each tied to GND explicitly */}

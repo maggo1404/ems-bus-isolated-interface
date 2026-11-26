@@ -27,7 +27,7 @@ In tscircuit set the number on the component: `supplierPartNumbers={{ jlcpcb: ["
 ## Verified table
 | Ref (Eagle) | Value / function | Package | Part (mfr) | LCSC | Class | Stock | Notes |
 |---|---|---|---|---|---|---|---|
-| U3 (ESP) | ESP32-S3-WROOM-1-N16R8 | module 25.5x18 | Espressif ESP32-S3-WROOM-1-N16R8 | C2913202 | Ext | 35.7k | `lib/esp32s3wroom1.tsx`: EPAD = 9 ports pin41..49 (all GND) |
+| U3 (ESP) | ESP32-S3-WROOM-1-N16R8 | module 25.5x18 | Espressif ESP32-S3-WROOM-1-N16R8 | C2913202 | Ext | 35.7k | **DNP / hand-solder (Economic PCBA: JLC part page says "PCBA Type: Standard Only", true for all ESP32-S3 modules, docs/JLC_ECONOMIC.md)**; `doNotPlace` in `src/mcu-side.tsx`, not in BOM/CPL. `lib/esp32s3wroom1.tsx`: EPAD = 9 ports pin41..49 (all GND) |
 | J2 | USB-C 16P USB2.0 | SMD+THT | HRO TYPE-C-31-M-12 | C165948 | Ext | 425k | `lib/usbc16.tsx`: 16 distinct ports (12 pads + 4 shell legs), pairs tied by nets |
 | U5 (LDO) | 3.3V 1A LDO | SOT-223 | AMS1117-3.3 (AMS) | C6186 | **Basic** | 1.2M | OK |
 | (alt) | 3.3V 600mA LDO | SOT-23-5 | AP2112K-3.3TRG1 (Diodes) | C51118 | Ext | 9.7k | fallback |
@@ -77,6 +77,10 @@ In tscircuit set the number on the component: `supplierPartNumbers={{ jlcpcb: ["
 | C2,C10 (+LDO 10u) | 10u 25V X5R | 0805 | CL21A106KAYNNNE | C15850 | Basic | 9.3M | |
 | C11 (+LDO 22u) | 22u 25V X5R | 1206 | CL31A226KAHNNNE | C12891 | Basic | 2.5M | |
 | C12, C14 | 2 x 1000u/25V SMD electrolytic (parallel = 2000 uF; replaces the single 2200 uF THT of V1) | SMD D10 x L12 (BD10.0-L10.3-W10.3) | JVJ25V1000M10X12 (JIERR) | C49256851 | Ext | see JLC | pads 4.5 x 1.65 at +-4.5 mm, pad 1 = +, chamfered corner = + side (EasyEDA). Replaces PA25V2200M10x17 C46550439 (THT, hand-soldered). Both on EMS_VIN / GND_EMS near D7/U2 |
+
+## Economic PCBA (checked 2026-11-26, docs/JLC_ECONOMIC.md)
+JLC part page field "PCBA Type" per BOM part (table in `scripts/jlc_economic.py`): all 45 assembled LCSC numbers are "Economic and Standard" (P1 C441236 / P2 C32713270 are "Wave Soldering", J2 C165948 "SMT Assembly").
+Only U3 C2913202 is "Standard Only" -> DNP, hand-solder, listed in `fab/EMSinterface_V2.0-HANDSOLDER.csv`. The fee count below therefore drops by one for JLC-assembled Extended parts (ESP32 not assembled).
 
 ## Extended-part count (extra fees)
 Q1 BC817-40 (C20069155) and C29 (C16133) need an availability/class check at order time. Distinct **Ext** (fee) part numbers: C2913202 (ESP32), C165948 (USB-C), C7519 (USBLC6), C92651 (6N137), C336082 (6N136),
