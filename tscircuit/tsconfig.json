@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
@@ -10,6 +11,6 @@
     "noEmit": true,
     "types": ["tscircuit"]
   },
-  "include": ["**/*.tsx", "**/*.ts"],
+  "include": ["index.circuit.tsx", "lib/**/*.tsx", "circuit/**/*.tsx", "scratch/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
 }
