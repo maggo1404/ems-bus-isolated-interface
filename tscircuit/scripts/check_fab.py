@@ -1165,6 +1165,173 @@ else:
     (FAIL if bad else OK)("USB-C pads%s" % (": " + "; ".join(bad) if bad else " all on the right nets and connected by copper"))
 
 # =====================================================================
+# P1: breakaway panel (rails + mouse-bite tabs) for the >= 70 mm delivery size (scripts/panelize.py, docs/JLC_ECONOMIC.md)
+# =====================================================================
+print("\n-- Breakaway panel (rails + mouse bites) --")
+PANEL = None            # shapely polygon of the panel material (None = Gerber without panel)
+if not NOGERBER:
+    import panelize as PZ
+    from gerbonara import GerberFile
+    import gerbonara.utils as _gu
+    _board_p = [e for e in cj if e["type"] == "pcb_board"][0]
+    _bo = Polygon([(p["x"], p["y"]) for p in _board_p["outline"]])
+    # ---- Edge_Cuts contours ----
+    _rings, _cur, _open = [], [], 0
+    for ln in open(os.path.join(tmp, "Edge_Cuts.gbr")):
+        m = re.match(r"X(-?\d+)Y(-?\d+)D0([12])\*", ln.strip())
+        if not m:
+            continue
+        pt = (int(m.group(1)) / 1e6, int(m.group(2)) / 1e6)
+        if m.group(3) == "2":
+            if _cur:
+                _rings.append(_cur)
+            _cur = [pt]
+        else:
+            _cur.append(pt)
+    if _cur:
+        _rings.append(_cur)
+    _unclosed = [i for i, r in enumerate(_rings) if len(r) < 4 or math.hypot(r[0][0] - r[-1][0], r[0][1] - r[-1][1]) > 1e-6]
+    _polys = sorted((Polygon(r) for r in _rings if len(r) >= 4), key=lambda p: -p.area)
+    _is_panel = _polys and _polys[0].bounds[3] - _polys[0].bounds[1] > _board_p["height"] + 1
+    (FAIL if _unclosed else OK)("panel: Edge_Cuts has %d closed contours%s" % (len(_rings), "" if not _unclosed else " (UNCLOSED: %s)" % _unclosed))
+    if not _is_panel:
+        FAIL("panel: Edge_Cuts holds only the bare board outline (%.1f mm high): run scripts/panelize.py; JLC Economic delivery needs >= 70 mm in each direction" % (_polys[0].bounds[3] - _polys[0].bounds[1] if _polys else 0))
+    else:
+        _outer = _polys[0]
+        PANEL = Polygon(_outer.exterior, [p.exterior for p in _polys[1:] if _outer.contains(p)])
+        _x0, _y0, _x1, _y1 = _outer.bounds
+        _W, _H = _x1 - _x0, _y1 - _y0
+        (OK if min(_W, _H) >= PZ.MIN_PANEL - TOL and max(_W, _H) <= 250 else FAIL)(
+            "panel: size %.2f x %.2f mm (delivered PCB >= 70 x 70 mm, panel <= 250 x 250 mm)" % (_W, _H))
+        (OK if abs((_x0 + _x1) / 2) < TOL and abs((_y0 + _y1) / 2) < TOL else FAIL)(
+            "panel: centred on the Gerber origin (%.3f, %.3f), so the board origin and the CPL coordinates are unchanged" % ((_x0 + _x1) / 2, (_y0 + _y1) / 2))
+        # the board outline is contained in the panel material; what is left after break-off is exactly rails/tabs outside the board
+        _oc = [p for p in _polys[1:] if _bo.contains(p)]          # OC1/OC2 slots of the board
+        _miss = _bo.difference(PANEL.buffer(1e-4)).difference(unary_union(_oc).buffer(1e-4)).area
+        (OK if _miss < 1e-6 else FAIL)("panel: board outline (110 x 60, 4 notches) lies completely inside the panel material apart from its own %d slots (missing %.6f mm2)" % (len(_oc), _miss))
+        _rest = PANEL.difference(_bo.buffer(1e-4))
+        _pieces = [g_ for g_ in (_rest.geoms if hasattr(_rest, "geoms") else [_rest]) if g_.area > 1.0]
+        (OK if len(_pieces) == 2 else FAIL)("panel: after break-off exactly two pieces are removed (top and bottom rail with their tab stubs): %d pieces" % len(_pieces))
+        _gaps, _rw = [], []
+        _probe = PANEL.intersection(LineString([(_x0 + 0.5, -100), (_x0 + 0.5, 100)]))        # column through the rails at the panel end (outside any tab)
+        for sg_ in (1, -1):
+            segs_ = [g_ for g_ in (_probe.geoms if hasattr(_probe, "geoms") else [_probe]) if g_.length > 0.1 and g_.centroid.y * sg_ > _bo.bounds[3] - 1]
+            if segs_:
+                sg0 = max(segs_, key=lambda g_: g_.centroid.y * sg_)
+                _rw.append(sg0.length)
+                _gaps.append(abs(sg0.bounds[1] if sg_ > 0 else sg0.bounds[3]) - _bo.bounds[3])
+        (OK if _rw and min(_rw) >= PZ.RAIL - 0.06 else FAIL)("panel: rail width %s mm (JLC: 5 mm tooling edge, minimum 3 mm); no copper/silk/mask on the rails (see below)" % ", ".join("%.2f" % r for r in _rw))
+        (OK if _gaps and min(_gaps) >= 1.6 - 0.06 else FAIL)("panel: routed gap board-rail %s mm (JLC: 1.6 or 2 mm, minimum 1.2 mm)" % ", ".join("%.2f" % r for r in _gaps))
+        _slots = [p for p in _polys[1:] if _outer.contains(p) and p.bounds[2] - p.bounds[0] > 5 and p.bounds[3] - p.bounds[1] < 3]
+        _sw = [p.bounds[3] - p.bounds[1] for p in _slots]
+        (OK if not _sw or min(_sw) >= 1.2 else FAIL)("panel: %d closed routed slots between the tabs, narrowest %.2f mm (JLC min routed gap 1.2 mm)" % (len(_slots), min(_sw) if _sw else 0))
+        # ---- tabs: material bridging the gap ----
+        _tabs = []
+        for sg, ye in ((1, _bo.bounds[3]), (-1, _bo.bounds[1])):
+            band = box(_x0, min(ye + sg * 0.3, ye + sg * 1.7), _x1, max(ye + sg * 0.3, ye + sg * 1.7))
+            cut_ = PANEL.intersection(band)
+            for g_ in (cut_.geoms if hasattr(cut_, "geoms") else [cut_]):
+                if g_.area > 0.01:
+                    _tabs.append((sg, g_.bounds[0], g_.bounds[2]))
+        _top = [t for t in _tabs if t[0] > 0]
+        _bot = [t for t in _tabs if t[0] < 0]
+        # the open end pieces of the gap are not material: tabs are the pieces inside the board edge span
+        _bad = []
+        _j2 = [e for e in cj if e["type"] == "pcb_component" and e.get("center") and abs(e["center"]["x"] - 33) < 1 and abs(e["center"]["y"] - 25) < 2][0]
+        _j2x0, _j2x1 = _j2["center"]["x"] - _j2["width"] / 2, _j2["center"]["x"] + _j2["width"] / 2
+        _ant = [k for k in keeps if k.get("width") and k["center"]["x"] - k["width"] / 2 > 40 and k["width"] > 5]
+        _ax0 = min([k["center"]["x"] - k["width"] / 2 for k in _ant], default=45.0)
+        for sg, a0, a1 in _tabs:
+            if a1 - a0 < PZ.TAB_W - 0.05:
+                _bad.append("tab %+.1f..%+.1f narrower than %.1f mm" % (a0, a1, PZ.TAB_W))
+            if sg > 0 and not (a1 < _j2x0 - 3 or a0 > _j2x1 + 3):
+                _bad.append("tab %.1f..%.1f within 3 mm of J2 (%.1f..%.1f)" % (a0, a1, _j2x0, _j2x1))
+            if a1 > _ax0 - 3:
+                _bad.append("tab %.1f..%.1f within 3 mm of the antenna region (x >= %.1f)" % (a0, a1, _ax0))
+            if a0 < -46.5 or a1 > 46.5:
+                _bad.append("tab %.1f..%.1f too close to the corner notches (straight edge |x| <= 49.5)" % (a0, a1))
+        (OK if len(_top) >= 3 and len(_bot) >= 3 and not _bad else FAIL)(
+            "panel: %d tabs top (x centres %s) / %d bottom (%s), width %.1f mm (JLC: >= 5 mm; one set every 50-60 mm), clear of J2 mouth, antenna region, corner notches%s" % (
+                len(_top), [round((t[1] + t[2]) / 2, 1) for t in _top], len(_bot), [round((t[1] + t[2]) / 2, 1) for t in _bot],
+                min([t[2] - t[1] for t in _tabs], default=0), "" if not _bad else ": " + "; ".join(_bad)))
+        # ---- NPTH drill: mouse bites + tooling holes ----
+        _dr = {}
+        _cd, _tdia = None, {}
+        for ln in open(os.path.join(tmp, "drill_npth.drl")):
+            ln = ln.strip()
+            m = re.match(r"T(\d+)C([\d.]+)", ln)
+            if m:
+                _tdia[m.group(1)] = float(m.group(2))
+            m = re.fullmatch(r"T(\d+)", ln)
+            if m:
+                _cd = m.group(1)
+            m = re.fullmatch(r"X(-?[\d.]+)Y(-?[\d.]+)", ln)
+            if m:
+                _dr.setdefault(_tdia[_cd], []).append((float(m.group(1)), float(m.group(2))))
+        _yb = _bo.bounds[3]
+        _bites = [(d, p) for d, ps in _dr.items() for p in ps if abs(abs(p[1]) - _yb) < 0.5 and d < 1.0]
+        _tool = [(d, p) for d, ps in _dr.items() for p in ps if abs(p[1]) > _yb + 1 and d >= 1.5]
+        _badb = []
+        for sg, a0, a1 in _tabs:
+            hs = sorted(p[0] for d, p in _bites if a0 - 0.01 <= p[0] <= a1 + 0.01 and p[1] * sg > 0)
+            if len(hs) < 5:
+                _badb.append("tab %.1f..%.1f has %d holes (JLC: 5-8 per set)" % (a0, a1, len(hs)))
+            else:
+                eg = min(b - a for a, b in zip(hs, hs[1:])) - _bites[0][0]
+                if eg < 0.3 - 1e-3:
+                    _badb.append("tab %.1f..%.1f hole edge gap %.2f < 0.3" % (a0, a1, eg))
+                if hs[0] - _bites[0][0] / 2 < a0 + 0.2 or hs[-1] + _bites[0][0] / 2 > a1 - 0.2:
+                    _badb.append("tab %.1f..%.1f holes too close to the tab ends" % (a0, a1))
+        _offs = [abs(p[1]) - _yb for d, p in _bites]
+        _dd = sorted({d for d, p in _bites})
+        if not _bites or not all(0.5 <= d <= 0.8 for d in _dd):
+            _badb.append("mouse-bite hole diameters %s outside 0.5-0.8 mm" % _dd)
+        if _offs and (max(_offs) > 0.2 or min(_offs) < -PZ.BITE_D / 3 - 1e-6):
+            _badb.append("hole centres %.2f..%.2f mm from the board edge (limit: on the line .. 1/3 hole inside)" % (min(_offs), max(_offs)))
+        (FAIL if _badb else OK)("panel: %d mouse-bite holes (NPTH.drl) d=%s mm, %d per tab, hole edge gap %.2f mm (JLC min 0.3), centres on the board edge line%s" % (
+            len(_bites), _dd, PZ.BITE_N, PZ.BITE_EDGE_GAP, "" if not _badb else ": " + "; ".join(_badb)))
+        _badt = [p for d, p in _tool if not PANEL.contains(Point(p).buffer(d / 2 + 0.5)) or abs(abs(p[1]) - _yb - PZ.GAP - PZ.RAIL / 2) > 0.01]
+        _corn = {(p[0] > 0, p[1] > 0) for d, p in _tool}
+        (OK if len(_tool) >= 3 and len(_corn) >= 3 and not _badt and all(abs(d - 2.0) < 1e-6 for d, p in _tool) else FAIL)(
+            "panel: %d tooling holes 2.0 mm in the rails on %d different corners (JLC: 2 mm tooling holes, at least 3 corners)" % (len(_tool), len(_corn)))
+        # ---- nothing on the rails; nothing close to the tabs on the board side ----
+        _rail_geom = PANEL.difference(_bo.buffer(0.001))
+        _onrail = []
+        for nm_, fn_ in (("F_Cu.gtl", "copper top"), ("B_Cu.gbl", "copper bottom"), ("F_Mask.gts", "mask top"), ("B_Mask.gbs", "mask bottom"),
+                         ("F_Paste.gtp", "paste top"), ("F_Silkscreen.gto", "silk top"), ("B_Silkscreen.gbo", "silk bottom")):
+            hit = [n for n in zip_names if n.endswith("-" + nm_)]
+            if not hit:
+                continue
+            gf = GerberFile.open(os.path.join(tmp, hit[0]))
+            bb = gf.bounding_box(unit=_gu.MM)
+            if bb and (bb[0][1] < -_yb - 1e-6 or bb[1][1] > _yb + 1e-6):
+                _onrail.append("%s (y %.2f..%.2f)" % (fn_, bb[0][1], bb[1][1]))
+        (FAIL if _onrail else OK)("panel: no copper, mask, paste or silkscreen outside the board (nothing on the rails; Gerber bounding boxes inside y = +-%.1f)%s" % (_yb, "" if not _onrail else ": " + ", ".join(_onrail)))
+        _bg = unary_union([Point(p).buffer(d / 2, 16) for d, p in _bites])
+        _near = []
+        for it in items:
+            lim = 0.2 if it.kind == "pour" else 0.5     # JLC: copper >= 0.2 mm from routed edges; pours here are 0.5 mm back from the board edge already
+            if it.geom.distance(_bg) < lim - TOL:
+                _near.append("%s %s %s %.2f mm" % (it.kind, it.label, it.layer, it.geom.distance(_bg)))
+        for hit in [n for n in zip_names if n.endswith("-F_Silkscreen.gto") or n.endswith("-B_Silkscreen.gbo")]:
+            for ob in GerberFile.open(os.path.join(tmp, hit)).objects:
+                bb = ob.bounding_box(_gu.MM)
+                if bb and box(bb[0][0], bb[0][1], bb[1][0], bb[1][1]).distance(_bg) < 0.5 - TOL:
+                    _near.append("silk %s %.2f mm" % (hit.split("-")[-1], box(bb[0][0], bb[0][1], bb[1][0], bb[1][1]).distance(_bg)))
+        for e in cj:
+            if e["type"] == "pcb_component" and e.get("width") and e["center"]:
+                c_ = e["center"]
+                if box(c_["x"] - e["width"] / 2, c_["y"] - e["height"] / 2, c_["x"] + e["width"] / 2, c_["y"] + e["height"] / 2).distance(_bg) < 0.5 - TOL:
+                    _near.append("component %s %.2f mm" % (e.get("pcb_component_id"), box(c_["x"] - e["width"] / 2, c_["y"] - e["height"] / 2, c_["x"] + e["width"] / 2, c_["y"] + e["height"] / 2).distance(_bg)))
+        (FAIL if _near else OK)("panel: on the board side nothing (pads, traces, vias, silk, component bodies) within 0.5 mm of a mouse-bite hole, pours >= 0.2 mm%s" % ("" if not _near else ": " + "; ".join(sorted(set(_near))[:6])))
+        # ---- J2 vs the top rail ----
+        _j2y = _j2["center"]["y"] + _j2["height"] / 2
+        _j2pads = [e for e in cj if e["type"] == "pcb_smtpad" and e.get("x") is not None and _j2x0 - 1 < e["x"] < _j2x1 + 1 and e["y"] > 20]
+        _ov = max(_j2y, max([e["y"] + e.get("height", 0) / 2 for e in _j2pads], default=0)) - _yb
+        (OK if _ov < PZ.GAP - 0.3 else FAIL)("panel: J2 USB-C footprint/pads end at y %.2f = %.2f mm inside the board edge (silk %.2f); the %.1f mm gap clears the mouth even if the metal shell overhangs by up to %.1f mm in 3D" % (_yb + _ov, -_ov, 29.73, PZ.GAP, PZ.GAP - 0.3))
+        print("       info: JLC capabilities 'Mouse bites Panel': tab >= 5 mm, hole 0.5-0.8 mm; blog 'mouse-bite-panelization-guide': 5-8 holes of 0.6 mm, edge gap 0.35-0.4 (min 0.3), spacing 1.6/2 mm; a customer Gerber panel gets no extra tooling data from JLC")
+
+# =====================================================================
 # E1: JLCPCB Economic PCBA compliance (rules + sources: docs/JLC_ECONOMIC.md, data: scripts/jlc_economic.py)
 # =====================================================================
 print("\n-- Economic PCBA compliance --")
@@ -1230,14 +1397,22 @@ else:
         if e["type"] == "pcb_component" and e["source_component_id"] in _sc and _sc[e["source_component_id"]] in _bomrefs:
             n = _sc[e["source_component_id"]]
             c_, w_, h_ = e["center"], e["width"], e["height"]
-            d = _poly.exterior.distance(box(c_["x"] - w_ / 2, c_["y"] - h_ / 2, c_["x"] + w_ / 2, c_["y"] + h_ / 2))
+            bx_ = box(c_["x"] - w_ / 2, c_["y"] - h_ / 2, c_["x"] + w_ / 2, c_["y"] + h_ / 2)
+            if PANEL is not None:
+                # delivered panel: the conveyor/clamp edges are the rails (top/bottom panel edge); the board edge is a mouse-bite break line, not a transport edge
+                d = min(abs(PANEL.bounds[3] - bx_.bounds[3]), abs(bx_.bounds[1] - PANEL.bounds[1]))
+            else:
+                d = _poly.exterior.distance(bx_)
             if d < JE.ECON["edge_body_mm"] and n not in ("J2",):
                 _edge.append("%s %.2f mm" % (n, d))
-    if _edge:
+    if PANEL is not None:
+        OK("Economic: all assembled parts >= 2.5 mm from the panel edges that carry the board through SMT (top/bottom rails: nearest part %.1f mm from the panel edge); the breakaway board edge is no transport edge" % (
+            min(min(PANEL.bounds[3] - e["center"]["y"] - e["height"] / 2, e["center"]["y"] - e["height"] / 2 - PANEL.bounds[1]) for e in cj if e["type"] == "pcb_component" and e["source_component_id"] in _sc and _sc[e["source_component_id"]] in _bomrefs)))
+    elif _edge:
         WARN("Economic/JLC DFM: part pads closer than 2.5 mm to the board edge (body distance is larger; JLC terms 'body to edge >= 2.5 mm', verify in the order DFM preview): " + ", ".join(_edge))
     else:
         OK("Economic: all assembled parts >= 2.5 mm from the board edge (J2 USB-C edge connector exempt)")
-    print("       info: Economic needs no edge rails/fiducials (JLC adds mouse-bite rails); order: 2-50 pcs, 1.6 mm, HASL or ENIG, standard stack-up")
+    print("       info: Economic needs no edge rails/fiducials; this panel is customer-made (rails + mouse bites, tooling holes 2 mm); order: 2-50 pcs, 1.6 mm, HASL or ENIG, standard stack-up")
 
 print("\n%d FAIL, %d WARN" % (len(fails), len(warns)))
 print("ALL FAB CHECKS OK" if not fails else "FAB CHECKS FAILED")

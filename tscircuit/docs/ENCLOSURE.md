@@ -4,6 +4,8 @@ Stand: 2026-11-26. Quellen: Hammond-Zeichnungen (PDF, hammfg.com, gelesen und al
 Reichelt-Produktseiten (reichelt.de, Preis/Lager am Abrufdatum). Reichelt-Datenblatt-CDN (cdn-reichelt.de),
 tme.eu, Gainta, OKW-/Bopla-Zeichnungen waren nicht lesbar bzw. nicht in Reichelts Sortiment -> dort "ungeprüft".
 
+> **Hinweis (Fertigung):** JLC liefert die Platine als 110 x 74 mm Panel mit zwei Abbrech-Schienen (oben/unten, je 5 mm + 2 mm Fraesspalt, Mouse-Bites). Die Schienen werden **vor dem Einbau abgebrochen**; die Platine ist danach wieder exakt 110 x 60 mm (Umriss unveraendert, Gehaeuse-Geometrie unveraendert; siehe docs/FAB_CHECKLIST.md, docs/img/panel.png).
+
 ## Anforderungen
 PCB ca. 110 x 60 mm (anpassbar), ESP32-S3-WROOM-1 mit PCB-Antenne an kurzer Kante (Kunststoff, kein Metall),
 Innenhöhe >= ca. 25-30 mm (Elko 12 mm, Klemme ca. 15 mm), Wandmontage, USB-C seitlich, Klemme 5,08 mm + Kabeleinführung,
