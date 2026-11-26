@@ -1,77 +1,59 @@
 # Gehäuse-Recherche EMS-Bus-Interface (ESP32-S3, galvanisch getrennt)
 
-Stand: 2026-11-26. **Wichtige Einschränkung:** In der Recherche-Umgebung waren WebFetch-Zugriffe auf
-hammfg.com, tme.eu und electrokit.com gesperrt (DNS nicht erreichbar); es standen nur WebSearch-Snippets
-zur Verfügung. Alle Maße unten stammen aus Suchergebnis-Snippets oder sind als **[ungeprüft]** markiert.
-Bohrungsabstände / Domkoordinaten konnten **nicht** aus Zeichnungen gelesen werden. Vor dem PCB-Layout-Freeze
-MUSS die Herstellerzeichnung (PDF/STEP, Links unten) geprüft werden. Preise sind Größenordnungen aus dem
-Gedächtnis [ungeprüft], keine abgefragten Shop-Preise.
+Stand: 2026-11-26. Quellen: Hammond-Zeichnungen (PDF, hammfg.com, gelesen und als Bild geprüft) und
+Reichelt-Produktseiten (reichelt.de, Preis/Lager am Abrufdatum). Reichelt-Datenblatt-CDN (cdn-reichelt.de),
+tme.eu, Gainta, OKW-/Bopla-Zeichnungen waren nicht lesbar bzw. nicht in Reichelts Sortiment -> dort "ungeprüft".
 
-## Anforderungen (Kurzfassung)
-- PCB 110 x 60 mm (anpassbar), ESP32-S3-WROOM-1 mit PCB-Antenne an einer kurzen Kante -> Kunststoff, kein Metall dort.
-- Höhe innen >= ca. 25 mm (Elkos 12 mm, Klemme ca. 15 mm inkl. Stecker, plus PCB 1,6 mm und Abstand) -> realistisch >= 28-30 mm.
-- Wandmontage (Flansch/Laschen), USB-C seitlich/optional, 2-pol. 5,08-mm-Klemme + Kabeleinführung, 4-6 LEDs.
-- IP-Schutz: Heizungskeller trocken -> **IP40 reicht**. IP54/65 ist nicht nötig, aber bei gedichteten Boxen
-  (Gainta G3xx, Euromas) vorhanden; Dichtung stört nicht, verteuert aber ggf. die Kabeleinführung (M16/M20-Verschraubung).
+## Anforderungen
+PCB ca. 110 x 60 mm (anpassbar), ESP32-S3-WROOM-1 mit PCB-Antenne an kurzer Kante (Kunststoff, kein Metall),
+Innenhöhe >= ca. 25-30 mm (Elko 12 mm, Klemme ca. 15 mm), Wandmontage, USB-C seitlich, Klemme 5,08 mm + Kabeleinführung,
+4-6 LEDs, RESET/BOOT intern. Heizungskeller trocken -> **IP40 genügt** (IP54 der Hammond-Boxen ist ausreichend).
 
-## Kandidaten
+## Verifiziert: Hammond 1591 bei Reichelt (Reichelt führt keine Gainta/Bopla/Fibox; Strapubox, OKW, Hammond ja)
 
-| # | Gehäuse | Außen L x B x H | Innen (belegt?) | Flansch | Material / IP | Bemerkung |
-|---|---------|-----------------|-----------------|---------|---------------|-----------|
-| 1 | **Hammond 1591DSFLGY** (grau, Flansch) | 150 x 80 x 50 | ca. 143,6 x 73,6 x 46,1 (Hammond-Zeichnung 1591DSFL laut Snippet; Teilenummer-Zuordnung prüfen) | ja, integriert | ABS flammhemmend (UL94 V-0), IP54 | PCB 110x60 passt mit Luft; viel Höhe; Reichelt/Farnell/Mouser/RS/TME. STEP über hammfg.com / Farnell-CAD |
-| 2 | **Gainta G308MF** (115x65x55, Flansch; vermutlich = V1-Box laut Foto mit Messing-Einsätzen) | 115 x 65 x 55 | [ungeprüft] ca. 105 x 55 (Wand ca. 3 mm abzüglich Eckdome) -> 110x60 passt NICHT | ja | ABS, IP65 (Dichtung) | günstig (ca. 4-6 EUR [ungeprüft]), TME/Reichelt. Dome in den Ecken für Deckelschrauben; Platinen-Bosse am Boden laut Händlerbeschreibung. PCB müsste auf ca. 95 x 50 schrumpfen |
-| 3 | Hammond 1591BFLGY (112x62x31, Flansch) | 112 x 62 x 31 | [ungeprüft] ca. 106 x 56 x 27 | ja | ABS, IP54 | zu schmal für 60 mm Breite; Höhe knapp für Klemme+Elko. Nur mit PCB ca. 100 x 50 und liegenden Elkos |
-| 4 | OKW Smart-Box C6011141 | 140 x 110 x 60 (Farnell; andere Quellen widersprüchlich) | [ungeprüft] | Wandlaschen-Variante vorhanden | ABS, IP66, Schraubdome für PCB | größer als nötig, teurer (ca. 12-20 EUR [ungeprüft]); Datenblatt enthält Tabelle "max. PCB size" |
-| 5 | Bopla Euromas M/T-Serie (z. B. M/T 208: 98x64x36,4; größere 120x80x85) | siehe links | [ungeprüft] | Schraubkanäle im Boden / Wandwinkel | ABS, IP65 | M/T 208 zu klein; 122x120x55 (Flansch) deutlich zu groß; Bopla-STEP je Artikel verfügbar |
-| 6 | RS PRO / Hammond DIN-Schienengehäuse ABS, z. B. 107 x 90 x 65 | 107 x 90 x 65,2 | [ungeprüft] | DIN-Schiene TS35 (3 Rasten) | ABS, flammhemmend | Alternative statt Wandmontage; Platine 110x60 passt hier nicht, Layout müsste auf Modulbreite angepasst werden. Phoenix ME-MAX/Italtronic nicht geprüft |
+| Reichelt Art.-Nr. | Gehäuse | Innen L x B x H (Hammond-Zeichnung) | Flansch | Preis (brutto) | Bemerkung |
+|---|---|---|---|---|---|
+| **1591XXCFLBK** (reichelt-ID 221253) | 1591XXC, 121 x 66 x 40, schwarz, FR-ABS UL94 V-0, IP54 | **115,15 x 60,65 x 36,0** | ja (Laschen mit Langloch) | 6,99 EUR, ab Lager 1-2 Werktage | **Primär.** Messingeinsätze für 4 Deckelschrauben M3x10, PCB-Posten in Box UND Deckel |
+| 1591XXCGY (221272) | wie oben, grau, ohne Flansch | 115,15 x 60,65 x 36,0 (gleiche Serie) | nein | 7,10 EUR | falls Wandmontage anders (Klebe-/Schraubpads) |
+| 1591CFLBK (121042) | 1591C alt, 120 x 65 x 40, schwarz, Flansch | 113,53 x 58,53 x 35,9; Kartenführung 1,6 mm Schlitz | ja | 6,25 EUR | PCB 110x60 passt NICHT (58,53 breit); max. ca. 110 x 56 |
+| 1591CTCL (221271) | 1591C, **kristallklar (Polycarbonat)** | 113,53 x 58,53 x 35,9 | nein | 8,20 EUR | transluzent -> LEDs sichtbar ohne Lichtleiter; PCB max. ca. 110 x 56 |
+| 1591BFLBK (121041) / XXBFLBK (221252) | 112 x 62 x 31 | XXB: 108,15 x 57,65 x 27,0 | ja | 4,90 EUR | zu klein/flach, PCB max. ca. 100 x 52 |
+| 1591DFLBK (221256) / XXDFLBK (221258) | 150 x 80 x 50 | XXD: 145,40 x 75,40 x 46,5 | ja | 7,90 / 7,99 EUR | Reserve, wenn mehr Platz nötig |
 
-Transluzent: Bei Hammond gibt es 1591-Varianten mit transparentem/transluzentem Deckel (z. B. "...TBU" bei 1591S laut Datenblattlistung);
-für 1591D/E-Größen **prüfen**. Sonst Lichtleiter (3 mm Rundstab, wie bei V1 im Deckel verklebt) oder Löcher im Deckel.
+Nicht Hammond bei Reichelt: Strapubox 115x65x27 (Art. SP, 6,10 EUR; mit Batteriefach, Innenhöhe zu gering, Maße ungeprüft),
+OKW SMART-CASE 140x62,7x30,5 (Art. OKW, 22,95 EUR, ABS UL94HB, Befestigungsdome; Zeichnung ungeprüft) -> beide nicht empfohlen.
+Hammond 1591-Zeichnungen: https://www.hammfg.com/files/parts/pdf/1591XXCFLGY.pdf (identische Geometrie wie CFLBK),
+https://www.hammfg.com/files/parts/pdf/1591CTCL.pdf. STEP/IGES lt. Zeichnung bei Hammond verfügbar (Download-Link nicht verifiziert).
 
 ## Empfehlung
-**Primär: Hammond 1591DSFLGY** (Flansch, ABS V-0, 46 mm Innenhöhe, ca. 143 x 73 mm Innenfläche).
-Gründe: Platz für bestehende 110x60-Platine inkl. Antennenfreiraum (Antennenkante zeigt zu einem freien Ende,
-Kunststoffwand, kein Metall), reichlich Höhe, Wandflansch, in DE breit verfügbar, STEP vorhanden.
-Nachteil: Platine hat im Boden keine passenden Standard-Aufnahmen -> Befestigung über ein 3D-gedrucktes
-Trägerblech/Standoffs oder selbstklebende/gesteckte M3-Abstandshalter; Deckelschrauben-Dome sitzen in den Ecken.
+**Primär: Reichelt 1591XXCFLBK** (6,99 EUR): Innenmaß 115,15 x 60,65 x 36, Flansch zur Wandmontage, FR-ABS, definierte
+PCB-Posten. **Alternative (transluzent): 1591CTCL** (8,20 EUR, klares PC, ohne Flansch; Platine auf ca. 110 x 56 verkleinern,
+Wandmontage dann über Klebe-/Montagelaschen oder Variante CFL mit 3D-gedruckten Winkeln).
+Hinweis: Eine transluzente XX-C-Variante gibt es lt. Zeichnung nicht (nur BK/GY); TBU existiert bei XXA/XXB/XXE.
+Hinweis Antenne: Kunststoff-Wand, Antennenkante zu einer kurzen Gehäusewand legen; Wand ist 2,0 mm ABS (unkritisch).
 
-**Alternative: Gainta G308MF** (gleiches Prinzip wie V1, sehr günstig), aber nur wenn die Platine auf ca. 95 x 50 mm
-verkleinert wird [ungeprüft, V1-Box nachmessen: Innenmaß + Abstand der Bodenbosse]. Praktischer Tipp: Das physische V1-Gehäuse
-vorhanden -> Innenmaße und Bossen-Positionen direkt mit Messschieber ermitteln.
+### PCB-Umriss und Bohrungen für 1591XXCFL (aus Hammond-Zeichnung "MAX SIZE PCB", Maße in mm)
+Hammond-Maximalplatine: 114,5 x 60,5, Eckausschnitte um die Deckelschraub-Dome (gerade Länge zwischen Ausschnitten 99,0,
+gerade Breite 44,5; Ausschnitt-Radius R3,5). PCB-Posten: Raster **84,5 x 39,5** (Ø3,5 Bohrung, #4 x 1/4" Blechschraube).
+Vorschlag (Ursprung unten links, Platine mittig im Gehäuse):
+- Außenmaß **110,0 x 60,0**, 4 Eckausschnitte je **5,5 (X) x 8,0 (Y)** mit R3,5 an den Innenecken. (Ableitung: (114,5-110)/2 = 2,25 weniger Länge: 7,75 - 2,25 = 5,5; Breitenausschnitt 8,0 unverändert.)
+- 4 Bohrungen Ø3,5 bei **(12,75 | 10,25), (97,25 | 10,25), (12,75 | 49,75), (97,25 | 49,75)** (Raster 84,5 x 39,5, zentriert).
+- Hinweis: Schrauben sind #4 x 1/4" selbstschneidend (Hammond 1593ATS50) oder M3-Blechschrauben; M3-Gewinde in den Posten nicht vorgesehen. Pilotloch-Durchmesser der Posten nicht in der Zeichnung -> ungeprüft.
+- Bauteilhöhen: Innenhöhe gesamt 36 mm (Box + Deckel); Pfostenhöhe nicht bemaßt (ungeprüft), Elko 12 mm + Klemme 15 mm passen mit großem Spiel.
 
-### Vorgeschlagener PCB-Umriss / Bohrungen (vorläufig, bis Zeichnung gelesen)
-- Umriss: 110 x 60 mm beibehalten (passt in Innen 143,6 x 73,6 -> je Seite >= 3 mm Luft in Breite, 16 mm in Länge).
-- Vier M3-Bohrungen (3,2 mm) bei 4,0 mm Randabstand: Raster **102 x 52 mm**, bei Gehäuse-Standoff-Träger (3D-Druck) 1:1 anlegbar.
-- Platine in der Gehäuselängsachse mittig, ESP32-Antennenkante an die kurze Seite, >= 10 mm Abstand zur Wand/Metallteilen.
-- USB-C: an die lange Seite nahe Ecke, Öffnung ca. 10 x 4 mm in der Gehäusewand fräsen/bohren (nur zum Flashen: Gummistopfen ok).
-- Klemmleiste 5,08 mm: an die kurze Seite gegenüber der Antenne; Kabeleinführung per M16-Verschraubung oder Ausbruch.
-- LEDs: auf der Platinen-Oberseite in einer Reihe, Lichtleiter/Löcher im Deckel; RESET/BOOT intern.
-Diese Werte sind **Vorschlag**, nicht aus Hersteller-Datenblatt; sie sind gegen die Zeichnung zu validieren.
+### Öffnungen (Vorschlag)
+- Klemmleiste 5,08 mm: an einer kurzen Wand, Antenne an gegenüberliegender kurzer Seite; Kabelloch Ø6-7 mm oder M12/M16-Verschraubung; 2 mm Wand lässt sich bohren/fräsen (Hammond bietet auch Bearbeitung/Bedruckung an).
+- USB-C: lange Wand nahe Ecke, Ausschnitt ca. 10 x 4 mm (nur zum Flashen; Gummistopfen/Aufkleber).
+- LEDs: Löcher Ø3 oder Ø5 im Deckel (Lichtleiter wie V1), Taster intern.
 
 ## 3D-Druck-Alternative
-Eigenes Gehäuse (PETG oder ASA, Wandstärke 2 mm, Heizungskeller bis ca. 40-50 C: kein PLA) mit exakt
-passenden PCB-Domen, USB-C-Ausschnitt, Klemmenöffnung, Lichtleiter-Schächten und Wandlaschen; Deckel verschraubt.
-Vorteil: Maße exakt zur Platine, Antenne frei. Nachteil: Flammschutz (V-0) fehlt, was für ein
-Netz-nahes/Heizungsprodukt zu bedenken ist; ASA/PC-FR bevorzugen.
+ASA/PETG (kein PLA), 2 mm Wand, exakt zur Platine mit Domen, USB-C-Ausschnitt, Lichtleiterschächten, Wandlaschen. Nachteil: kein UL94-V0.
 
-## Offene Punkte (vor Bestellung klären)
-1. Zeichnung 1591DSFL lesen: Innenmaße, Position/Durchmesser der Deckelschraubdome, Bodenrippen.
-2. Prüfen, ob 1591D eine transluzente Deckelvariante hat.
-3. Aktuelle Preise/Verfügbarkeit bei Reichelt, TME, Mouser, Farnell abfragen.
-4. V1-Box (Gainta?) nachmessen.
+## Ungeprüft / offen
+- STEP-Download-Link, Posten-Höhe und Pilotloch-Ø; Reichelt-eigene Datenblatt-PDFs (cdn-reichelt.de gesperrt).
+- Gainta G308MF (Innenmaß), OKW Smart-Box, Bopla: nicht im Reichelt-Sortiment, nicht geprüft. V1-Box nachmessen, falls Gainta-Option gewünscht.
+- Preise/Lager: Stand Abrufdatum, Reichelt-Preise brutto inkl. 19 % MwSt.
 
-## Quellen (Suchergebnisse; nicht alle per Fetch geprüft)
-- Hammond 1591 Serie: https://www.hammfg.com/electronics/small-case/plastic/1591
-- Hammond 1591 Datenblatt GS: https://www.hammfg.com/files/parts/pdf/1591GSGY.pdf
-- Hammond 1591XXBFLGY: https://www.hammfg.com/files/parts/pdf/1591XXBFLGY.pdf
-- Hammond 1591SFLGY: https://www.hammfg.com/part/1591SFLGY
-- RS 1591 DSFL 150x80x50: https://nz.rs-online.com/web/p/general-purpose-enclosures/4935900
-- Farnell Hammond CAD: https://www.farnell.com/cad/2237862.pdf
-- Gainta G308MF (Electrokit): https://www.electrokit.com/en/enclosure-115x65x55mm-ip65-with-flange-grey-abs
-- Gainta bei TME: https://www.tme.eu/html/EN/gainta-enclosures-with-fixation/ramka_15942_EN_pelny.html
-- Jaycar G308MF: https://jaycar.co.nz/abs-seal-box-115x65x55-with-flange-g308mf/p/HB6138
-- OKW Smart-Box (Farnell): https://uk.farnell.com/okw-enclosures/c6011141/enclosure-smart-box-ip66-140x110x60mm/dp/3378270
-- OKW Smart-Box Datenblatt: https://www.farnell.com/datasheets/1675107.pdf
-- Bopla Euromas: https://datasheet.sic-components.com/euromas-abs-pc-f05_en.pdf
-- RS PRO DIN-Rail ABS 107x90x65: https://uk.rs-online.com/web/p/din-rail-enclosures/2069059
-- Phoenix Contact DIN-Gehäuse: https://www.phoenixcontact.com/en-dk/products/electronics-housings/din-rail-housing
+## Quellen
+- https://www.reichelt.de/de/de/shop/produkt/x-221253 (1591XXCFLBK), -221272, -221271, -121042, -221256
+- https://www.hammfg.com/files/parts/pdf/1591XXCFLGY.pdf, https://www.hammfg.com/files/parts/pdf/1591CFLBK.pdf, https://www.hammfg.com/files/parts/pdf/1591CTCL.pdf, https://www.hammfg.com/files/parts/pdf/1591XXBFLGY.pdf, https://www.hammfg.com/files/parts/pdf/1591XXDFLGY.pdf
