@@ -28,7 +28,7 @@ Details/evidence: R1_circuit_fidelity.md, R2_isolation_layout_fab.md, R3_mcu_usb
 19. Courtyard overlaps (D5/D6 …), silkscreen line width ≥ 0.15 mm, text ≥ 0.8 mm height, no silk over pads, pour ≥ 0.5 mm from board edge.
 20. USB D+/D- routed as a short pair, ESD close to connector.
 21. Remove scratch/compare_netlist.py (superseded).
-22. Board outline / mounting holes may change to fit the enclosure (docs/ENCLOSURE.md, Reichelt) – coordinator will send the target outline.
+22. **Enclosure Hammond 1591XXCFLBK (Reichelt 221253)** – see docs/ENCLOSURE.md. Board outline 110.0 × 60.0 mm with 4 corner notches 5.5 (X) × 8.0 (Y) mm (R3.5) for the lid-screw bosses; 4 mounting holes Ø3.5 mm NPTH at (12.75|10.25), (97.25|10.25), (12.75|49.75), (97.25|49.75) mm from bottom-left (= ±42.25 / ±19.75 from centre), keepout for screw heads Ø7 mm. Inner height 36 mm. EMS terminal P1 at the LEFT short wall (cable entry), ESP32 antenna at the RIGHT short wall (≥ 15 mm free beside antenna, no copper under it), USB-C on a long wall near a corner (housing cut-out ~10 × 4 mm), LEDs (LD1–LD5) positioned so they can be seen via holes/light pipes in the lid; buttons internal.
 
 ## Acceptance
 - scripts/check_netlist.py OK, scripts/check_isolation.py ≥ 6.0 mm both layers, DRC 0 errors (placement DRC only the intended opto/slot overlap if unavoidable).
