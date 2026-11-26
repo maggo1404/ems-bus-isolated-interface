@@ -76,7 +76,7 @@ for k, v in list(PARAMS.items()):
 P = type('P', (), PARAMS)
 
 # LED-Positionen (Platinenmitte = 0|0) und Gravurtexte (Text, dx, dy relativ zur LED)
-LEDS = dict(LD1=(-8.0, 24.0), LD3=(16.0, 13.6), LD2=(12.5, -13.8), LD5=(28.0, 8.5), LD4=(47.0, -16.5))
+LEDS = dict(LD1=(-8.0, 24.0), LD3=(16.0, 13.6), LD2=(12.5, -13.8), LD5=(28.0, 9.3), LD4=(47.0, -16.5))
 LED_LABEL = dict(LD1=('EMS', 4.0, 0.0), LD3=('RX', 3.8, 0.0), LD2=('TX', 3.8, 0.0), LD5=('3V3', 4.2, 0.0),
                  LD4=('STATUS', 0.0, 4.0))
 BTN = dict(SW1=(33.5, -23.5, 'RESET', -9.5, 0.0), SW2=(34.0, -14.8, 'BOOT', -8.5, 0.0))

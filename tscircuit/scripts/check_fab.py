@@ -16,6 +16,7 @@ Checks
  C4 No copper inside <cutout>s (slots), no copper inside <keepout>s (antenna) except the keepout's own component,
     copper-to-NPTH-hole and copper-to-board-edge distance.
  G5 Silkscreen: glyph height/stroke MEASURED in the silk Gerber (>= 1.0 mm / 0.16 mm), texts vs pads/vias/holes/slots/edge/other texts, pin-1 + polarity marks.
+ G10 U3 hand-solder footprint: pads >= 1.2 mm outside the module body, no paste, EPAD plated GND holes + bottom GND pad, silk outline/pin 1.
  G8 Pour slivers < 0.15 mm cleared in the copper Gerbers (scripts/slivers.py), no island created; G9 C23 within 2 mm of the ESP32 3V3 pad; Gerber file names (JLC/KiCad).
  C5 Every net is physically connected by copper (traces/vias/pours) = no open/unrouted connection; the USB-C pads
     are listed one by one (both D+ pads, both D- pads, all VBUS/GND pads, CC1/CC2, shell legs).
@@ -1100,7 +1101,7 @@ if not NOGERBER:
             FAIL("paste aperture / pad area outside %.0f..100 %%: smallest %.0f %% (%s), largest %.0f %% (%s)" % (MIN_PASTE * 100, lo[0] * 100, lo[1], hi[0] * 100, hi[1]))
         else:
             OK("paste apertures: %d pads compared, aperture/pad area %.0f..%.0f %%" % (len(ratios), lo[0] * 100, hi[0] * 100))
-    bad_np = sorted(set(x for x in nopaste if not re.match(r"(JP\d|TP\d)", x)))
+    bad_np = sorted(set(x for x in nopaste if not re.match(r"(JP\d|TP\d|U3\.)", x)))   # U3 (hand-soldered, DNP) has no paste by design, see G10
     jp_np = sorted(set(x for x in nopaste if re.match(r"JP\d", x)))
     print("       pads without paste: %d (JP1/JP2 pads must have none: %s; test pads TP: %s)" % (len(nopaste), jp_np, sorted(set(x for x in nopaste if x.startswith("TP")))))
     if bad_np:
@@ -1238,6 +1239,127 @@ else:
     else:
         OK("Economic: all assembled parts >= 2.5 mm from the board edge (J2 USB-C edge connector exempt)")
     print("       info: Economic needs no edge rails/fiducials (JLC adds mouse-bite rails); order: 2-50 pcs, 1.6 mm, HASL or ENIG, standard stack-up")
+
+
+# =====================================================================
+# G10: U3 (ESP32-S3-WROOM-1) hand-solder footprint (R8): castellated pads extended outward, no paste, EPAD plated holes + bottom pad
+# =====================================================================
+print()
+U3_C = (42.25, 0.0)    # placement in src/mcu-side.tsx (rot -90): module body 18.0 x 25.5, antenna end (local +Y) -> world +X
+U3_BODY = box(U3_C[0] - 12.75, U3_C[1] - 9.0, U3_C[0] + 12.75, U3_C[1] + 9.0)
+MIN_U3_EXT = 1.2        # mm of copper outside the module body edge (iron tip), pins 1..40
+MIN_U3_GAP = 0.20       # pad-to-pad gap on the edge rows
+u3 = {}
+for e in cj:
+    if e["type"] == "pcb_smtpad":
+        ps = pin_str(e.get("pcb_port_id")) or ""
+        if ps.startswith("U3."):
+            u3.setdefault(ps, []).append(e)
+
+
+def _u3num(k):
+    return int(re.sub(r"\D", "", k.split(".")[1]))
+
+
+def _padgeom(e):
+    return rect_poly(e["x"], e["y"], e["width"], e["height"])
+
+
+edge_pads = {k: [e for e in v if e["layer"] == "top"] for k, v in u3.items() if 1 <= _u3num(k) <= 40}
+if len(edge_pads) != 40:
+    FAIL("U3: %d edge pads (pins 1..40) found, expected 40" % len(edge_pads))
+else:
+    bx = U3_BODY.bounds
+    exts, short = [], []
+    for k, v in edge_pads.items():
+        b = _padgeom(v[0]).bounds
+        ext = max(bx[0] - b[0], b[2] - bx[2], bx[1] - b[1], b[3] - bx[3])
+        exts.append(ext)
+        if ext < MIN_U3_EXT:
+            short.append("%s %.2f" % (k, ext))
+    (FAIL if short else OK)("U3 castellated pads extend %.2f..%.2f mm outside the module body (need >= %.1f mm, copper for the iron tip)%s" % (min(exts), max(exts), MIN_U3_EXT, "" if not short else ": " + ", ".join(short)))
+    gs = [(k, _padgeom(v[0])) for k, v in edge_pads.items()]
+    gaps = min(a[1].distance(b[1]) for i, a in enumerate(gs) for b in gs[i + 1:])
+    (FAIL if gaps < MIN_U3_GAP - 1e-6 else OK)("U3 edge pads: smallest pad-to-pad gap %.3f mm (need >= %.2f mm)" % (gaps, MIN_U3_GAP))
+    ant = box(U3_C[0] + 5.8, -9.5, U3_C[0] + 13, 9.5)   # antenna end of the module: local y > 5.8 (pad rows end at 5.71)
+    bad_ant = [k for k, g in gs if g.intersects(ant)]
+    (FAIL if bad_ant else OK)("U3 extended pads stay out of the antenna end (x > %.2f)%s" % (U3_C[0] + 5.8, "" if not bad_ant else ": " + ", ".join(bad_ant)))
+# paste: no U3 pad (top or bottom) or plated hole may have a paste aperture
+if not NOGERBER:
+    u3_paste = []
+    u3_holes_all = [e for e in cj if e["type"] == "pcb_plated_hole" and (pin_str(e.get("pcb_port_id")) or "").startswith("U3.")]
+    for lay, gf in (("top", "F_Paste.gbr"), ("bottom", "B_Paste.gbr")):
+        fl = paste_flashes(gf)
+        for k, v in u3.items():
+            for e in v:
+                if e["layer"] == lay and any(abs(f[0] - e["x"]) < 0.01 and abs(f[1] - e["y"]) < 0.01 for f in fl):
+                    u3_paste.append(k)
+        for e in u3_holes_all:
+            if any(abs(f[0] - e["x"]) < 0.01 and abs(f[1] - e["y"]) < 0.01 for f in fl):
+                u3_paste.append("hole " + pin_str(e.get("pcb_port_id")))
+    (FAIL if u3_paste else OK)("U3 has NO solder paste (hand-soldered, DNP): %d U3 pads + %d plated holes checked in F_Paste/B_Paste%s" % (sum(len(v) for v in u3.values()), len(u3_holes_all), "" if not u3_paste else ", paste found on " + ", ".join(sorted(set(u3_paste)))))
+# EPAD: plated holes, all GND, + exposed GND pad on the bottom layer
+holes = [e for e in cj if e["type"] == "pcb_plated_hole" and (pin_str(e.get("pcb_port_id")) or "").startswith("U3.")]
+if len(holes) < 4:
+    FAIL("U3 EPAD: only %d plated holes (need >= 4)" % len(holes))
+else:
+    badh = []
+    for e in holes:
+        r = root_of_pcbport(e.get("pcb_port_id"))
+        nm = conn.groups[r]["names"] if r in conn.groups else set()
+        d = e.get("hole_diameter") or 0
+        od = e.get("outer_diameter") or 0
+        if not (nm & GND_NETS) or not (0.8 - 1e-6 <= d <= 1.0 + 1e-6) or (od - d) / 2 < MIN_ANNULAR + 0.05:
+            badh.append("%s d=%.2f od=%.2f net=%s" % (pin_str(e.get("pcb_port_id")), d, od, sorted(nm)))
+        if not {"top", "bottom"} <= set(e.get("layers") or ["top", "bottom"]):
+            badh.append("%s not through-plated" % pin_str(e.get("pcb_port_id")))
+    ds = sorted(set(round(e.get("hole_diameter") or 0, 2) for e in holes))
+    ring = min(((e.get("outer_diameter") or 0) - (e.get("hole_diameter") or 0)) / 2 for e in holes)
+    (FAIL if badh else OK)("U3 EPAD: %d plated through-holes, drill %s mm, ring %.2f mm, all GND%s" % (len(holes), ds, ring, "" if not badh else " -> " + "; ".join(badh)))
+    ep_bad = []
+    for k, v in u3.items():
+        if 41 <= _u3num(k) <= 49:
+            for e in v:
+                r = root_of_pcbport(e.get("pcb_port_id"))
+                if not (r in conn.groups and conn.groups[r]["names"] & GND_NETS):
+                    ep_bad.append(k)
+    n_ep = sum(1 for k in u3 if 41 <= _u3num(k) <= 49 and any(e["layer"] == "top" for e in u3[k])) + len(holes)
+    (FAIL if (ep_bad or n_ep != 9) else OK)("U3 EPAD ports pin41..49 (%d found: %d SMD + %d plated holes) are all GND%s" % (n_ep, n_ep - len(holes), len(holes), "" if not ep_bad else ": " + ", ".join(sorted(set(ep_bad)))))
+    if not NOGERBER:   # holes must not be tented: mask opening >= pad ring on both sides
+        untented = [pin_str(e.get("pcb_port_id")) for e in holes for gf in ("F_Mask.gbr", "B_Mask.gbr")
+                    if not any(abs(f[0] - e["x"]) < 0.01 and abs(f[1] - e["y"]) < 0.01 and f[3] >= e["outer_diameter"] - 0.01 for f in paste_flashes(gf))]
+        (FAIL if untented else OK)("U3 EPAD holes are NOT tented: mask opening on top and bottom%s" % ("" if not untented else " missing for " + ", ".join(sorted(set(untented)))))
+    bot = [e for v in u3.values() for e in v if e["layer"] == "bottom"]
+    if not bot:
+        FAIL("U3 EPAD: no exposed copper pad on the bottom layer")
+    else:
+        b = bot[0]
+        bg = _padgeom(b)
+        r = root_of_pcbport(b.get("pcb_port_id"))
+        gnd = r in conn.groups and bool(conn.groups[r]["names"] & GND_NETS)
+        cov = all(bg.buffer(0.2).contains(Point(e["x"], e["y"])) for e in holes)
+        msg = ""
+        if not NOGERBER:
+            op = any(abs(f[0] - b["x"]) < 0.01 and abs(f[1] - b["y"]) < 0.01 and f[3] >= b["width"] - 0.01 for f in paste_flashes("B_Mask.gbr"))
+            msg = ", mask opening in B_Mask %s" % ("yes" if op else "MISSING")
+            cov = cov and op
+        (OK if (gnd and cov) else FAIL)("U3 EPAD: bottom pad %.1f x %.1f mm at (%.2f,%.2f) is %s, covers all %d holes%s" % (b["width"], b["height"], b["x"], b["y"], "GND" if gnd else "NOT GND", len(holes), msg))
+# silk: outline + pin-1 marker beside pad 1 and on no pad
+def _sp(e):
+    return Point(e["route"][0]["x"], e["route"][0]["y"]) if e["type"] == "pcb_silkscreen_path" else Point(e["center"]["x"], e["center"]["y"])
+
+
+u3_silk = [e for e in cj if e["type"] in ("pcb_silkscreen_path", "pcb_silkscreen_circle") and e.get("layer") == "top" and U3_BODY.buffer(3.0).intersects(_sp(e))]
+nsil = sum(1 for e in u3_silk if e["type"] == "pcb_silkscreen_path")
+dots = [e for e in u3_silk if e["type"] == "pcb_silkscreen_circle"]
+p1 = edge_pads.get("U3.1") or edge_pads.get("U3.pin1")
+if p1 and dots:
+    pg = _padgeom(p1[0])
+    dd = min(Point(d["center"]["x"], d["center"]["y"]).distance(pg) - d["radius"] for d in dots)
+    onpad = [k for k, v in edge_pads.items() for d in dots if Point(d["center"]["x"], d["center"]["y"]).distance(_padgeom(v[0])) < d["radius"] + 0.08]
+    (FAIL if (onpad or nsil < 3 or dd > 2.0) else OK)("U3 silk: %d outline paths + pin-1 marker %.2f mm beside pad 1, not touching any pad" % (nsil, dd))
+else:
+    FAIL("U3 silk: pin-1 marker / outline not found")
 
 print("\n%d FAIL, %d WARN" % (len(fails), len(warns)))
 print("ALL FAB CHECKS OK" if not fails else "FAB CHECKS FAILED")

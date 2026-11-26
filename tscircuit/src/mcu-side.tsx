@@ -40,13 +40,13 @@ export const McuSide = () => (
     {T(".U3 > .V3V3", "net.V3V3")}
     {/* R7 m4: the 100 nF (C23) sits next to U3 pin 2 (3V3), the 10 uF (C22) behind it */}
     {/* R7 m4: the 100 nF (C23) sits next to U3 pin 2 (3V3), the 10 uF (C22) behind it */}
-    {C("C23", "100nF", 46.9, 12.0, 90, "C49678", "0805")}
+    {C("C23", "100nF", 46.9, 12.4, 90, "C49678", "0805")}
     {C("C22", "10uF", 46.9, 16.0, 90, "C15850", "0805")}
     {T(".C22 > .pin1", "net.V3V3")}{T(".C22 > .pin2", "net.GND")}
     {T(".C23 > .pin1", "net.V3V3")}{T(".C23 > .pin2", "net.GND")}
 
         {/* EN: pull-up + 1uF + RESET */}
-    {R("R20", "10k", 44.4, 11.4, 270, "C17414")}
+    {R("R20", "10k", 44.4, 12.2, 270, "C17414")}
     {C("C20", "1uF", 38.6, 12.8, 180, "C28323", "0805")}
     <Tactile5x5 name="SW1" pcbX={33.5} pcbY={-23.5} pcbRotation={0} {...sch("SW1", [["A1", "A2"], ["B1", "B2"]])} />
     {T(".U3 > .EN", "net.EN")}
@@ -87,7 +87,7 @@ export const McuSide = () => (
     {T(".J2 > .DP_L", "net.USB_DP")}{T(".J2 > .DP_R", "net.USB_DP")}
     {T(".J2 > .DN_L", "net.USB_DN")}{T(".J2 > .DN_R", "net.USB_DN")}
     {R("R23", "5.1k", 28.6, 19.2, 90, "C27834")}
-    {R("R24", "5.1k", 37.0, 20.3, 90, "C27834")}
+    {R("R24", "5.1k", 37.0, 20.0, 90, "C27834")}
     {T(".J2 > .CC1", ".R23 > .pin1")}{T(".R23 > .pin2", "net.GND")}
     {T(".J2 > .CC2", ".R24 > .pin1")}{T(".R24 > .pin2", "net.GND")}
     {R("R25", "1M", 26.6, 26.5, 90, "C17514")}
@@ -134,7 +134,7 @@ export const McuSide = () => (
 
     {/* power LED on V3V3 */}
     {R("R26", "330", 24.0, 8.5, 90, "C17630")}
-    <LedYellow name="LD5" pcbX={28.0} pcbY={8.5} pcbRotation={90} {...sch("LD5", ["A", "K"])} />
+    <LedYellow name="LD5" pcbX={28.0} pcbY={9.3} pcbRotation={90} {...sch("LD5", ["A", "K"])} />
     {T(".R26 > .pin1", "net.V3V3")}{T(".R26 > .pin2", ".LD5 > .A")}{T(".LD5 > .K", "net.GND")}
 
     {/* ---------------- JP1 (open) ESP_TX <-> MCU_TX, R_PU, P2 ---------------- */}

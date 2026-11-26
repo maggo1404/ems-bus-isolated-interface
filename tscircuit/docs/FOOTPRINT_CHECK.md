@@ -123,3 +123,20 @@ is below the body, as per DESIGN_SPEC).
 * **L1/L2 (C98021)**: `Inductor3225` = EasyEDA IND-SMD_L3.2-W2.5 (Pads 1,52 x 3,1 mm bei x = +-1,145 mm), Restfehler 0,000 mm.
 * **P2 (C32713270)**: `PinHeader1x4` (`lib/thtparts.tsx`) = Loch 1,1 mm, Pad 1,7 mm (Pin 1 quadratisch), Raster 2,54 mm.
 * U3-, J2-, SW-, P1-Silkscreen so gezeichnet, dass keine Linie ueber einem Pad liegt (siehe FAB_CHECKLIST).
+
+---
+## 3a. ESP32-S3-WROOM-1 hand-solder footprint (R8, `lib/esp32s3wroom1.tsx`)
+U3 is not placed by JLC (Economic PCBA, part is "Standard Only"), so the footprint is tuned for an iron instead of paste/reflow.
+Espressif land pattern (datasheet "Recommended PCB Land Pattern", EasyEDA C2913202) stays as the inner geometry: pad pitch 1.27, pad width 0.9,
+inner pad ends at x = +-8.0 (side rows) and y = -11.79 (bottom row), all pad centres of section 3 unchanged (pin mapping / netlist identical).
+* **Pads 1..40 lengthened outward** by 1.07 mm (const `EXT`): side pads 2.57 x 0.9 mm (inner end -8.0 / +8.0, outer end +-10.57), bottom pads 0.9 x 2.57 mm (outer end y = -14.36).
+  Module body edge is x = +-9.0 / y = -12.75, so **1.57 mm (sides) / 1.61 mm (bottom)** of copper stay exposed for the iron tip (EasyEDA: 0.5 / 0.54 mm).
+  Pad-to-pad gap stays 0.37 mm (JLC mask web fine). Pads stay out of the antenna end (rows end at 5.71, keepout from y = 5.75, `check_fab.py` G10).
+* **No solder paste on U3** (`noSolderPaste` on every pad, plated holes carry none): F_Paste 252 -> 203 apertures; no bump under the module.
+* **EPAD** (pin41..49, still 9 ports, all GND): 3x3 grid pitch 1.4 centred at (-1.5, -2.47) as before; corners + centre (pin41/43/45/47/49) are **plated through-holes, drill 0.8 mm, pad 1.3 mm (ring 0.25 mm >= 0.15 JLC)**, the 4 edge-centre ports stay 0.9 x 0.9 SMD pads. Edge to edge: hole pad to SMD pad 0.30 mm, hole to hole 1.18 mm (hole spacing rule 0.5 mm met).
+  On the **bottom layer** a 4.2 x 4.2 mm exposed copper pad (port pin45, no paste, open mask) covers all five holes and merges into the bottom MCU GND pour: heat it from below, solder runs through the holes into the module's GND pad.
+  Holes lie inside the module's 3.7 x 3.7 mm EPAD footprint (extreme hole edge 1.8 mm from the EPAD centre, EPAD half width 1.85), nothing else of the module is under them. Not tented (mask opening both sides).
+* **Silk**: antenna part of the body outline in full, corner marks at the lower body corners and at the shoulders (y = 5.9); along the pad rows the body edge itself is under the extended pads (JLC clips silk on pads), so the outline there is the pads. Pin-1 ring 0.53 mm outside pad 1 (left row, top). Module label stays dropped (min. 1 mm glyph, EPAD in the middle).
+* New checks in `scripts/check_fab.py` (G10): pad extension >= 1.2 mm, pad gap >= 0.2 mm, no pad in the antenna end, no paste on U3 (F_/B_Paste), EPAD holes plated / drill 0.8..1.0 / ring / GND, all 9 EPAD ports GND, bottom pad GND + covers holes + mask opening, holes not tented, silk outline + pin-1 marker not on pads.
+* Neighbour parts moved so that the extended pads clear them (router re-roll, see TSCIRCUIT_API.md): LD5 (28.0, 8.5 -> 9.3), R20 (44.4, 11.4 -> 12.2), C23 (46.9, 12.0 -> 12.4), R24 (37.0, 20.3 -> 20.0).
+

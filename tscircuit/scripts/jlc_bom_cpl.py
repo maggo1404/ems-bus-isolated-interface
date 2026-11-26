@@ -78,5 +78,5 @@ with open(prefix + "-HANDSOLDER.csv", "w", newline="") as f:
     w.writerow(["Designator", "Part", "LCSC Part #", "Reason"])
     for n, s in sorted(_dnp, key=lambda t: key(t[0])):
         lc = (s.get("supplier_part_numbers") or {}).get("jlcpcb", [""])[0]
-        w.writerow([n, s.get("manufacturer_part_number", ""), lc, 'DNP: JLC PCBA type "Standard Only" (not assemblable with Economic PCBA); order the part separately and hand-solder'])
+        w.writerow([n, s.get("manufacturer_part_number", ""), lc, 'DNP: JLC PCBA type "Standard Only" (not assemblable with Economic PCBA); order the part separately and hand-solder (footprint: extended pads, EPAD holes, no paste)'])
 print("hand-solder (DNP) parts:", [n for n, _ in _dnp])

@@ -23,44 +23,65 @@ export const ESP32S3_PINLABELS = {
 } as const
 
 const P = 1.27
+// Hand-soldering aid (R8): the module is NOT placed by JLC (doNotPlace), so every U3 pad has noSolderPaste and the castellated pads are
+// extended OUTWARD by 1.0 mm beyond the Espressif land pattern. Inner end stays where the land pattern has it (x = +-8.0 / y = -11.79);
+// outside the module body edge (x = +-9.0, y = -12.75) 1.5 mm of copper stay free for the iron tip.
+const EXT = 1.07
+const W_SIDE = 1.5 + EXT      // side pads: 2.5 mm long (x), inner end -8.0 / +8.0, outer end -10.5 / +10.5
+const W_BOT = 1.5 + EXT       // bottom pads: 2.5 mm long (y), inner end -11.79, outer end -14.29
+// EPAD: 3x3 grid (pitch 1.4, centre (-1.5,-2.47)). The 4 corner pads + centre pad are plated through-holes (hole 0.8 / pad 1.3 ring 0.25 mm)
+// connected to a 4.2 x 4.2 mm exposed GND pad on the BOTTOM layer: heat the pad from below, solder flows through the holes to the module EPAD.
+const EP_X = [-2.9, -1.5, -0.1]
+const EP_Y = [-3.87, -2.47, -1.07]
+export const EPAD_HOLE_D = 0.8
+export const EPAD_HOLE_PAD = 1.3
 export const Esp32S3Footprint = () => {
   const pads: any[] = []
   // left: pins 1..14, y from +? (top, antenna side) downwards
   for (let i = 0; i < 14; i++) {
     pads.push(
-      <smtpad key={`l${i}`} portHints={[`pin${1 + i}`]} shape="rect" width="1.5mm" height="0.9mm"
-        pcbX={-8.75} pcbY={5.26 - i * P} />,
+      <smtpad key={`l${i}`} portHints={[`pin${1 + i}`]} shape="rect" width={`${W_SIDE}mm`} height="0.9mm"
+        pcbX={-8.0 - W_SIDE / 2} pcbY={5.26 - i * P} noSolderPaste />,
     )
   }
   // bottom: pins 15..26 left->right
   for (let i = 0; i < 12; i++) {
     pads.push(
-      <smtpad key={`b${i}`} portHints={[`pin${15 + i}`]} shape="rect" width="0.9mm" height="1.5mm"
-        pcbX={-6.985 + i * P} pcbY={-12.54} />,
+      <smtpad key={`b${i}`} portHints={[`pin${15 + i}`]} shape="rect" width="0.9mm" height={`${W_BOT}mm`}
+        pcbX={-6.985 + i * P} pcbY={-11.79 - W_BOT / 2} noSolderPaste />,
     )
   }
   // right: pins 27..40 bottom->top
   for (let i = 0; i < 14; i++) {
     pads.push(
-      <smtpad key={`r${i}`} portHints={[`pin${27 + i}`]} shape="rect" width="1.5mm" height="0.9mm"
-        pcbX={8.75} pcbY={-11.26 + i * P} />,
+      <smtpad key={`r${i}`} portHints={[`pin${27 + i}`]} shape="rect" width={`${W_SIDE}mm`} height="0.9mm"
+        pcbX={8.0 + W_SIDE / 2} pcbY={-11.26 + i * P} noSolderPaste />,
     )
   }
   return (
     <footprint>
       {pads}
-      {/* EPAD (pin 41): 3x3 array of 0.9 x 0.9 pads, pitch 1.4, centred at (-1.5, -2.47) (EasyEDA C2913202) */}
-      {[-2.9, -1.5, -0.1].flatMap((x, xi) => [-3.87, -2.47, -1.07].map((y, yi) => (
-        <smtpad key={`e${x}_${y}`} portHints={[`pin${41 + xi * 3 + yi}`]} shape="rect" width="0.9mm" height="0.9mm" pcbX={x} pcbY={y} />
-      )))}
+      {/* EPAD ports pin41..pin49 (index xi*3+yi); corner + centre = plated holes, the 4 edge-centre ones stay 0.9 mm SMD pads */}
+      {EP_X.flatMap((x, xi) => EP_Y.map((y, yi) => {
+        const hole = (xi !== 1 && yi !== 1) || (xi === 1 && yi === 1)
+        return hole
+          ? <platedhole key={`e${x}_${y}`} portHints={[`pin${41 + xi * 3 + yi}`]} shape="circle" holeDiameter={`${EPAD_HOLE_D}mm`} outerDiameter={`${EPAD_HOLE_PAD}mm`} pcbX={x} pcbY={y} />
+          : <smtpad key={`e${x}_${y}`} portHints={[`pin${41 + xi * 3 + yi}`]} shape="rect" width="0.9mm" height="0.9mm" pcbX={x} pcbY={y} noSolderPaste />
+      }))}
+      {/* exposed GND pad on the bottom layer (hand-soldering from below); same port as the centre EPAD pad (internal duplicate port) */}
+      <smtpad portHints={["pin45"]} layer="bottom" shape="rect" width="4.2mm" height="4.2mm" pcbX={-1.5} pcbY={-2.47} noSolderPaste />
       {/* antenna keepout: no copper on any layer under/around antenna end */}
       <keepout shape="rect" width="18.6mm" height="7mm" pcbX={0} pcbY={9.25} layers={["top", "bottom"]} />
-      {/* module outline only where there are no pads (antenna part, y > 5.9); the pad rows are marked by the pads themselves.
-          Top edge 0.3 mm inside the module end so the silk does not sit on the board edge; lower outline 0.35 mm outside the pads. */}
+      {/* module body outline 18.0 x 25.5 (x +-9.0, y -12.75 .. +12.75). Full lines along the antenna part (y > 5.9, no pads there); along the pad rows the
+          outline is drawn only as corner marks (0.7 mm legs) because the extended pads cover the body edge (silk on pads is clipped by JLC). */}
       <silkscreenpath route={[{ x: -9, y: 5.9 }, { x: -9, y: 12.45 }, { x: 9, y: 12.45 }, { x: 9, y: 5.9 }]} />
-      <silkscreenpath route={[{ x: -9.85, y: 5.9 }, { x: -9.85, y: -13.4 }, { x: 9.85, y: -13.4 }, { x: 9.85, y: 5.9 }]} />
-      {/* pin-1 dot inside the module outline next to pad 1 (R7 m6); the module label is dropped (silk text must be >= 1 mm high and the EPAD sits in the middle) */}
-      <Dot x={-7.3} y={6.9} />
+      <silkscreenpath route={[{ x: -9, y: -12.1 }, { x: -9, y: -12.75 }, { x: -8.1, y: -12.75 }]} />
+      <silkscreenpath route={[{ x: 9, y: -12.1 }, { x: 9, y: -12.75 }, { x: 8.1, y: -12.75 }]} />
+      {/* module shoulder (end of the pad rows, y = 5.9) and the pad-row side limits just outside the extended pads */}
+      <silkscreenpath route={[{ x: -10.9, y: 5.9 }, { x: -9, y: 5.9 }]} />
+      <silkscreenpath route={[{ x: 10.9, y: 5.9 }, { x: 9, y: 5.9 }]} />
+      {/* pin-1 dot outside the extended pad 1 (left, in line with the pad); the module label is dropped (silk text must be >= 1 mm high) */}
+      <Dot x={-11.4} y={5.26} />
     </footprint>
   )
 }
