@@ -140,7 +140,7 @@ export const McuSide = () => (
     {/* ---------------- JP1 (open) ESP_TX <-> MCU_TX, R_PU, P2 ---------------- */}
     <solderjumper name="JP1" pinCount={2} footprint={<SolderJumper2Footprint />} pcbX={21} pcbY={-9.5} pcbRotation={90} {...sch("JP1")} />
     {T(".JP1 > .pin1", "net.ESP_TX")}{T(".JP1 > .pin2", "net.MCU_TX")}
-    <silkscreentext text="TX EN" pcbX={20} pcbY={-11.9} fontSize={FS} />
+    <silkscreentext text="TX EN" pcbX={21} pcbY={-11.9} fontSize={FS} />
     {R("R27", "100k", 16.5, -9.5, 90, "C149504")}
     {T(".R27 > .pin1", "net.MCU_TX")}{T(".R27 > .pin2", "net.V3V3")}
     {/* JP2 (default OPEN): V3V3 -> P2 pin 1 (net P2_3V3); close only if the 3V3 rail of this board may feed the header */}

@@ -2,24 +2,24 @@
  "bottom": {
   "size": [
    126.0,
-   90.8,
+   80.8,
    24.1
   ],
   "watertight": true,
   "winding": true,
-  "volume_cm3": 34.98,
+  "volume_cm3": 31.74,
   "manifold_status": "Error.NoError",
   "euler": -10
  },
  "lid": {
   "size": [
    126.0,
-   74.8,
+   64.8,
    18.8
   ],
   "watertight": true,
   "winding": true,
-  "volume_cm3": 28.72,
+  "volume_cm3": 25.05,
   "manifold_status": "Error.NoError",
   "euler": -24
  },
@@ -49,8 +49,8 @@
  },
  "collisions_mm3": {
   "Unterteil x Platine+Bauteile": -0.0,
-  "Deckel x Platine+Bauteile": -0.0,
-  "Unterteil x Deckel": 0.0,
+  "Deckel x Platine+Bauteile": 0.0,
+  "Unterteil x Deckel": -0.0,
   "Unterteil x P1-Stecker": 0.0,
   "Deckel x P1-Stecker": 0.0,
   "Lichtleiter x Platine": 0.0,
@@ -73,12 +73,12 @@
  "dims": {
   "outer_xyz": [
    126.0,
-   74.8,
+   64.8,
    26.9
   ],
   "inner_cavity": [
    122.8,
-   70.8
+   60.8
   ],
   "z": {
    "pcb_bottom": 6.5,

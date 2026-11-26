@@ -24,8 +24,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PARAMS = dict(
     # Platine
     pcb_t=1.6,                 # Platinendicke
-    pcb_w=110.0, pcb_h=70.0,   # Platine X x Y (Rechteck, scharfe Ecken)
-    pcb_y0=-40.0,              # Platinen-Unterkante in Platinenkoordinaten (tscircuit: y -40..30; USB-C an der Oberkante y = +30)
+    pcb_w=110.0, pcb_h=60.0,   # Platine X x Y
     clr=0.4,                   # Luft Platine <-> Innenwand (je Seite)
     # Huelle
     wall=2.0,                  # Wandstaerke
@@ -34,7 +33,6 @@ PARAMS = dict(
     floor_ant_t=1.2,           # Boden unter dem Antennenbereich (Tasche von innen)
     lid_t=2.8,                 # Deckelstaerke
     lid_ant_t=1.6,             # Deckelstaerke ueber der Antenne (Tasche von innen)
-    cav_r=0.5,                 # Innen-Eckenradius des Innenraums (Platine hat scharfe Ecken, 0,4 mm Luft: R <= 0,64)
     corner_r=3.0,              # Aussen-Eckenradius
     standoff=4.5,              # Abstand Boden-Innenflaeche -> Platinenunterseite (THT-Beinchen)
     h_above=16.0,              # Innenhoehe ueber Platinenoberseite (hoechstes Teil: P1 mit Stecker 15)
@@ -94,10 +92,9 @@ Z_LID_U = Z_PCB_T + P.h_above                     # Deckelunterseite = Oberkante
 Z_LID_T = Z_LID_U + P.lid_t                       # Deckeloberseite
 CAV_X0 = -P.pcb_w / 2 - P.clr - P.ext_left
 CAV_X1 = P.pcb_w / 2 + P.clr
-CAV_Y0 = P.pcb_y0 - P.clr                         # Innenraum in Y (Platinenkoordinaten, Platine liegt y -40..30)
-CAV_Y1 = P.pcb_y0 + P.pcb_h + P.clr
+CAV_Y = P.pcb_h / 2 + P.clr
 OUT_X0, OUT_X1 = CAV_X0 - P.wall, CAV_X1 + P.wall_ant
-OUT_Y0, OUT_Y1 = CAV_Y0 - P.wall, CAV_Y1 + P.wall
+OUT_Y = CAV_Y + P.wall
 SEG = 48
 
 
@@ -178,11 +175,11 @@ def text_solid(s, cx, cy, z0, z1, h=None):
 # Unterteil
 # ----------------------------------------------------------------------------------------------
 def make_bottom(bosses=True):
-    outer = rrect(OUT_X0, OUT_X1, OUT_Y0, OUT_Y1, P.corner_r, 0, Z_LID_U)
-    cav = rrect(CAV_X0, CAV_X1, CAV_Y0, CAV_Y1, P.cav_r, P.floor_t, Z_LID_U + 1)
+    outer = rrect(OUT_X0, OUT_X1, -OUT_Y, OUT_Y, P.corner_r, 0, Z_LID_U)
+    cav = rrect(CAV_X0, CAV_X1, -CAV_Y, CAV_Y, 1.0, P.floor_t, Z_LID_U + 1)
     b = outer - cav
     # Falz (nur links/oben/unten; rechts duenne Wand ohne Falz)
-    reb = rrect(CAV_X0 - P.rebate, CAV_X1, CAV_Y0 - P.rebate, CAV_Y1 + P.rebate, P.cav_r, Z_LID_U - P.rebate_h, Z_LID_U + 1)
+    reb = rrect(CAV_X0 - P.rebate, CAV_X1, -CAV_Y - P.rebate, CAV_Y + P.rebate, 1.0, Z_LID_U - P.rebate_h, Z_LID_U + 1)
     b = b - reb
     # Antennenbereich: Boden von innen auf floor_ant_t abduennen
     if P.floor_ant_t < P.floor_t:
@@ -197,7 +194,7 @@ def make_bottom(bosses=True):
             b = b - cyl(x, y, Z_PCB_B - P.pilot_depth, Z_PCB_B + 0.1, P.pilot_d / 2)
     # Isolationsrippe unter der Platine (x=0) + Zungen durch die Optokoppler-Schlitze
     if P.rib:
-        rib = box(-P.rib_t / 2, P.rib_t / 2, CAV_Y0 - 0.1, CAV_Y1 + 0.1, P.floor_t - 0.1, Z_PCB_B - P.rib_gap_below)
+        rib = box(-P.rib_t / 2, P.rib_t / 2, -CAV_Y - 0.1, CAV_Y + 0.1, P.floor_t - 0.1, Z_PCB_B - P.rib_gap_below)
         b = b + rib
         if P.rib_slot_tabs:
             for ys in (8.0, -8.0):
@@ -205,9 +202,9 @@ def make_bottom(bosses=True):
     # USB-C Ausschnitt (+Y Wand)
     uz = Z_PCB_T + P.usb_z_mid_above_pcb
     cut = M.extrude(CS.square([P.usb_w - 2, P.usb_h - 2]).translate([-(P.usb_w - 2) / 2, -(P.usb_h - 2) / 2])
-                    .offset(1.0, m.JoinType.Round, 2.0, 24), CAV_Y1 + P.wall + 1.0 - (CAV_Y1 - 1.0))
+                    .offset(1.0, m.JoinType.Round, 2.0, 24), CAV_Y + P.wall + 1.0 - (CAV_Y - 1.0))
     # Extrusion laeuft in +Z; auf +Y drehen: (x,y,z)->(x,z,y)
-    cut = cut.rotate([-90, 0, 0]).translate([P.usb_x, CAV_Y1 - 1.0, uz])
+    cut = cut.rotate([-90, 0, 0]).translate([P.usb_x, CAV_Y - 1.0, uz])
     b = b - cut
     # P1 Leitungsaustritt (linke Wand)
     pz = Z_PCB_T + P.p1_slot_z_above_pcb
@@ -219,10 +216,9 @@ def make_bottom(bosses=True):
     if P.mount in ('ears', 'both'):
         for xe in P.ear_x:
             for sgn in (1, -1):
-                ye = OUT_Y1 if sgn > 0 else -OUT_Y0   # |y| of the long wall on this side
-                yc = sgn * (ye + P.ear_len - P.ear_w / 2 + 0.0)
-                ear = box(xe - P.ear_w / 2, xe + P.ear_w / 2, min(sgn * (ye - 1.0), sgn * (ye + P.ear_len - P.ear_w / 2)),
-                          max(sgn * (ye - 1.0), sgn * (ye + P.ear_len - P.ear_w / 2)), 0, P.ear_t)
+                yc = sgn * (OUT_Y + P.ear_len - P.ear_w / 2 + 0.0)
+                ear = box(xe - P.ear_w / 2, xe + P.ear_w / 2, min(sgn * (OUT_Y - 1.0), sgn * (OUT_Y + P.ear_len - P.ear_w / 2)),
+                          max(sgn * (OUT_Y - 1.0), sgn * (OUT_Y + P.ear_len - P.ear_w / 2)), 0, P.ear_t)
                 ear = ear + cyl(xe, yc, 0, P.ear_t, P.ear_w / 2)
                 ear = ear - cyl(xe, yc, -0.1, P.ear_t + 0.1, P.ear_hole / 2)
                 b = b + ear
@@ -239,19 +235,19 @@ def make_bottom(bosses=True):
 # Deckel (in Einbaulage, Oberseite = +Z)
 # ----------------------------------------------------------------------------------------------
 def make_lid(posts=True):
-    plate = rrect(OUT_X0, OUT_X1, OUT_Y0, OUT_Y1, P.corner_r, Z_LID_U, Z_LID_T)
+    plate = rrect(OUT_X0, OUT_X1, -OUT_Y, OUT_Y, P.corner_r, Z_LID_U, Z_LID_T)
     lid = plate
     # Falz-Lippe (innen, nur links/oben/unten)
-    lip_out = rrect(CAV_X0 - P.rebate + P.lip_clr, CAV_X1, CAV_Y0 - P.rebate + P.lip_clr, CAV_Y1 + P.rebate - P.lip_clr, P.cav_r,
+    lip_out = rrect(CAV_X0 - P.rebate + P.lip_clr, CAV_X1, -CAV_Y - P.rebate + P.lip_clr, CAV_Y + P.rebate - P.lip_clr, 1.0,
                     Z_LID_U - P.rebate_h + P.lip_clr, Z_LID_U + 0.01)
-    lip_in = rrect(CAV_X0, CAV_X1 + 1, CAV_Y0, CAV_Y1, P.cav_r, Z_LID_U - P.rebate_h, Z_LID_U + 1)
+    lip_in = rrect(CAV_X0, CAV_X1 + 1, -CAV_Y, CAV_Y, 1.0, Z_LID_U - P.rebate_h, Z_LID_U + 1)
     lid = lid + (lip_out - lip_in)
     # Schraubhuelsen
     for (x, y) in (HOLES if posts else []):
         lid = lid + cyl(x, y, Z_PCB_T + P.post_gap, Z_LID_U + 0.01, P.boss_d / 2)
     # Rippe oben
     if P.rib_lid:
-        lid = lid + box(-P.rib_t / 2, P.rib_t / 2, CAV_Y0, CAV_Y1, Z_PCB_T + P.rib_lid_bottom_above_pcb, Z_LID_U + 0.01)
+        lid = lid + box(-P.rib_t / 2, P.rib_t / 2, -CAV_Y, CAV_Y, Z_PCB_T + P.rib_lid_bottom_above_pcb, Z_LID_U + 0.01)
     # LED-Huelsen
     led_bottom = Z_PCB_T + P.led_h + P.led_gap + 0.2
     led_info = {}
@@ -452,8 +448,8 @@ def main():
     gaps['Unterteil (ohne Posten)<->nackte Platine (mm)'] = round(float(b0.min_gap(bare, 5.0)), 3)
     res['collisions_mm3'] = chk
     res['gaps'] = gaps
-    res['dims'] = dict(outer_xyz=[round(OUT_X1 - OUT_X0, 2), round(OUT_Y1 - OUT_Y0, 2), round(Z_LID_T, 2)],
-                       inner_cavity=[round(CAV_X1 - CAV_X0, 2), round(CAV_Y1 - CAV_Y0, 2)],
+    res['dims'] = dict(outer_xyz=[round(OUT_X1 - OUT_X0, 2), round(2 * OUT_Y, 2), round(Z_LID_T, 2)],
+                       inner_cavity=[round(CAV_X1 - CAV_X0, 2), round(2 * CAV_Y, 2)],
                        z=dict(pcb_bottom=Z_PCB_B, pcb_top=Z_PCB_T, lid_underside=Z_LID_U, lid_top=Z_LID_T),
                        rod_length=round(L, 2), usb_centre_z=round(Z_PCB_T + P.usb_z_mid_above_pcb, 2))
     print(json.dumps(res, indent=1, ensure_ascii=False))

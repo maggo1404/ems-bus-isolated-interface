@@ -1,30 +1,30 @@
 {
  "equivalence": {
   "bottom": {
-   "vol_stl_mm3": 34980.5,
-   "vol_cq_brep_mm3": 34984.4,
-   "vol_cq_mesh_mm3": 34983.6,
-   "vol_diff_pct": 0.011,
+   "vol_stl_mm3": 31737.3,
+   "vol_cq_brep_mm3": 31741.0,
+   "vol_cq_mesh_mm3": 31740.3,
+   "vol_diff_pct": 0.012,
    "bbox_max_dev_mm": 0.0016,
-   "symdiff_mm3": 5.8,
-   "symdiff_pct_of_stl": 0.017,
+   "symdiff_mm3": 6.0,
+   "symdiff_pct_of_stl": 0.019,
    "cq_valid": true,
    "cq_solids": 1,
    "cq_faces": 100,
    "cq_planar_cyl_faces_pct": 96.0
   },
   "lid": {
-   "vol_stl_mm3": 28715.3,
-   "vol_cq_brep_mm3": 28722.4,
-   "vol_cq_mesh_mm3": 28721.4,
-   "vol_diff_pct": 0.025,
+   "vol_stl_mm3": 25046.3,
+   "vol_cq_brep_mm3": 25053.4,
+   "vol_cq_mesh_mm3": 25052.4,
+   "vol_diff_pct": 0.028,
    "bbox_max_dev_mm": 0.0,
    "symdiff_mm3": 23.3,
-   "symdiff_pct_of_stl": 0.081,
+   "symdiff_pct_of_stl": 0.093,
    "cq_valid": true,
    "cq_solids": 1,
-   "cq_faces": 733,
-   "cq_planar_cyl_faces_pct": 56.9
+   "cq_faces": 731,
+   "cq_planar_cyl_faces_pct": 56.8
   },
   "light_pipes": {
    "vol_stl_mm3": 607.0,
@@ -56,8 +56,8 @@
  "fit_check_cadquery": {
   "collisions_mm3": {
    "Unterteil x Platine+Bauteile": -0.0,
-   "Deckel x Platine+Bauteile": 0.0,
-   "Unterteil x Deckel": 0.0,
+   "Deckel x Platine+Bauteile": -0.0,
+   "Unterteil x Deckel": -0.0,
    "Unterteil x P1-Stecker": 0.0,
    "Deckel x P1-Stecker": 0.0,
    "Lichtleiter x Platine": 0.0,
@@ -81,11 +81,11 @@
    "objects": [
     "bottom"
    ],
-   "volume_cm3": 34.984,
+   "volume_cm3": 31.74,
    "bounds": [
     [
      -69.4,
-     -50.4,
+     -40.4,
      0.0
     ],
     [
@@ -100,7 +100,7 @@
    "objects": [
     "lid"
    ],
-   "volume_cm3": 28.721,
+   "volume_cm3": 25.052,
    "bounds": [
     [
      -69.4,
@@ -109,7 +109,7 @@
     ],
     [
      56.6,
-     42.4,
+     32.4,
      18.8
     ]
    ],
@@ -160,7 +160,7 @@
     "lid",
     "light_pipes"
    ],
-   "volume_cm3": 64.478,
+   "volume_cm3": 57.566,
    "bounds": [
     [
      5.0,
@@ -169,7 +169,7 @@
     ],
     [
      131.0,
-     187.6,
+     167.6,
      24.1
     ]
    ],

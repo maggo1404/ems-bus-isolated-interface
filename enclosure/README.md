@@ -1,10 +1,9 @@
 # 3D-gedrucktes Gehäuse für das EMS-Bus-Interface (ESP32-S3, galvanisch getrennt)
 
-Zweiteiliges Gehäuse für die Platine aus `tscircuit/` (110 x 70 x 1,6 mm Rechteck mit scharfen Ecken, x -55..55, y -40..30, 4 x Ø3,5 Montagebohrungen
-bei (±42,25 | ±19,75); die Platine reicht 10 mm weiter nach -Y als frueher, die Bohrungen nicht). FDM, PLA oder PETG, 0,4-mm-Düse, **ohne Stützstrukturen** druckbar.
+Zweiteiliges Gehäuse für die Platine aus `tscircuit/` (110 x 60 x 1,6 mm, 4 Eckausschnitte, 4 x Ø3,5 Montagebohrungen
+bei (±42,25 | ±19,75)). FDM, PLA oder PETG, 0,4-mm-Düse, **ohne Stützstrukturen** druckbar.
 Die ursprüngliche Hammond-Variante (1591XXCFLBK, Reichelt) bleibt unverändert in `tscircuit/docs/ENCLOSURE.md` dokumentiert;
 dieses Gehäuse ist die 3D-Druck-Alternative aus Abschnitt "3D-Druck-Alternative" dort.
-Die Platine kommt von JLC als Einzelplatine 110 x 70 mm; bei der Panel-Variante (110 x 84 mm, Mouse-Bites) zuerst die Abbrech-Schienen abbrechen und die Stuempfe buendig verschleifen. Das Hammond 1591XXCFLBK passt nicht mehr (siehe `tscircuit/docs/ENCLOSURE.md`).
 
 ## Dateien
 
@@ -19,7 +18,7 @@ Die Platine kommt von JLC als Einzelplatine 110 x 70 mm; bei der Panel-Variante 
 | `step/bottom.step`, `lid.step`, `light_pipes.step`, `buttons.step` | Einzelteile als B-Rep (Ebenen/Zylinder), gleiche Lage wie die STL (Deckel mit Außenseite unten, Lichtleiter/Stößel in Druckausrichtung) |
 | `step/assembly.step` | Baugruppe in Einbaulage mit Namen und Farben: Unterteil, Deckel, 5 Lichtleiter, 2 Stößel, Platine (Umriss, Ausschnitte, Löcher, Optokoppler-Schlitze), Bauteile als Quader, THT-Beinchen, P1-Gegenstecker-Platzhalter, 4 Schrauben |
 | `3mf/bottom.3mf`, `lid.3mf`, `light_pipes.3mf`, `buttons.3mf` | je ein Druckteil, Einheit mm, Druckausrichtung |
-| `3mf/plate.3mf` | Druckplatte: Unterteil, Deckel (Außenseite unten), Lichtleiter und Stößel nebeneinander, ca. 131 x 188 mm Belegung (Druckbett mindestens ca. 135 x 190 mm bzw. 190 x 135 gedreht; auf 180 x 180 mm passt die Platte nicht mehr, dann Teile einzeln drucken) |
+| `3mf/plate.3mf` | Druckplatte: Unterteil, Deckel (Außenseite unten), Lichtleiter und Stößel nebeneinander, ca. 131 x 168 mm Belegung, passt auf 180 x 180 mm und größer |
 | `stl/bottom.stl` | Unterteil, Druckausrichtung (offene Seite oben) |
 | `stl/lid.stl` | Deckel, **Druckausrichtung = Oberseite auf dem Druckbett** (Pfosten zeigen nach oben) |
 | `stl/light_pipes.stl` | 5 Lichtleiter-Stäbe (klares PETG), Druckausrichtung: Flansch unten, stehend |
@@ -43,8 +42,8 @@ Parameter ohne Dateiänderung per Umgebungsvariable, z. B. `P_INSERT=0 P_MOUNT=k
 
 ## Maße (Standardparameter)
 
-- Außen **126,0 x 74,8 x 26,9 mm** (Unterteil 24,1 hoch, Deckel 2,8 Platte + 16 mm Hülsen; mit Wandlaschen 80,8 mm breit)
-- Innenraum 122,8 x 70,8 mm (Platine y -40..30, Innenraum y -40,4..30,4; Innen-Eckenradius 0,5 mm wegen der scharfen Platinenecken, Mindestluft 0,3 mm); die Platine liegt 12 mm vom linken Innenrand entfernt (Platz für den P1-Gegenstecker), 0,4 mm Luft zu den anderen Wänden
+- Außen **126,0 x 64,8 x 26,9 mm** (Unterteil 24,1 hoch, Deckel 2,8 Platte + 16 mm Hülsen; mit Wandlaschen 80,8 mm breit)
+- Innenraum 122,8 x 60,8 mm; die Platine liegt 12 mm vom linken Innenrand entfernt (Platz für den P1-Gegenstecker), 0,4 mm Luft zu den anderen Wänden
 - Wand 2,0 mm, **Antennenseite (+X) 1,2 mm**, Boden 2,0 mm (unter der Antenne 1,2 mm), Deckel 2,8 mm (über der Antenne 1,6 mm)
 - Platinenunterseite 4,5 mm über der Bodeninnenfläche (THT-Beinchen von P1, P2, J2), Platinenoberseite bei z = 8,1 mm, Deckelunterseite z = 24,1 mm (16 mm Luft über der Platine)
 
@@ -65,7 +64,6 @@ Parameter ohne Dateiänderung per Umgebungsvariable, z. B. `P_INSERT=0 P_MOUNT=k
 ## Druckeinstellungen
 
 - Material: PETG (oder PLA; Heizungskeller, Dauer < 50 °C: PETG/ASA bevorzugt). Düse 0,4, Schichthöhe 0,2 mm, 3 Wandlinien (die 1,2-mm-Antennenwand = 3 Linien), Boden/Deckel 4-5 Schichten, Infill 20 %.
-- Hinweis: der untere 10-mm-Streifen der Platine (y -40..-30, mit P2, RESET/BOOT) liegt 20 mm unter der Schraubenreihe (y = -19,75) ohne eigenen Posten; die Mittelrippe stuetzt nur bei x = 0. Bei Bedarf Stuetzpfosten an der Unterkante ergaenzen (nicht modelliert).
 - **Keine Stützen.** Überbrückungen: USB-C-Ausschnitt (12 mm) und P1-Leitungsschlitz (12 mm) haben abgerundete Ecken, Brücke mit Lüfter 100 %, ca. 30-40 mm/s. Im Deckel (Oberseite unten gedruckt) werden Senkungen, Gravuren und Flanschsitze über ca. 0,4-1,8 mm Höhe überbrückt (alle Spannweiten <= 6,4 mm).
 - Deckel `lid.stl` liegt bereits mit der Außenseite unten; die Gravur (0,4 mm tief, 2,6 mm Schrifthöhe) ist lesbar, wenn man den Deckel von außen betrachtet.
 - Lichtleiter: PETG transparent/natur, 100 % Infill, 0,1-0,15 mm Schicht, Wandlinien-Überlappung hoch, stehend; Stirnflächen ggf. mit Feinschleifpapier glätten. Länge 17,6 mm (LED-Oberkante + 0,3 mm bis Deckeloberseite), Ø3,0 (LD5: Ø2,4, 0,8 mm nach -X versetzt, da LD5 nur 1,2 mm neben dem ESP32-Modul sitzt).
@@ -116,8 +114,8 @@ Parameter ohne Dateiänderung per Umgebungsvariable, z. B. `P_INSERT=0 P_MOUNT=k
 
 | Teil | Volumen alt / CadQuery (mm³) | Differenz | Bounding Box max. Abw. | symmetrische Differenz |
 |---|---|---|---|---|
-| bottom | 34981 / 34984 | 0,011 % | 0,002 mm | 6 mm³ (0,02 %) |
-| lid | 28715 / 28722 | 0,025 % | 0,000 mm | 23 mm³ (0,08 %) |
+| bottom | 31737 / 31741 | 0,012 % | 0,002 mm | 6 mm³ (0,02 %) |
+| lid | 25046 / 25053 | 0,028 % | 0,000 mm | 23 mm³ (0,09 %) |
 | light_pipes | 607 / 609 | 0,29 % | 0,001 mm | 1,5 mm³ |
 | buttons | 164 / 165 | 0,29 % | 0,001 mm | 0,4 mm³ |
 

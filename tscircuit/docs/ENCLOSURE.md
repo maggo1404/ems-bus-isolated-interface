@@ -4,10 +4,8 @@ Stand: 2026-11-26. Quellen: Hammond-Zeichnungen (PDF, hammfg.com, gelesen und al
 Reichelt-Produktseiten (reichelt.de, Preis/Lager am Abrufdatum). Reichelt-Datenblatt-CDN (cdn-reichelt.de),
 tme.eu, Gainta, OKW-/Bopla-Zeichnungen waren nicht lesbar bzw. nicht in Reichelts Sortiment -> dort "ungeprüft".
 
-> **Wichtig (Stand Platine 110 x 70 mm):** Die Platine ist jetzt ein einfaches Rechteck **110 x 70 mm** (x -55..55, y -40..30, scharfe 90-Grad-Ecken, keine Eckausschnitte, kein Panel; siehe docs/FAB_CHECKLIST.md). Das **Hammond 1591XXCFLBK passt damit NICHT mehr**: Innenraum 115,15 x 60,65 mm, die Platine ist 70 mm breit, und die Eckausschnitte fuer die Deckelschraub-Domes, mit denen die Platine ueberhaupt in das Gehaeuse kam, gibt es nicht mehr. Alle Hammond-Angaben unten sind **historisch** (Stand 110 x 60) und nur zur Dokumentation stehen geblieben. Gehaeuse jetzt: das 3D-gedruckte Gehaeuse in `enclosure/` (Aussenmass 126,0 x 74,8 x 26,9 mm, Innenraum 122,8 x 70,8 mm). Ein Reichelt-Standardgehaeuse mit Innenmass >= ca. 112 x 72 mm: einzig die Hammond-1591XXD-Reihe aus der Tabelle unten (XXDFLBK, Innen 145,40 x 75,40 x 46,5 laut Hammond-Zeichnung) ist dimensionsmaessig gross genug; Lage/Raster der Platinenposten und Eignung fuer die 84,5 x 39,5-Bohrungen sind dort **nicht geprueft** (nur 145 x 75 Innenmass bekannt), deshalb keine Empfehlung. Empfehlung: gedrucktes Gehaeuse.
-
 ## Anforderungen
-PCB 110 x 70 mm (Rechteck; frueher 110 x 60 mm), ESP32-S3-WROOM-1 mit PCB-Antenne an kurzer Kante (Kunststoff, kein Metall),
+PCB ca. 110 x 60 mm (anpassbar), ESP32-S3-WROOM-1 mit PCB-Antenne an kurzer Kante (Kunststoff, kein Metall),
 Innenhöhe >= ca. 25-30 mm (Elko 12 mm, Klemme ca. 15 mm), Wandmontage, USB-C seitlich, Klemme 5,08 mm + Kabeleinführung,
 4-6 LEDs, RESET/BOOT intern. Heizungskeller trocken -> **IP40 genügt** (IP54 der Hammond-Boxen ist ausreichend).
 
@@ -60,12 +58,12 @@ ASA/PETG (kein PLA), 2 mm Wand, exakt zur Platine mit Domen, USB-C-Ausschnitt, L
 - https://www.reichelt.de/de/de/shop/produkt/x-221253 (1591XXCFLBK), -221272, -221271, -121042, -221256
 - https://www.hammfg.com/files/parts/pdf/1591XXCFLGY.pdf, https://www.hammfg.com/files/parts/pdf/1591CFLBK.pdf, https://www.hammfg.com/files/parts/pdf/1591CTCL.pdf, https://www.hammfg.com/files/parts/pdf/1591XXBFLGY.pdf, https://www.hammfg.com/files/parts/pdf/1591XXDFLGY.pdf
 
-## Platinenlayout V2.0 (Koordinaten gelten unveraendert fuer 110 x 70; Titel historisch: Hammond 1591XXCFLBK, Stand Layout AP7b)
-Koordinaten: tscircuit-Koordinatenursprung (0|0) = Mitte der frueheren 110 x 60-Platine, jetzt 5 mm ueber der Platinenmitte (die Platine reicht y -40..30), X nach rechts, Y nach oben (Maße in mm). Für "unten links = Ursprung" (Hammond-Zeichnung): X + 55, Y + 30.
+## Platinenlayout V2.0 im Gehäuse 1591XXCFLBK (Stand Layout AP7b)
+Koordinaten: Platinen-Mitte = (0|0), X nach rechts, Y nach oben (Maße in mm). Für "unten links = Ursprung" (Hammond-Zeichnung): X + 55, Y + 30.
 
 | Objekt | Lage (Mitte) | Lage ab unten links | Bemerkung |
 |---|---|---|---|
-| Umriss | **110,0 x 70,0 Rechteck, scharfe Ecken** (x -55..55, y -40..30; 10 mm nur nach unten verlaengert; frueher 110 x 60 mit Eckausschnitten) | | `index.circuit.tsx` (`board outline`) |
+| Umriss | 110,0 x 60,0, 4 Eckausschnitte je 5,5 (X) x 8,0 (Y), Innenecke R3,5 | | `index.circuit.tsx` (`board outline`) |
 | Montagebohrungen MH1..MH4 | (-42,25 / +19,75), (-42,25 / -19,75), (+42,25 / +19,75), (+42,25 / -19,75) | (12,75 / 49,75), (12,75 / 10,25), (97,25 / 49,75), (97,25 / 10,25) | Ø3,5 NPTH; Kupfer-/Bauteil-Sperrzone Ø8 (Schraubenkopf) um jede Bohrung, Pour-Abstand >= 2,25 mm zum Loch |
 | P1 Klemme (KF2EDGRC-5.08-2P, rechtwinklig) | Stiftachse x = -44,1, Pins bei y = +-2,54, Steckseite bündig an der linken Kante (x = -55) | Kabelloch Ø6..7 bei (0 / 30) in der linken kurzen Wand | Gegenstecker (nicht in der BOM, separat kaufen): 2-poliger 5,08-mm-Schraubsteckverbinder KF2EDGK-5.08-2P / Phoenix MSTB 2,5/2-STF-5,08-Klasse, Leitungsaustritt parallel zur Platine; Steckerrichtung nach außen (EasyEDA-Körper -10,9 .. +1,3 mm um die Pinachse, Drehung 270); Körper 11,8 x 12,2 mm überdeckt nur den freien Streifen x -55 .. -42,8 |
 | ESP32-S3-WROOM-1 (U3) | Mitte (42,25 / 0), Antenne zeigt nach +X, endet bündig an x = +55 | | Antennenzone x >= 48, \|y\| <= 24 (= 9 mm halbe Modulbreite + 15 mm): auf beiden Lagen weder Kupfer noch Bauteile (Keepout, geprüft von `check_fab.py`) |

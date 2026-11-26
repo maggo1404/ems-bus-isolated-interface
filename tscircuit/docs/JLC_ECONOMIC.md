@@ -48,38 +48,20 @@ Part-level fields (partdetail page): "Assembly Type: SMT Assembly | Wave Solderi
 
 | Item | Board | Verdict |
 |---|---|---|
-| Layers / thickness / size | 2 / 1.6 mm / 110 x 70 mm (single PCB, no panel) | ok |
+| Layers / thickness / size | 2 / 1.6 mm / 110 x 60 mm | ok |
 | Sides | all parts Top, nothing on Bottom | ok (single-sided) |
 | Smallest package / IC pitch | 0805 (2010, SOT-23, SOP-8 2.54 mm, ESP32 1.27 mm) / >= 0.95 mm | ok |
 | THT parts | P1 (C441236), P2 (C32713270): "Wave Soldering", PCBA Type Economic and Standard | allowed; kept assembled |
 | J2 USB-C (C165948) | "SMT Assembly" (shell legs are part of the SMT part), PCBA Type Economic and Standard | ok, **not changed** |
 | C12/C14 SMD electrolytic C49256851 | SMT Assembly, Economic and Standard | ok |
-| Fiducials / rails / panel | none needed in Economic; no panel, single PCB | ok |
+| Fiducials / rails | none needed in Economic | ok |
 | Qty / finish / colour (order form) | 2-50 pcs; choose HASL or ENIG, 1.6 mm, green (or black HASL) | user choice |
 | **U3 ESP32-S3-WROOM-1-N16R8 C2913202** | **Standard Only** | **BLOCKER -> DNP, hand-solder** |
 | Part-edge >= 2.5 mm | pads of C12 0.75 mm / R25 2.07 mm from edge (bodies: C12 ~2.35 mm), J2 is an edge connector | advisory only (same rule applies to Standard); JLC DFM preview decides |
 
-U3 is excluded from BOM/CPL; no placement change for that.
+No placement change was needed: the board is 100 % identical (Gerbers byte-identical apart from timestamps); only U3 is excluded from BOM/CPL.
 
 ## Consequences / hand-solder list
 * **U3 (ESP32-S3-WROOM-1-N16R8, LCSC C2913202)**: marked `doNotPlace` in `src/mcu-side.tsx`, kept in the design and in the Gerbers (pads, paste, silk, keepout), removed from BOM/CPL. Order the module separately (LCSC C2913202) and solder it yourself (pads on the module edge + GND thermal pad: hot-air or hot plate with paste, or solder the EPAD through the 9 GND ports via the module; see docs/FAB_CHECKLIST.md). The list is generated into `fab/EMSinterface_V2.0-HANDSOLDER.csv`.
 * P1 (bus terminal) and P2 (programming header) stay assembled by JLC's wave soldering. If JLC rejects THT in the order form anyway, mark P1/P2 as "do not place" in the parts step (or remove them from the BOM) and hand-solder; no design change needed. The enclosure assumptions (P1 at the left edge facing out, height/opening) are unchanged.
 * Alternative if hand-soldering the module is not acceptable: order Standard PCBA (module and all other parts then assembled by JLC; setup/stencil about 17 USD / 7 USD more, >= 4 days).
-
-## Board size 110 x 70 mm, single PCB (no panel)
-
-Why: the JLC order form still refused Economic PCBA with the old 110 x 60 mm board, and the delivered PCB shall be >= 70 mm in each direction (user decision).
-The 70 mm minimum is not in the published Economic table (capabilities page, fetched 2026-11-26: Economic "Single PCB Size: 10x10mm - 470x500mm"; only **Standard** lists "70x70mm - 460x500mm"),
-but the order form behaves as if it applied. The board is therefore made 110 x 70 mm by extending the outline by 10 mm at the **bottom only** (x -55..55, y -40..30), as one plain rectangle with sharp 90 deg corners.
-Economic Delivery Format "Single PCB" is met directly; the single-board zip has **no rails, mouse bites or tooling holes**. A separate panel zip (below) is provided in addition.
-* Nothing on the board moved: components, hand-routed paths, mounting holes (4 x 3.5 mm NPTH at +-42.25 / +-19.75, keepouts) and the antenna zone keep their coordinates; J2 stays flush on the top edge, P1 on the left edge, the antenna at the right edge. The new 110 x 40 mm strip (y -40..-30 plus the former notch corners) carries only the two copper pours (GND_EMS left, GND right, >= 0.5 mm to the edge, isolation gap 6.4 mm centred on x = 0 continues straight down to the new edge) and the silkscreen labels "EMS SIDE" / "MCU SIDE" and the barrier line.
-* `scripts/check_fab.py` section "Board outline": pcb_board outline is a 4-corner rectangle with 90 deg corners, >= 70 x 70 mm, Edge_Cuts holds exactly one closed rectangle (same as the board outline, centred on the Gerber origin so the CPL stays valid) plus the two internal opto slots, nothing else.
-* Body-to-edge rule (JLC terms, 2.5 mm): evaluated against the real board edge now (no rails). Advisory WARN for pad boxes of C12 (0.75 mm; body about 2.35 mm from the edge) and R25 (2.07 mm); J2 is an edge connector. Same as before the panel was introduced; the JLC DFM preview decides. If it objects, move C12 inwards (the autorouter is fragile, see TSCIRCUIT_API.md) or accept the DFM hint.
-
-## Breakaway panel variant (110 x 84 mm, mouse bites) - in addition to the single board
-
-Two outputs, same board: `fab/EMSinterface_V2.0-gerbers.zip` (single PCB 110 x 70 mm, unchanged) and `fab/EMSinterface_V2.0-panel-gerbers.zip` (`scripts/panelize.py`, step 3c of export_fab.sh).
-Order-form settings: single = Delivery Format "Single PCB", 110 x 70 mm; panel = "Panel by Customer", X = 1, Y = 1, 110 x 84 mm, PCBA Economic (Economic Delivery Format list: "Single PCB, Panel with mouse bites"). BOM/CPL are identical for both (origin unchanged; the panel only adds material at y 30..37 and y -47..-40).
-Rules (JLC capabilities "Mouse bites Panel" and https://jlcpcb.com/blog/mouse-bite-panelization-guide): rail >= 3 mm (5 mm recommended for SMT), gap 1.6 or 2 mm (min 1.2), tab >= 5 mm, holes 0.5-0.8 mm (0.6, 5-8 per set), hole edge gap 0.35-0.4 (min 0.3), holes on the frame centre line, tooling holes 2 mm. Customer Gerber panels get no extra tooling holes/fiducials from JLC; none needed for Economic.
-Geometry: rails 5 mm + routed gap 2 mm top and bottom; top tabs x = -40, -16, +12; bottom tabs x = -38, -14, +14 (clear of J2 mouth x 26..40, antenna x >= 45, isolation line x = 0); tooling holes (-52.5, +34.5), (-52.5, -44.5), (+52.5, -44.5). Only Edge_Cuts and NPTH differ from the single zip (verified by check_fab.py).
-After delivery: break off the rails, file/sand the tab stubs flush and deburr. Open: whether the order form accepts the customer panel for Economic can only be confirmed in the order preview.
