@@ -57,7 +57,7 @@ Toolchain/API: `docs/TOOLCHAIN.md`, `docs/TSCIRCUIT_API.md`. Parts: `docs/JLCPCB
 The board is orderable with JLCPCB **Economic** PCBA (single-sided top, 2 layers, 1.6 mm). The only blocking part was U3 (ESP32-S3-WROOM-1-N16R8, "Standard Only"): it is `doNotPlace` (kept in design/Gerbers, excluded from BOM/CPL) and hand-soldered; list in `fab/EMSinterface_V2.0-HANDSOLDER.csv`. P1/P2 (wave soldering) and J2 (SMT) remain assembled. Checked by `scripts/check_fab.py` (Economic section).
 
 ## Board
-Size free (suggestion ~100 × 50 mm), 2 layers, 1.6 mm, JLC capabilities (≥0.15 mm track/space, 0.3 mm drill). EMS terminal P1 at one edge, USB-C at an edge on MCU side, ESP32 antenna at another edge on MCU side. 4 × M3 mounting holes.
+**110 × 70 mm plain rectangle, sharp 90° corners** (x -55..55, y -40..30; no notches, no panel/rails; ≥ 70 × 70 mm for the JLC Economic order form, see docs/JLC_ECONOMIC.md), 2 layers, 1.6 mm, JLC capabilities (≥0.15 mm track/space, 0.3 mm drill). EMS terminal P1 at one edge, USB-C at an edge on MCU side, ESP32 antenna at another edge on MCU side. 4 × M3 mounting holes.
 
 ## Fab rules (checked by scripts/check_fab.py)
 Via 0.3 mm drill / 0.6 mm pad, annular ring ≥ 0.13 mm; trace width ≥ 0.4 mm on power/bus nets (VBUS, V3V3, GND, GND_EMS, V5_EMS, EMS_VIN, buck SW, bus path), ≥ 0.2 mm elsewhere; copper clearance between nets ≥ 0.2 mm; barrier creepage ≥ 6 mm (check_isolation.py). tscircuit settings: see docs/TSCIRCUIT_API.md "Fab settings".
@@ -66,7 +66,7 @@ Via 0.3 mm drill / 0.6 mm pad, annular ring ≥ 0.13 mm; trace width ≥ 0.4 mm 
 - `src/ems-side.tsx` – export `EmsSide` (all V1 parts incl. OC1/OC2 and MCU-side opto helpers R13,R14,R18,R19,LD2,LD3,C7).
 - `src/mcu-side.tsx` – export `McuSide` (ESP32, USB-C, LDO + C29 tantalum, ESD, buttons, LED, JP1, JP2, R_PU, P2, test pads).
 - `lib/` – custom footprints (opto SO8-GW300, USB-C, ESP32, THT parts, diodes, `jumper.tsx`).
-- `index.circuit.tsx` – `<board>` with both, outline, cutouts, pours, mounting holes.
+- `index.circuit.tsx` – `<board>` (110 × 70 mm rectangle) with both, cutouts, pours, mounting holes.
 - Connection between files only through the shared nets above (`net.V3V3`, `net.GND`, `net.MCU_RX`, `net.MCU_TX`).
 
 ## V2 review fixes (R4/R5), see docs/review/FIX_LIST_R2.md

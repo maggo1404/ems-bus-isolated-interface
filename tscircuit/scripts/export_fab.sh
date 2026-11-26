@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Fab export: build WITH autorouter -> Gerbers/drill exported FROM the routed dist/index/circuit.json
-# -> JLCPCB BOM/CPL -> panel (rails + mouse bites) -> netlist check -> fab check.  Usage: scripts/export_fab.sh [autorouter-timeout, default 300s]
+# -> JLCPCB BOM/CPL -> netlist check -> fab check.  Usage: scripts/export_fab.sh [autorouter-timeout, default 300s]
 # (The Gerbers must come from dist/index/circuit.json: exporting index.circuit.tsx re-runs without traces/vias.)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -20,8 +20,6 @@ echo "== 3/5 BOM / CPL (JLCPCB format; reads bom.csv/pick_and_place.csv from the
 python3 scripts/jlc_bom_cpl.py "$ZIP" fab/EMSinterface_V2.0 dist/index/circuit.json
 echo "== 3b gerber post-processing (silk barcode square + logo regions, silk stroke >= 0.16 mm, pour slivers, paste on slots, JLC/KiCad file names, drop tscircuit bom.csv / pick_and_place.csv)"
 python3 scripts/postprocess_gerbers.py "$ZIP" dist/index/circuit.json
-echo "== 3c breakaway panel: rails 5 mm + routed gap 2 mm + mouse-bite tabs -> 110 x 74 mm (JLC Economic delivery >= 70 mm; scripts/panelize.py; board outline/copper/silk unchanged, same Gerber origin)"
-python3 scripts/panelize.py "$ZIP" dist/index/circuit.json
 echo "== 4/5 netlist check"
 python3 scripts/check_netlist.py dist/index/circuit.json
 echo "== 5/5 fab check (traces/vias/widths/clearance/keepouts/USB-C)"

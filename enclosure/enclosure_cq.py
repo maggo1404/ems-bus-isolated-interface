@@ -15,7 +15,7 @@ import cadquery as cq
 import trimesh
 import enclosure as E
 from enclosure import P, LEDS, BTN, HOLES, HERE
-from enclosure import (Z_PCB_B, Z_PCB_T, Z_LID_U, Z_LID_T, CAV_X0, CAV_X1, CAV_Y, OUT_X0, OUT_X1, OUT_Y,
+from enclosure import (Z_PCB_B, Z_PCB_T, Z_LID_U, Z_LID_T, CAV_X0, CAV_X1, CAV_Y0, CAV_Y1, OUT_X0, OUT_X1, OUT_Y0, OUT_Y1,
                        led_geom, clear_height, parts_boxes, rod_len)
 
 V = cq.Vector
@@ -74,10 +74,10 @@ def prism_y(x, z, w, h, r, y0, y1):
 # Unterteil
 # ----------------------------------------------------------------------------------------------
 def make_bottom(bosses=True):
-    outer = rrect(OUT_X0, OUT_X1, -OUT_Y, OUT_Y, P.corner_r, 0, Z_LID_U)
-    cav = rrect(CAV_X0, CAV_X1, -CAV_Y, CAV_Y, 1.0, P.floor_t, Z_LID_U + 1)
+    outer = rrect(OUT_X0, OUT_X1, OUT_Y0, OUT_Y1, P.corner_r, 0, Z_LID_U)
+    cav = rrect(CAV_X0, CAV_X1, CAV_Y0, CAV_Y1, P.cav_r, P.floor_t, Z_LID_U + 1)
     b = outer.cut(cav)
-    reb = rrect(CAV_X0 - P.rebate, CAV_X1, -CAV_Y - P.rebate, CAV_Y + P.rebate, 1.0, Z_LID_U - P.rebate_h, Z_LID_U + 1)
+    reb = rrect(CAV_X0 - P.rebate, CAV_X1, CAV_Y0 - P.rebate, CAV_Y1 + P.rebate, P.cav_r, Z_LID_U - P.rebate_h, Z_LID_U + 1)
     b = b.cut(reb)
     if P.floor_ant_t < P.floor_t:
         b = b.cut(box(47.0, CAV_X1 - 0.01, -24.0, 24.0, P.floor_ant_t, P.floor_t + 0.01))
@@ -90,7 +90,7 @@ def make_bottom(bosses=True):
         else:
             cuts.append(cyl(x, y, Z_PCB_B - P.pilot_depth, Z_PCB_B + 0.1, P.pilot_d / 2))
     if P.rib:
-        adds.append(box(-P.rib_t / 2, P.rib_t / 2, -CAV_Y - 0.1, CAV_Y + 0.1, P.floor_t - 0.1, Z_PCB_B - P.rib_gap_below))
+        adds.append(box(-P.rib_t / 2, P.rib_t / 2, CAV_Y0 - 0.1, CAV_Y1 + 0.1, P.floor_t - 0.1, Z_PCB_B - P.rib_gap_below))
         if P.rib_slot_tabs:
             for ys in (8.0, -8.0):
                 adds.append(box(-P.tab_t / 2, P.tab_t / 2, ys - 5.7, ys + 5.7, Z_PCB_B - P.rib_gap_below - 0.1, Z_PCB_T - 0.4))
@@ -98,15 +98,16 @@ def make_bottom(bosses=True):
     if P.mount in ('ears', 'both'):
         for xe in P.ear_x:
             for sgn in (1, -1):
-                yc = sgn * (OUT_Y + P.ear_len - P.ear_w / 2)
-                ya, yb = sorted((sgn * (OUT_Y - 1.0), yc))
+                ye = OUT_Y1 if sgn > 0 else -OUT_Y0   # |y| of the long wall on this side
+                yc = sgn * (ye + P.ear_len - P.ear_w / 2)
+                ya, yb = sorted((sgn * (ye - 1.0), yc))
                 adds.append(box(xe - P.ear_w / 2, xe + P.ear_w / 2, ya, yb, 0, P.ear_t))
                 adds.append(cyl(xe, yc, 0, P.ear_t, P.ear_w / 2))
                 cuts.append(cyl(xe, yc, -0.1, P.ear_t + 0.1, P.ear_hole / 2))
     b = fuse([b] + adds)
     # Ausschnitte
     uz = Z_PCB_T + P.usb_z_mid_above_pcb
-    cuts.append(prism_y(P.usb_x, uz, P.usb_w, P.usb_h, 1.0, CAV_Y - 1.0, CAV_Y + P.wall + 1.0))
+    cuts.append(prism_y(P.usb_x, uz, P.usb_w, P.usb_h, 1.0, CAV_Y1 - 1.0, CAV_Y1 + P.wall + 1.0))
     pz = Z_PCB_T + P.p1_slot_z_above_pcb
     cuts.append(prism_x(0.0, pz, P.p1_slot_w, P.p1_slot_h, 1.0, OUT_X0 - 0.5, OUT_X0 - 0.5 + P.wall + 2.0))
     if P.mount in ('keyholes', 'both'):
@@ -122,15 +123,15 @@ def make_bottom(bosses=True):
 # Deckel (Einbaulage)
 # ----------------------------------------------------------------------------------------------
 def make_lid(posts=True):
-    lid = rrect(OUT_X0, OUT_X1, -OUT_Y, OUT_Y, P.corner_r, Z_LID_U, Z_LID_T)
-    lip_out = rrect(CAV_X0 - P.rebate + P.lip_clr, CAV_X1, -CAV_Y - P.rebate + P.lip_clr, CAV_Y + P.rebate - P.lip_clr, 1.0,
+    lid = rrect(OUT_X0, OUT_X1, OUT_Y0, OUT_Y1, P.corner_r, Z_LID_U, Z_LID_T)
+    lip_out = rrect(CAV_X0 - P.rebate + P.lip_clr, CAV_X1, CAV_Y0 - P.rebate + P.lip_clr, CAV_Y1 + P.rebate - P.lip_clr, P.cav_r,
                     Z_LID_U - P.rebate_h + P.lip_clr, Z_LID_U + 0.01)
-    lip_in = rrect(CAV_X0, CAV_X1 + 1, -CAV_Y, CAV_Y, 1.0, Z_LID_U - P.rebate_h, Z_LID_U + 1)
+    lip_in = rrect(CAV_X0, CAV_X1 + 1, CAV_Y0, CAV_Y1, P.cav_r, Z_LID_U - P.rebate_h, Z_LID_U + 1)
     adds = [lip_out.cut(lip_in)]
     for (x, y) in (HOLES if posts else []):
         adds.append(cyl(x, y, Z_PCB_T + P.post_gap, Z_LID_U + 0.01, P.boss_d / 2))
     if P.rib_lid:
-        adds.append(box(-P.rib_t / 2, P.rib_t / 2, -CAV_Y, CAV_Y, Z_PCB_T + P.rib_lid_bottom_above_pcb, Z_LID_U + 0.01))
+        adds.append(box(-P.rib_t / 2, P.rib_t / 2, CAV_Y0, CAV_Y1, Z_PCB_T + P.rib_lid_bottom_above_pcb, Z_LID_U + 0.01))
     led_bottom = Z_PCB_T + P.led_h + P.led_gap + 0.2
     led_info = {}
     for n in LEDS:

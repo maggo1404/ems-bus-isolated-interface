@@ -48,47 +48,30 @@ Part-level fields (partdetail page): "Assembly Type: SMT Assembly | Wave Solderi
 
 | Item | Board | Verdict |
 |---|---|---|
-| Layers / thickness / size | 2 / 1.6 mm / 110 x 60 mm | ok |
+| Layers / thickness / size | 2 / 1.6 mm / 110 x 70 mm (single PCB, no panel) | ok |
 | Sides | all parts Top, nothing on Bottom | ok (single-sided) |
 | Smallest package / IC pitch | 0805 (2010, SOT-23, SOP-8 2.54 mm, ESP32 1.27 mm) / >= 0.95 mm | ok |
 | THT parts | P1 (C441236), P2 (C32713270): "Wave Soldering", PCBA Type Economic and Standard | allowed; kept assembled |
 | J2 USB-C (C165948) | "SMT Assembly" (shell legs are part of the SMT part), PCBA Type Economic and Standard | ok, **not changed** |
 | C12/C14 SMD electrolytic C49256851 | SMT Assembly, Economic and Standard | ok |
-| Fiducials / rails | none needed in Economic | ok |
+| Fiducials / rails / panel | none needed in Economic; no panel, single PCB | ok |
 | Qty / finish / colour (order form) | 2-50 pcs; choose HASL or ENIG, 1.6 mm, green (or black HASL) | user choice |
 | **U3 ESP32-S3-WROOM-1-N16R8 C2913202** | **Standard Only** | **BLOCKER -> DNP, hand-solder** |
 | Part-edge >= 2.5 mm | pads of C12 0.75 mm / R25 2.07 mm from edge (bodies: C12 ~2.35 mm), J2 is an edge connector | advisory only (same rule applies to Standard); JLC DFM preview decides |
 
-No placement change was needed: the board is 100 % identical (Gerbers byte-identical apart from timestamps); only U3 is excluded from BOM/CPL.
+U3 is excluded from BOM/CPL; no placement change for that.
 
 ## Consequences / hand-solder list
 * **U3 (ESP32-S3-WROOM-1-N16R8, LCSC C2913202)**: marked `doNotPlace` in `src/mcu-side.tsx`, kept in the design and in the Gerbers (pads, paste, silk, keepout), removed from BOM/CPL. Order the module separately (LCSC C2913202) and solder it yourself (pads on the module edge + GND thermal pad: hot-air or hot plate with paste, or solder the EPAD through the 9 GND ports via the module; see docs/FAB_CHECKLIST.md). The list is generated into `fab/EMSinterface_V2.0-HANDSOLDER.csv`.
 * P1 (bus terminal) and P2 (programming header) stay assembled by JLC's wave soldering. If JLC rejects THT in the order form anyway, mark P1/P2 as "do not place" in the parts step (or remove them from the BOM) and hand-solder; no design change needed. The enclosure assumptions (P1 at the left edge facing out, height/opening) are unchanged.
 * Alternative if hand-soldering the module is not acceptable: order Standard PCBA (module and all other parts then assembled by JLC; setup/stencil about 17 USD / 7 USD more, >= 4 days).
 
-## Breakaway rails / panel (110 x 74 mm delivery size, mouse bites)
+## Board size 110 x 70 mm, single PCB (no panel)
 
-Why: the delivered PCB shall be >= 70 mm in each direction (user decision; the board is 110 x 60 mm). Note on the rule source: the capabilities page
-(https://jlcpcb.com/capabilities/pcb-assembly-capabilities, fetched 2026-11-26) lists for **Economic** "Single PCB Size: 10x10mm - 470x500mm; PCB Panel Size: 10x10mm - 250x250mm"
-and only for **Standard** "70x70mm - 460x500mm" (FAQ there: "Economic PCBA: 10 × 10 mm to 470 × 500 mm"). The 70 mm minimum therefore is not in the published Economic table
-(it is the Standard PCBA limit and the V-cut panel limit "Min. panel dimensions: 70 × 70 mm"); the panel is built anyway so that the file satisfies 70 x 70 mm in every case
-(Economic Delivery Format: "Single PCB, Panel with mouse bites"; FAQ 98: "for Economic assembly, please panelize your boards with mouse-bites"). If the order form accepts the bare 110 x 60 board, the panel can be dropped by removing step 3c from export_fab.sh.
-
-Rules used (verbatim, all fetched 2026-11-26):
-* https://jlcpcb.com/capabilities/pcb-capabilities, "Mouse bites Panel": "Panel board spacing: 1.6 or 2 mm" / "Serrated edges will remain after depanelization" /
-  "Minimum tooling edge width: 3 mm. For SMT assembly at JLCPCB, use 5 mm tooling edges, 2 mm tooling holes, and 1 mm fiducials centered at 3.85 mm from the panel edges." /
-  "Recommended diameter of mouse bite is 0.5mm-0.8mm; ... The minimum width of breakaway tab is 4mm. For breakaway with mouse-bites, the minimum width is 5mm." /
-  "Copper clearance from non-mouse-bite board edges: >= 0.2 mm"; "Routed: Copper clearance from routed board edges: >= 0.2 mm".
-* https://jlcpcb.com/blog/mouse-bite-panelization-guide: "It is recommended to use sets of 5 to 8 holes with a diameter of 0.60 mm each (it is not recommended to have fewer than 5 holes in a set)." /
-  "The distance from hole edge to hole edge should be 0.35-0.4 mm. A minimum spacing of 0.3 mm should be ensured" / "add a set of mouse bites every 50-60 mm" /
-  "Add mouse bite holes in the centerline of the board frame or extending one-third into the board. If there are vias, traces, mounting holes, or protruding components along the board edge, avoid placing mouse bites in those areas." /
-  "The typical spacing is 1.6 mm or 2 mm, with a minimum requirement of 1.2 mm" / "For panel designs provided by the customer as gerber files, if they require tooling holes or fiducials, please add them yourself. Data not present on the drawings will not be added by us."
-* https://jlcpcb.com/help/article/panelizing-your-pcb-for-assembly: "Suggested length of each side for panel board: 150 -200mm" (recommendation only), panel formats V-cut, mouse-bites, bridge-even.
-
-Implementation (scripts/panelize.py, step 3c of export_fab.sh; parameters at the top of the script):
-* Panel 110 x 74 mm = 5 mm rail + 2 mm routed gap + 60 mm board + 2 mm gap + 5 mm rail (rails top and bottom only; the left/right ends are the board's own ends, the corner notches stay).
-* Edge_Cuts (one file): outer contour of rails + board + tabs, the four closed routed slots between the tabs, and the unchanged OC1/OC2 slots. Board outline, copper, mask, paste, silk and the Gerber origin (board centre) are unchanged (verified: only Edge_Cuts and NPTH differ from the previous zip; CPL identical).
-* 6 tabs, each 5 mm wide with 5 holes of 0.6 mm, hole edge gap 0.35 mm (pitch 0.95), hole centres on the board edge line (JLC: "centerline"; about 0.3 mm scallops remain on the board edge, deburr). Top: x = -40, -14, +12 (J2 mouth x 27..39 and antenna x >= 45 stay free). Bottom: x = -38, +10, +34 (the -14 position would touch the silk outline of a part, the isolation silk line at x = 0 stays free). Nothing on the board side within 0.5 mm of a hole (pours >= 0.2 mm), checked by check_fab.py.
-* 3 tooling holes 2.0 mm in the rails at (-52.5, +34.5), (-52.5, -34.5), (+52.5, -34.5) in NPTH.drl. No fiducials (Economic: "Not necessary"; no copper on the rails by design).
-* J2 USB-C: footprint/pads end 1.72 mm inside the top edge, so the 2 mm gap clears the mouth; the 2.5 mm body-to-edge rule is evaluated against the panel edges that carry the board (top/bottom rails: 7.8 mm), so the old C12 advisory disappears (the board edge is only a break line).
-Open: whether JLC's order form/DFM accepts the customer panel for Economic must be confirmed in the order preview (cannot be tested offline); JLC may adjust mouse-bite spacing to >= 0.3 mm.
+Why: the JLC order form still refused Economic PCBA with the old 110 x 60 mm board, and the delivered PCB shall be >= 70 mm in each direction (user decision).
+The 70 mm minimum is not in the published Economic table (capabilities page, fetched 2026-11-26: Economic "Single PCB Size: 10x10mm - 470x500mm"; only **Standard** lists "70x70mm - 460x500mm"),
+but the order form behaves as if it applied. The board is therefore made 110 x 70 mm by extending the outline by 10 mm at the **bottom only** (x -55..55, y -40..30), as one plain rectangle with sharp 90 deg corners.
+Economic Delivery Format "Single PCB" is met directly; **no breakaway rails, no mouse bites, no tooling holes, no panel** (the earlier 110 x 74 mm panel, `scripts/panelize.py`, is removed together with its checks).
+* Nothing on the board moved: components, hand-routed paths, mounting holes (4 x 3.5 mm NPTH at +-42.25 / +-19.75, keepouts) and the antenna zone keep their coordinates; J2 stays flush on the top edge, P1 on the left edge, the antenna at the right edge. The new 110 x 40 mm strip (y -40..-30 plus the former notch corners) carries only the two copper pours (GND_EMS left, GND right, >= 0.5 mm to the edge, isolation gap 6.4 mm centred on x = 0 continues straight down to the new edge) and the silkscreen labels "EMS SIDE" / "MCU SIDE" and the barrier line.
+* `scripts/check_fab.py` section "Board outline": pcb_board outline is a 4-corner rectangle with 90 deg corners, >= 70 x 70 mm, Edge_Cuts holds exactly one closed rectangle (same as the board outline, centred on the Gerber origin so the CPL stays valid) plus the two internal opto slots, nothing else.
+* Body-to-edge rule (JLC terms, 2.5 mm): evaluated against the real board edge now (no rails). Advisory WARN for pad boxes of C12 (0.75 mm; body about 2.35 mm from the edge) and R25 (2.07 mm); J2 is an edge connector. Same as before the panel was introduced; the JLC DFM preview decides. If it objects, move C12 inwards (the autorouter is fragile, see TSCIRCUIT_API.md) or accept the DFM hint.

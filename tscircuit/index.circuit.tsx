@@ -1,4 +1,4 @@
-// EMS-ESP Isolated Interface V2.0 - complete board, for enclosure Hammond 1591XXCFLBK (docs/ENCLOSURE.md).
+// EMS-ESP Isolated Interface V2.0 - complete board, 110 x 70 mm rectangle, 3D-printed enclosure (enclosure/, docs/ENCLOSURE.md).
 // Barrier line x = 0: EMS side at x < 0 (terminal P1 at the LEFT short edge), MCU/USB side at x > 0
 // (ESP32 antenna at the RIGHT short edge, USB-C J2 at the top long edge); only OC1/OC2 straddle the barrier.
 import { EmsSide } from "./src/ems-side"
@@ -7,8 +7,6 @@ import { NetDefs } from "./lib/netdefs"
 import { FS } from "./lib/silk"
 import { SchAnnotations } from "./lib/schannot"
 
-const W = 110, H = 60
-const NX = 5.5, NY = 8.0, NR = 3.5 // corner notch (X, Y) for the lid-screw bosses, R3.5 on the inner corner
 const SLOT_W = 2 // isolation slot width (mm), centred on x = 0
 const SLOT_Y0 = 2, SLOT_Y1 = 14 // slot y-range |y| (opto body 9.6 mm + 2 mm), OC1 at y = 8, OC2 at y = -8
 const POUR_GAP = 3.2 // pour edge distance from barrier centre (mm) -> 6.4 mm EMS<->MCU
@@ -18,71 +16,22 @@ const ANT_Y = 24 // 9 (half module width) + 15 mm
 const HOLE_X = 42.25, HOLE_Y = 19.75 // M3/#4 screw holes 3.5 mm NPTH, 84.5 x 39.5 grid
 const KEEP_R = 4 // copper/part keepout around each hole (screw head 8 mm)
 
-// board outline, counter-clockwise from the lower left; the notch inner corners get an R3.5 fillet
-type Pt = { x: number; y: number }
-const arc = (cx: number, cy: number, a0: number, a1: number, n = 6): Pt[] =>
-  Array.from({ length: n + 1 }, (_, i) => {
-    const a = ((a0 + ((a1 - a0) * i) / n) * Math.PI) / 180
-    return { x: +(cx + NR * Math.cos(a)).toFixed(3), y: +(cy + NR * Math.sin(a)).toFixed(3) }
-  })
-const hx = W / 2, hy = H / 2
-const OUTLINE: Pt[] = [
-  // bottom-left notch
-  { x: -hx, y: -hy + NY }, { x: -hx + NX, y: -hy + NY },
-  { x: -hx + NX, y: -hy + NY }, // fillet below (corner (-hx+NX, -hy+NY) rounded)
-  { x: -hx + NX, y: -hy },
-  // bottom edge -> bottom-right notch
-  { x: hx - NX, y: -hy }, { x: hx - NX, y: -hy + NY }, { x: hx, y: -hy + NY },
-  // right edge -> top-right notch
-  { x: hx, y: hy - NY }, { x: hx - NX, y: hy - NY }, { x: hx - NX, y: hy },
-  // top edge -> top-left notch
-  { x: -hx + NX, y: hy }, { x: -hx + NX, y: hy - NY }, { x: -hx, y: hy - NY },
-]
-// replace the 4 inner notch corners by fillets (concave corner of the board, R3.5)
-const OUTLINE_R: Pt[] = (() => {
-  const o: Pt[] = []
-  const c = (x: number, y: number, sx: number, sy: number) => {
-    // corner at (x, y); sx/sy point from the corner into the board material along both notch edges
-    const e0 = { x: x, y: y + sy * NR }, e1 = { x: x + sx * NR, y: y }
-    return { e0, e1 }
-  }
-  void c
-  return o
-})()
-void OUTLINE_R
-// simple explicit polygon with fillets (ccw)
-const fil = (cx: number, cy: number, a0: number, a1: number) => arc(cx, cy, a0, a1)
-const BOARD: Pt[] = [
-  { x: -hx, y: -hy + NY + 0 }, // left edge bottom (below the BL notch top)
-  ...[] as Pt[],
-]
-void BOARD
-const pts: Pt[] = [
-  // start at left edge, just above the bottom-left notch, go clockwise... (ccw below)
-  { x: -hx, y: -hy + NY },
-  // BL notch: material boundary goes right along y = -hy+NY then DOWN along x = -hx+NX (fillet at the corner)
-  ...fil(-hx + NX - NR + 0, -hy + NY - NR + 0, 90, 0).slice(0, 0),
-  { x: -hx + NX - NR, y: -hy + NY }, ...fil(-hx + NX - NR, -hy + NY - NR, 90, 0), { x: -hx + NX, y: -hy },
-  { x: hx - NX, y: -hy }, ...fil(hx - NX + NR, -hy + NY - NR, 180, 90), { x: hx - NX + NR, y: -hy + NY }, { x: hx, y: -hy + NY },
-  { x: hx, y: hy - NY }, { x: hx - NX + NR, y: hy - NY }, ...fil(hx - NX + NR, hy - NY + NR, 270, 180), { x: hx - NX, y: hy },
-  { x: -hx + NX, y: hy }, ...fil(-hx + NX - NR, hy - NY + NR, 360, 270), { x: -hx + NX - NR, y: hy - NY }, { x: -hx, y: hy - NY },
-]
-// remove consecutive duplicates
-const outline = pts.filter((p, i) => i === 0 || p.x !== pts[i - 1].x || p.y !== pts[i - 1].y)
+// board outline: plain rectangle 110 x 70 mm, sharp 90 deg corners (no notches, no radius, no panel rails).
+// x -55..55, y -40..30: the board is 10 mm longer than the earlier 110 x 60 at the BOTTOM only, so that no part/trace moves
+// (J2 stays flush on the top edge, P1 on the left edge, the antenna on the right edge); 70 x 70 mm minimum for JLC Economic delivery.
+const X0 = -55, X1 = 55, Y0 = -40, Y1 = 30
+const outline = [{ x: X0, y: Y0 }, { x: X1, y: Y0 }, { x: X1, y: Y1 }, { x: X0, y: Y1 }]
 
-// pour outlines (inset PM from the board edge/notches; no pour beyond the antenna zone x >= 48 and none in the barrier)
-const NXi = hx - NX - PM // x of the notch wall (inset), 49.0
-const NYi = hy - NY - PM // y of the notch floor (inset), 21.5
+// pour outlines (inset PM from the board edge; no pour beyond the antenna zone x >= 48 and none in the barrier, which runs straight down to the bottom edge)
 const EMS_POUR = [
-  { x: -POUR_GAP, y: hy - PM }, { x: -NXi, y: hy - PM }, { x: -NXi, y: NYi }, { x: -hx + PM, y: NYi },
-  { x: -hx + PM, y: -NYi }, { x: -NXi, y: -NYi }, { x: -NXi, y: -hy + PM }, { x: -POUR_GAP, y: -hy + PM },
+  { x: -POUR_GAP, y: Y1 - PM }, { x: X0 + PM, y: Y1 - PM }, { x: X0 + PM, y: Y0 + PM }, { x: -POUR_GAP, y: Y0 + PM },
 ]
 // V3V3 pour area for the AMS1117 tab (FIX_LIST #11): x 8..24.5, y 19..29.5 on both layers (~ 2 x 165 mm2 = 3.3 cm2)
 const V_X0 = 8, V_X1 = 24.5, V_Y0 = 19, V_Y1 = 29.5
 const VG = 0.8 // gap between the V3V3 pour and the GND pour
 const MCU_POUR = [
-  { x: POUR_GAP, y: hy - PM }, { x: V_X0 - VG, y: hy - PM }, { x: V_X0 - VG, y: V_Y0 - VG }, { x: V_X1 + VG, y: V_Y0 - VG },
-  { x: V_X1 + VG, y: hy - PM }, { x: ANT_X - 1.4, y: hy - PM }, { x: ANT_X - 1.4, y: -hy + PM }, { x: POUR_GAP, y: -hy + PM },
+  { x: POUR_GAP, y: Y1 - PM }, { x: V_X0 - VG, y: Y1 - PM }, { x: V_X0 - VG, y: V_Y0 - VG }, { x: V_X1 + VG, y: V_Y0 - VG },
+  { x: V_X1 + VG, y: Y1 - PM }, { x: ANT_X - 1.4, y: Y1 - PM }, { x: ANT_X - 1.4, y: Y0 + PM }, { x: POUR_GAP, y: Y0 + PM },
 ]
 const V3V3_POUR = [{ x: V_X0, y: V_Y0 }, { x: V_X1, y: V_Y0 }, { x: V_X1, y: V_Y1 }, { x: V_X0, y: V_Y1 }]
 
@@ -100,7 +49,7 @@ export default () => (
     <McuSide />
     <SchAnnotations />
 
-    {/* 4 x mounting holes 3.5 mm NPTH (84.5 x 39.5 grid of the Hammond 1591XX posts) + copper/part keepout 8 mm (screw head) */}
+    {/* 4 x mounting holes 3.5 mm NPTH (84.5 x 39.5 grid of the printed-case posts, formerly Hammond 1591XX) + copper/part keepout 8 mm (screw head) */}
     {([[-1, 1, "MH1"], [-1, -1, "MH2"], [1, 1, "MH3"], [1, -1, "MH4"]] as const).map(([sx, sy, n]) => (
       <>
         <hole key={n} name={n} diameter="3.5mm" pcbX={sx * HOLE_X} pcbY={sy * HOLE_Y} />
@@ -109,7 +58,7 @@ export default () => (
     ))}
 
     {/* antenna zone: no copper and no parts on either layer beside/under the ESP32 antenna (>= 15 mm beside it) */}
-    <keepout shape="rect" width={`${hx - ANT_X + 2}mm`} height={`${2 * ANT_Y}mm`} pcbX={(hx + ANT_X) / 2 + 1} pcbY={0} layers={["top", "bottom"]} />
+    <keepout shape="rect" width={`${X1 - ANT_X + 2}mm`} height={`${2 * ANT_Y}mm`} pcbX={(X1 + ANT_X) / 2 + 1} pcbY={0} layers={["top", "bottom"]} />
 
     {/* isolation slots, 2 mm wide, only under the optocoupler bodies (body 9.6 mm + 2 mm), NOT to the board edge:
         the board stays one piece. tscircuit flags "component overlaps cutout" for OC1/OC2: intended. */}
@@ -141,11 +90,11 @@ export default () => (
     <silkscreentext text="3V3" pcbX={26.0} pcbY={5.9} fontSize={FS} />
     <silkscreentext text="RESET" pcbX={33.5} pcbY={-28.2} fontSize={FS} />
     <silkscreentext text="BOOT" pcbX={27.6} pcbY={-14.8} fontSize={FS} />
-    <silkscreentext text="EMS SIDE" pcbX={-40} pcbY={-28.2} fontSize={FS} />
-    <silkscreentext text="MCU SIDE" pcbX={22.5} pcbY={-28.2} fontSize={FS} />
+    <silkscreentext text="EMS SIDE" pcbX={-27.5} pcbY={-35} fontSize={FS} />
+    <silkscreentext text="MCU SIDE" pcbX={27.5} pcbY={-35} fontSize={FS} />
     <silkscreentext text="ISOLATION" pcbX={0} pcbY={0} fontSize={FS} />
     <silkscreenpath route={[{ x: 0, y: SLOT_Y1 + 0.5 }, { x: 0, y: 29 }]} />
-    <silkscreenpath route={[{ x: 0, y: -SLOT_Y1 - 0.5 }, { x: 0, y: -29 }]} />
+    <silkscreenpath route={[{ x: 0, y: -SLOT_Y1 - 0.5 }, { x: 0, y: -33.5 }]} />
     {/* P2 pin labels (vertical, one per pin of the 2.54 mm header at x = 8.19 / 10.73 / 13.27 / 15.81, y = -26.5) */}
     <silkscreentext text="3V3" pcbX={8.19} pcbY={-23.2} pcbRotation={90} fontSize={FS} />
     <silkscreentext text="TX" pcbX={10.73} pcbY={-22.9} pcbRotation={90} fontSize={FS} />
