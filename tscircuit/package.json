@@ -1,0 +1,16 @@
+{
+  "name": "ems-bus-isolated-interface-tscircuit",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsci build",
+    "snapshot": "tsci snapshot"
+  },
+  "devDependencies": {
+    "@tscircuit/cli": "^0.1.2488",
+    "@types/react": "^19.3.3",
+    "tscircuit": "^0.0.3296",
+    "typescript": "^5.9.3"
+  }
+}
