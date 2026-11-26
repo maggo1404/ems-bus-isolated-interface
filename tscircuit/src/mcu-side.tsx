@@ -4,10 +4,13 @@
 import { Esp32S3Wroom1 } from "../lib/esp32s3wroom1"
 import { UsbC16 } from "../lib/usbc16"
 import { Tactile5x5, TantalumB } from "../lib/thtparts"
+import { traceWidth } from "../lib/netclass"
 import { LedGreen } from "../lib/diodes"
 import { SolderJumper2Footprint } from "../lib/jumper"
 
-const T = (from: string, to: string) => <trace key={`${from}|${to}`} from={from} to={to} />
+const T = (from: string, to: string) => (
+  <trace key={`${from}|${to}`} from={from} to={to} thickness={traceWidth(to.startsWith("net.") ? to.slice(4) : undefined)} />
+)
 const J = (c: string) => ({ jlcpcb: [c] })
 const R = (n: string, v: string, x: number, y: number, rot: number, lcsc?: string, sx = 0, sy = 0) => (
   <resistor name={n} resistance={v} footprint="0805" pcbX={x} pcbY={y} pcbRotation={rot} schX={sx} schY={sy}

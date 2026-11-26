@@ -12,7 +12,7 @@ Coordinates: mm, +X right, +Y UP (PCB and schematic). `pcbX/pcbY/pcbRotation` (d
   <capacitor name="C1" capacitance="100nF" footprint="0603" pcbRotation={90} />
   <diode name="D1" footprint="sod123" />                 // pin1 = anode, pin2 = cathode
   <led name="LED1" footprint="0805" color="green" />
-  <transistor name="Q1" type="npn" footprint="sot23" />  // npn: pin1=collector pin2=base pin3=emitter (labels .collector .base .emitter) -- NOT the SOT-23 package order; check vs BC847/MMBT3904 pinout (1=B 2=E 3=C)
+  <transistor name="Q1" type="npn" footprint="sot23" />  // npn: pin1=collector pin2=base pin3=emitter -- NOT the SOT-23 package order (BC817/BC847: 1=B 2=E 3=C); Q1 is therefore a <chip> with pinLabels B/E/C
   <chip name="U1" footprint="soic8"
         pinLabels={{ pin1: "A", pin2: "K", pin4: "GND" }}  // string or string[] aliases
         schPinArrangement={{ leftSide:{direction:"top-to-bottom",pins:["A","K"]}, rightSide:{direction:"top-to-bottom",pins:["OUT"]} }}

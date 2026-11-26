@@ -56,4 +56,10 @@ Rx/Tx use a UART with GPIO matrix, any valid GPIO works (UART1/2 chosen by firmw
 
 ## Settings to enter in web UI (if profile not auto-selected)
 Board profile `S32S3` (BBQKees Gateway S3), or "Custom" with Rx=5, Tx=17, LED=2, Button=0, Dallas=18, led type normal.
-Caveat: `S32S3` profile is also auto-detected from eFuse for BBQKees boards only; on a DIY board choose it manually.
+The `S32S3` profile is auto-selected by the firmware on ESP32-S3 builds (R3 review); if it is not, choose it manually in the web UI.
+
+## This board (V2.0 as built in tscircuit)
+* GPIO5 = `MCU_RX` (OC1 output, direct), GPIO17 = `ESP_TX` -> **JP1 (default OPEN: RX-only)** -> `MCU_TX` (OC2 LED / R27 100 k pull-up to 3V3). Close JP1 to allow transmitting on the EMS bus.
+* GPIO2 = status LED (R22 1 k + green LD4, active high), GPIO0 = BOOT button, EN = RESET button, GPIO19/20 = USB D-/D+ (USBLC6-2SC6 + USB-C), GPIO43/44 test pads TP1/TP2 (+ TP3 GND).
+* P2 (1=3V3 via JP2 default OPEN, 2=MCU_TX, 3=MCU_RX, 4=GND) is kept for an external MCU; close JP2 only to power it from the on-board 3V3.
+* 3V3 from AMS1117-3.3 (USB VBUS) with 22 uF + 10 uF + 100 nF + 100 uF tantalum (C29).

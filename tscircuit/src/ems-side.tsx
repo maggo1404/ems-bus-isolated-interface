@@ -3,6 +3,7 @@
 // (R13, R14, R18, R19, LD2, LD3, C7).  Net names follow docs/DESIGN_SPEC.md.
 import { Opto6N137, Opto6N136 } from "../lib/opto_so8_gw300"
 import { DiodeKA, DiodeAK, LedRed, LedGreen } from "../lib/diodes"
+import { traceWidth } from "../lib/netclass"
 import { Mstba2, CapE5_10p5, Inductor3225, Inductor0520, Res2010Footprint } from "../lib/thtparts"
 
 // ---------------------------------------------------------------------------
@@ -224,7 +225,7 @@ export const EmsSide = () => (
 
     {/* ---- connectivity (V1 netlist) ---- */}
     {Object.entries(NETS).flatMap(([net, pins]) =>
-      pins.map((p) => <trace key={`${net}-${p}`} from={selector(p)} to={`net.${net}`} />),
+      pins.map((p) => <trace key={`${net}-${p}`} from={selector(p)} to={`net.${net}`} thickness={traceWidth(net)} />),
     )}
   </group>
 )

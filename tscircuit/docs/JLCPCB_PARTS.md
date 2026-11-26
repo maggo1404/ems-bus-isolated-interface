@@ -27,20 +27,22 @@ In tscircuit set the number on the component: `supplierPartNumbers={{ jlcpcb: ["
 ## Verified table
 | Ref (Eagle) | Value / function | Package | Part (mfr) | LCSC | Class | Stock | Notes |
 |---|---|---|---|---|---|---|---|
-| U-ESP | ESP32-S3-WROOM-1-N16R8 | module 25.5x18 | Espressif ESP32-S3-WROOM-1-N16R8 | C2913202 | Ext | 35.7k | `lib/esp32s3wroom1.tsx`: EPAD position wrong, see FOOTPRINT_CHECK |
-| J-USB | USB-C 16P USB2.0 | SMD+THT | HRO TYPE-C-31-M-12 | C165948 | Ext | 425k | `lib/usbc16.tsx`: orientation/offsets, see FOOTPRINT_CHECK |
-| U-LDO / U3 | 3.3V 1A LDO | SOT-223 | AMS1117-3.3 (AMS) | C6186 | **Basic** | 1.2M | OK |
+| U3 (ESP) | ESP32-S3-WROOM-1-N16R8 | module 25.5x18 | Espressif ESP32-S3-WROOM-1-N16R8 | C2913202 | Ext | 35.7k | `lib/esp32s3wroom1.tsx`: EPAD = 9 ports pin41..49 (all GND) |
+| J2 | USB-C 16P USB2.0 | SMD+THT | HRO TYPE-C-31-M-12 | C165948 | Ext | 425k | `lib/usbc16.tsx`: 16 distinct ports (12 pads + 4 shell legs), pairs tied by nets |
+| U5 (LDO) | 3.3V 1A LDO | SOT-223 | AMS1117-3.3 (AMS) | C6186 | **Basic** | 1.2M | OK |
 | (alt) | 3.3V 600mA LDO | SOT-23-5 | AP2112K-3.3TRG1 (Diodes) | C51118 | Ext | 9.7k | fallback |
 | (alt) | 3.3V 1A LDO | SOT-23-5 | TLV75733PDBVR (TI) | C485517 | Ext | 36k | best performance |
-| U-ESD / U4 | USB ESD | SOT-23-6 | USBLC6-2SC6 (ST) | C7519 | Ext | 35k | 3.5 pF; no Basic equivalent |
-| SW-BOOT/RST | tactile 5.1x5.1 | SMD-4P | TS-1187A-B-A-B (XKB) | C318884 | **Basic** | 652k | pad->net mapping in lib is WRONG (see FOOTPRINT_CHECK) |
+| U4 (ESD) | USB ESD | SOT-23-6 | USBLC6-2SC6 (ST) | C7519 | Ext | 35k | 3.5 pF; no Basic equivalent |
+| SW1/SW2 | tactile 5.1x5.1 | SMD-4P | TS-1187A-B-A-B (XKB) | C318884 | **Basic** | 652k | pads 1/2 (top row) = A, 3/4 (bottom) = B; each pad own port |
 | OC1 | 6N137 | SOP-8 2.54 gull-wing | **6N137S-TA1-L (Lite-On)** | **C92651** | Ext | 60k | 2.7-5.5 V, 15 Mbit/s, 5 kV; alts C883170 Everlight 6N137S(TA)-V (16.7k), C15825 onsemi 6N137SDM (64k) |
 | OC2 | 6N136 | SOP-8 2.54 gull-wing | **6N136S-TA1-L (Lite-On)** | **C336082** | Ext | 8.6k | same footprint as C92651; alts C118756 Everlight 6N136S(TA) (7.8k), C3015393 Everlight 6N136S1(TA) (11.7k) |
 | U1 | LM393 | SOIC-8 | LM393DR2G (onsemi) | C7955 | **Basic** | 272k | use this; alt TI LM393DR C67470 (Ext, 191k). Fallback LMV393IDR C7984 (Ext, 11k, 2.7-5.5 V only!) |
 | U2 | JW5017S buck | SOT-23-6 | JW5017SSOTB#TRPBF (JoulWatt) | C371172 | Ext | 17.8k | 4.5-26 V, 1.2 A; allowed alt RY8310 C370876 (Ext, 13k, 4.5-30 V, 1 A) |
 | P1 | 2-pin 5.08 pluggable header, THT | THT | KF2EDGRC-5.08-2P (Cixi Kefa) | C441236 | Ext | 21k | MSTBA2,5/2-G-5,08 itself is not stocked (only 3-pin C5183941). Hole 1.8 mm, pad 2.5 mm (lib uses 1.4/2.8). alt KF2EDGR-5.08-2P C441204 (37k, hole 1.6). Screw type: KF128-5.08-2P-AA C474952 |
 | P2 | 1x4 2.54 header, THT | THT | HX PZ2.54-1x4P ZZ (male, hanxia) | C32713270 | Ext | 107k | female socket: C2718488 (144k). Pad 1.7, hole 1.1 |
-| Q1 | NPN SOT-23 | SOT-23 | MMBT3904 (Changjing) | C20526 | **Basic** | 4.0M | pinout B/E/C like BC847 |
+| Q1 | NPN SOT-23 (bus load transistor) | SOT-23 | **BC817-40** | **C20069155** | check | check | user decision; EasyEDA pads: 1 = B, 2 = E, 3 = C. (old: MMBT3904 C20526 Basic) |
+| C29 | 100 uF 6.3 V tantalum, LDO output stability | case B 3528 | TAJB107K006RNJ (Kyocera AVX) | C16133 | **Basic** | see JLC | EasyEDA CASE-B_3528: pad 1 = + (left, polarity bar), pad 2 = - ; pads 1.5 x 2.4 at +-1.861 mm |
+| JP1, JP2 | solder jumpers (open) | custom `lib/jumper.tsx` | - | - | - | - | not in BOM (no LCSC number); 0.4 mm gap, no paste |
 | D1-D5 | BAT42-class low-cap Schottky | SOD-123 | **BAT42W (hongjiacheng)** | **C22466362** | **Pref** | 22k | 30 V, 200 mA, Cj ~7-10 pF @1 V (BAT42 class; vs B5819W ~100 pF). Genuine alt: BAT42W-7-F Diodes Inc C134396 (Ext, 10.7k). Higher-voltage alt: BAT46W (100 V) C7420332 (Pref, 643k) |
 | D7 | PMEG3020EGW (power path) | SOD-123 | B5819W SL (Changjing) | C8598 | **Basic** | 886k | 1 A 40 V |
 | D6 | 1N4148 | SOD-123 | 1N4148W | C81598 | **Basic** | 4.2M | |
@@ -75,7 +77,7 @@ In tscircuit set the number on the component: `supplierPartNumbers={{ jlcpcb: ["
 | C12, C14 | 2 x 1000u/25V SMD electrolytic (parallel = 2000 uF; replaces the single 2200 uF THT of V1) | SMD D10 x L12 (BD10.0-L10.3-W10.3) | JVJ25V1000M10X12 (JIERR) | C49256851 | Ext | see JLC | pads 4.5 x 1.65 at +-4.5 mm, pad 1 = +, chamfered corner = + side (EasyEDA). Replaces PA25V2200M10x17 C46550439 (THT, hand-soldered). Both on EMS_VIN / GND_EMS near D7/U2 |
 
 ## Extended-part count (extra fees)
-Distinct **Ext** (fee) part numbers: C2913202 (ESP32), C165948 (USB-C), C7519 (USBLC6), C92651 (6N137), C336082 (6N136),
+Q1 BC817-40 (C20069155) and C29 (C16133) need an availability/class check at order time. Distinct **Ext** (fee) part numbers: C2913202 (ESP32), C165948 (USB-C), C7519 (USBLC6), C92651 (6N137), C336082 (6N136),
 C371172 (JW5017S), C98021 (L1/L2), C43183 (L3), C53284030 (68R 2010), C17384 (1k3), C107120 (68p), C441236 (P1),
 C32713270 (P2), C49256851 (C12/C14, one fee for both), C910822 (fuses) = **15**; 13 if P1 and P2 are hand-soldered (THT, not assembled). C12/C14 are now SMD and assembled by JLC.
 Preferred-extended (no fee): C22466362 (BAT42W), C17590 (270R), C1717 (1n5).

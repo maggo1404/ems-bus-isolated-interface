@@ -9,7 +9,11 @@ const POUR_GAP = 3 // pour edge distance from barrier centre (mm)
 const ANT_X = 47.95 // start of the ESP32 antenna keepout (mm)
 
 export default () => (
-  <board width={`${W}mm`} height={`${H}mm`} layers={2} borderRadius="2mm">
+  <board width={`${W}mm`} height={`${H}mm`} layers={2} borderRadius="2mm"
+    // fab rules, honoured by the autorouter (see docs/TSCIRCUIT_API.md "Fab settings"): via 0.3/0.6, min trace 0.2
+    // (per-net widths via <trace thickness>, lib/netclass.ts), pad/trace/via clearance 0.25
+    minTraceWidth="0.2mm" minViaHoleDiameter="0.3mm" minViaPadDiameter="0.6mm"
+    minTraceToPadEdgeClearance="0.25mm" minPadEdgeToPadEdgeClearance="0.25mm" minViaEdgeToPadEdgeClearance="0.25mm">
     <EmsSide />
     <McuSide />
 
