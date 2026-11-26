@@ -137,3 +137,35 @@ Source: `hardware/EMSinterface_V1.0.brd`, Dimension layer 20. All coordinates mm
 | C13 | 100n | C0805K | 47.62 | 3.17 | R90 |
 | LD2 | GREEN | CHIP-LED0805 | 54.61 | 30.80 | R0 |
 | R19 | 1k2 | R0805 | 56.52 | 29.53 | R90 |
+
+
+## V2 deviations from the V1 circuit (tscircuit board, fixes of review R4/R5)
+Pin-for-pin the 33 V1 nets are unchanged (`scripts/check_netlist.py`); the following parts/values differ or were added:
+
+| Item | V1 | V2 | Reason |
+|---|---|---|---|
+| C30 (new) | - | 100 nF 50 V X7R (C49678) parallel to C10 (EMS_VIN / GND_EMS) | buck input HF decoupling directly at U2 VIN (R5 M2) |
+| F3 (new, MCU side) | - | PTC 0805 BSMD0805-050-24V (C910822, 500 mA hold, same part as F1/F2) between J2/U4 `VBUS` and `VBUS_F` (U5.VIN, C24, C25) | USB host protection, a fault on the 3V3 rail cannot load the host above the PTC trip (R4 m5) |
+| R14 | 270R | **150R** (C17471, Basic) | OC2 CTR margin, calculation below (R4 m3) |
+| R18, R19 (LD3, LD2) | 1k2 | **220R** (C17557, Basic) | green LEDs about 2 mA from 3.3 V (R4 m6) |
+| R22, R26 (LD4 GPIO2, LD5 3V3) | 1k (V2 draft) | **220R** (C17557) | same, R4 m6 |
+| U1 / L1, L2 / P2 | generic soic8, V1 L3225M, `<pinheader>` | footprints copied from EasyEDA C7955 / C98021 / C32713270 | R4 M1, m2, m8 |
+
+### OC2 (6N136S-TA1-L) LED current, R14 = 150 R
+Path: 3V3 -> R14 -> OC2 LED (A->K) -> `MCU_TX` -> ESP32 GPIO17 (open sink through JP1, low = transmit).  Parallel branch 3V3 -> R19 -> LD2 -> `MCU_TX` (about 2 mA).
+Requirement: with TX low the phototransistor must pull `VO` below the comparator reference of about 0.6 V (D6, `N$7`): IC >= (V5 - 0.6 V) / R11 = (4.81 .. 5.0 V - 0.6 V) / 4k7 = 0.9 .. 0.94 mA (V5 = 4.98 V +- 3 %).
+CTR: JLC/datasheet minimum of the 6N136 class is 19 % (at IF = 16 mA); assumed flat at lower IF (conservative: CTR at 5..10 mA is not lower for this device class), temperature/ageing not included.
+
+| Case | V3V3 | Vf (OC2) | GPIO VOL | IF with 270 R (V1) | IF with 150 R (V2) | IC min (19 %) | margin to 0.94 mA |
+|---|---|---|---|---|---|---|---|
+| worst (V3V3 -2 %, Vf 1.6 V, VOL 0.33 V) | 3.234 V | 1.6 V | 0.33 V | 4.8 mA -> 0.92 mA | 8.7 mA | 1.65 mA | **1.76 x** (270 R: 0.98 x) |
+| typical | 3.30 V | 1.4 V | 0.10 V | 6.7 mA -> 1.27 mA | 12.0 mA | 2.28 mA | **2.4 x** (270 R: 1.35 x) |
+| best (V3V3 +2 %, Vf 1.3 V, VOL 0.1 V) | 3.366 V | 1.3 V | 0.1 V | | 13.1 mA | | |
+
+Limits: GPIO17 sink = IF(OC2) + IF(LD2) = 12 + 2.3 mA typical, 16 mA worst-high (ESP32-S3 default drive strength 20 mA, IOL abs max 28 mA); OC2 LED (6N136 absolute max 25 mA): <= 13.1 mA; R14 dissipation 25 mW.
+220 R (C17557, Basic) would give only 1.2 x in the worst case, 100/120 R would raise the GPIO load without need: 150 R (C17471, Basic) is the choice.
+V1 never ran from a 3.3 V LDO rail; with 270 R the worst-case margin is below 1 (marginal switching with an aged LED or a hot, low-CTR part), so this is a real improvement, not cosmetics.
+
+### Green LEDs (LD2..LD5) at about 2 mA
+KT-0805G (C2297): Vf 2.6 .. 3.1 V at 20 mA, 2.8 V typical at 2 mA.  With 220 R from 3.3 V: IF = (3.3 - 2.8 V) / 220 = 2.3 mA typical (0.9 mA at Vf 3.1 V, 3.2 mA at 2.6 V).
+LD2/LD3 are active-low (`MCU_TX`/`MCU_RX` low: GPIO VOL 0.1 V gives 2.3 mA); LD3 adds that current to the OC1 output sink (6N137 IOL max 13 mA, here 0.7 mA R13 + 2.3 mA).

@@ -12,8 +12,10 @@ echo "== 1/5 build + autoroute"
 npx tsci build index.circuit.tsx --svgs --ignore-placement-drc --autorouter-timeout "$TIMEOUT"
 echo "== 2/5 gerbers from dist/index/circuit.json"
 npx tsci export dist/index/circuit.json -f gerbers -o "$PWD/$ZIP"
-echo "== 3/5 BOM / CPL (JLCPCB format)"
+echo "== 3/5 BOM / CPL (JLCPCB format; reads bom.csv/pick_and_place.csv from the zip BEFORE they are removed)"
 python3 scripts/jlc_bom_cpl.py "$ZIP" fab/EMSinterface_V2.0 dist/index/circuit.json
+echo "== 3b gerber post-processing (silk stroke >= 0.15 mm, drop tscircuit bom.csv / pick_and_place.csv)"
+python3 scripts/postprocess_gerbers.py "$ZIP" dist/index/circuit.json
 echo "== 4/5 netlist check"
 python3 scripts/check_netlist.py dist/index/circuit.json
 echo "== 5/5 fab check (traces/vias/widths/clearance/keepouts/USB-C)"

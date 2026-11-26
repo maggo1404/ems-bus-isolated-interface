@@ -54,9 +54,10 @@ export const Esp32S3Footprint = () => {
       )))}
       {/* antenna keepout: no copper on any layer under/around antenna end */}
       <keepout shape="rect" width="18.6mm" height="7mm" pcbX={0} pcbY={9.25} layers={["top", "bottom"]} />
-      <silkscreenpath route={[
-        { x: -9, y: -12.75 }, { x: 9, y: -12.75 }, { x: 9, y: 12.75 }, { x: -9, y: 12.75 }, { x: -9, y: -12.75 },
-      ]} />
+      {/* module outline only where there are no pads (antenna part, y > 5.9); the pad rows are marked by the pads themselves.
+          Top edge 0.3 mm inside the module end so the silk does not sit on the board edge; lower outline 0.35 mm outside the pads. */}
+      <silkscreenpath route={[{ x: -9, y: 5.9 }, { x: -9, y: 12.45 }, { x: 9, y: 12.45 }, { x: 9, y: 5.9 }]} />
+      <silkscreenpath route={[{ x: -9.85, y: 5.9 }, { x: -9.85, y: -13.4 }, { x: 9.85, y: -13.4 }, { x: 9.85, y: 5.9 }]} />
       <silkscreentext text="ESP32-S3" pcbY={0} fontSize="1.2mm" />
     </footprint>
   )

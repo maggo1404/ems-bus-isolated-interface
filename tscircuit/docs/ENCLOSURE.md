@@ -43,7 +43,7 @@ Vorschlag (Ursprung unten links, Platine mittig im Gehäuse):
 
 ### Öffnungen (Vorschlag)
 - Klemmleiste 5,08 mm: an einer kurzen Wand, Antenne an gegenüberliegender kurzer Seite; Kabelloch Ø6-7 mm oder M12/M16-Verschraubung; 2 mm Wand lässt sich bohren/fräsen (Hammond bietet auch Bearbeitung/Bedruckung an).
-- USB-C: lange Wand nahe Ecke, Ausschnitt ca. 10 x 4 mm (nur zum Flashen; Gummistopfen/Aufkleber).
+- USB-C: lange Wand nahe Ecke, Ausschnitt **12 x 7 mm** (Mitte x = 33 / Wand bei y = +30; siehe "USB-C-Ausschnitt" unten; nur zum Flashen; Gummistopfen/Aufkleber).
 - LEDs: Löcher Ø3 oder Ø5 im Deckel (Lichtleiter wie V1), Taster intern.
 
 ## 3D-Druck-Alternative
@@ -65,9 +65,9 @@ Koordinaten: Platinen-Mitte = (0|0), X nach rechts, Y nach oben (Maße in mm). F
 |---|---|---|---|
 | Umriss | 110,0 x 60,0, 4 Eckausschnitte je 5,5 (X) x 8,0 (Y), Innenecke R3,5 | | `index.circuit.tsx` (`board outline`) |
 | Montagebohrungen MH1..MH4 | (-42,25 / +19,75), (-42,25 / -19,75), (+42,25 / +19,75), (+42,25 / -19,75) | (12,75 / 49,75), (12,75 / 10,25), (97,25 / 49,75), (97,25 / 10,25) | Ø3,5 NPTH; Kupfer-/Bauteil-Sperrzone Ø8 (Schraubenkopf) um jede Bohrung, Pour-Abstand >= 2,25 mm zum Loch |
-| P1 Klemme (KF2EDGRC-5.08-2P, rechtwinklig) | Stiftachse x = -44,1, Pins bei y = +-2,54, Steckseite bündig an der linken Kante (x = -55) | Kabelloch Ø6..7 bei (0 / 30) in der linken kurzen Wand | Steckerrichtung nach außen (EasyEDA-Körper -10,9 .. +1,3 mm um die Pinachse, Drehung 270); Körper 11,8 x 12,2 mm überdeckt nur den freien Streifen x -55 .. -42,8 |
+| P1 Klemme (KF2EDGRC-5.08-2P, rechtwinklig) | Stiftachse x = -44,1, Pins bei y = +-2,54, Steckseite bündig an der linken Kante (x = -55) | Kabelloch Ø6..7 bei (0 / 30) in der linken kurzen Wand | Gegenstecker (nicht in der BOM, separat kaufen): 2-poliger 5,08-mm-Schraubsteckverbinder KF2EDGK-5.08-2P / Phoenix MSTB 2,5/2-STF-5,08-Klasse, Leitungsaustritt parallel zur Platine; Steckerrichtung nach außen (EasyEDA-Körper -10,9 .. +1,3 mm um die Pinachse, Drehung 270); Körper 11,8 x 12,2 mm überdeckt nur den freien Streifen x -55 .. -42,8 |
 | ESP32-S3-WROOM-1 (U3) | Mitte (42,25 / 0), Antenne zeigt nach +X, endet bündig an x = +55 | | Antennenzone x >= 48, \|y\| <= 24 (= 9 mm halbe Modulbreite + 15 mm): auf beiden Lagen weder Kupfer noch Bauteile (Keepout, geprüft von `check_fab.py`) |
-| USB-C J2 | Mitte Steckeröffnung (33,0 / +30,0), Öffnung bündig an der oberen langen Kante, Breite 9 mm | (88,0 / 60,0) | Gehäuseausschnitt ca. 10 x 4 mm in der langen Wand, 22 mm von der rechten Wand; nur zum Flashen |
+| USB-C J2 | Mitte Steckeröffnung (33,0 / +30,0), Öffnung bündig an der oberen langen Kante, Breite 9 mm | (88,0 / 60,0) | Gehäuseausschnitt **12 x 7 mm** (B x H) in der langen Wand, Mitte 22 mm von der rechten Wand (x = 33); Steckermündung 2,3 mm hinter der Außenfläche, siehe "USB-C-Ausschnitt"; nur zum Flashen |
 | Tasten SW1 (RESET) / SW2 (BOOT) | (33,5 / -23,5) / (34,0 / -14,8) | | intern, durch Deckel nicht bedienbar (Büroklammer/Stift durch ein Ø2-Loch falls gewünscht: Loch im Boden der Box unter SW1/SW2 oder Deckel bei (88,5 / 6,5) / (89,0 / 15,2)) |
 | Isolationsschlitze | 2 x 12 mm, x = 0 (Breite 2 mm), y = +2 .. +14 und -2 .. -14 | | nur unter den Optokopplern, enden nicht an der Platinenkante |
 
@@ -83,4 +83,12 @@ Alle LEDs 0805 (Seite oben), Lichtleiter-Abstand >= 5 mm. Koordinaten = LED-Mitt
 | LD4 | Status GPIO2 | (+47,0 / -16,5) | (102,0 / 13,5) | grün |
 
 Hinweis LD4: liegt 5 mm neben der Antennenzone (x < 48) und 0,3 mm neben der Sperrzone des Schraubenkopfes (Hole 42,25 / -19,75); Lichtleiter dort bitte nicht aus Metall.
-Silkscreen auf der Platine: "PWR" (LD1), "RX" (LD3), "TX" (LD2), "3V3" (LD5).
+Silkscreen auf der Platine: "PWR" (LD1), "RX" (LD3), "TX" (LD2), "3V3" (LD5; Beschriftung unter der LED bei (26,0 / 5,9)); Text jetzt 1,0 mm hoch.
+
+### USB-C-Ausschnitt (R5 m8)
+Die Buchse J2 steht bündig mit der Platinenkante (Mündung bei y = +30,0). Die Gehäusewand ist 2,0 mm dick, zwischen Platinenkante und Wand bleiben rund 0,3 mm Spiel (Hammond: Innenmaß 60,65 gegen Platine 60,0): die Steckermündung liegt damit **2,3 mm hinter der Außenfläche**.
+Ein Standard-USB-C-Stecker (Metallhülse 8,4 x 2,6 mm, Kabel-Knickschutz meist größer) greift nur mit ca. 2 mm Hülse bis in die Buchse, wenn der Ausschnitt den Stecker-Overmould aufnimmt. Empfehlung: **Ausschnitt 12 x 7 mm (Breite x Höhe), Mitte bei x = 33,0 und in der Höhe auf die Buchse zentriert** (Buchse 9,0 x 3,2 mm, Mitte der Buchse ca. 1,6 mm über der Platinenoberseite + Platinendicke 1,6 mm + Postenhöhe), Ecken R1 bei gefrästem/gebohrtem Ausschnitt. Das passt auch für Stecker mit Overmould (typisch 10-11 x 6 mm) und lässt 0,5 mm Toleranz. Ein 10 x 4 mm Ausschnitt lässt nur schlanke Stecker (Hülse ohne Overmould) durch, die 2,3 mm tiefer in der Wand stecken.
+Die Höhenlage hängt vom Pfosten (Pfostenhöhe ist in der Hammond-Zeichnung nicht bemaßt, ungeprüft: mit dem STEP der 1591XXC nachmessen).
+
+### Lichtleiter (R5 m8)
+Die Platine liegt auf den Gehäuseposten, die LEDs (0805, Höhe ca. 0,8 mm) sitzen auf der Oberseite; der Abstand LED-Oberfläche zur Innenseite des Deckels beträgt ungefähr Innenhöhe 36 mm (Box + Deckel) - Pfostenhöhe - Platinendicke 1,6 mm - Deckeldicke. Mit den üblichen Postenhöhen ergibt das **ca. 25 mm Lichtleiterlänge** (Ø3 mm Acryl-/PC-Stab oder gedruckter Lichtleiter, Planungswert; nach STEP-Messung der Pfostenhöhe korrigieren). Lichtleiter-Abstand >= 5 mm, Lichtleiterenden auf der LED zentrieren (Toleranz Platine/Posten +-0,3 mm), LD4 (GPIO2) liegt 5 mm neben der Antennenzone: kein Metall.

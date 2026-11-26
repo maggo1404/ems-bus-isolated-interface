@@ -43,6 +43,8 @@ for n in ref["nets"]:
     exp = {cvt(p) for p in n["pins"]}
     # V2: the single 2200uF C12 is replaced by C12 + C14 (2 x 1000uF SMD in parallel, same nets)
     exp |= {"C14." + p.split(".")[1] for p in exp if p.startswith("C12.")}
+    # V2: C30 (100 nF) is added in parallel to the buck input capacitor C10 (same nets, R5 M2)
+    exp |= {"C30." + p.split(".")[1] for p in exp if p.startswith("C10.")}
     name = NAME.get(n["name"], n["name"])
     if n["name"] == "MCUVCC":  # V2: P2 pin 1 hangs on net P2_3V3 behind the open solder jumper JP2
         exp.discard("P2.1")
@@ -70,7 +72,8 @@ for n in ref["nets"]:
 
 # ---- new MCU nets (DESIGN_SPEC / src/mcu-side.tsx).  pins as Ref.pin number ----
 NEW = {
-    "VBUS": ["J2.2", "J2.11", "U5.3", "C24.1", "C25.1", "U4.5"],
+    "VBUS": ["J2.2", "J2.11", "F3.1", "U4.5"],
+    "VBUS_F": ["F3.2", "U5.3", "C24.1", "C25.1"],  # behind the 500 mA PTC F3 (R4 m5)
     "V3V3": ["U3.2", "U5.2", "U5.4", "C29.1", "JP2.1", "C22.1", "C23.1", "C26.1", "C27.1", "C28.1", "R20.1", "R21.1", "R26.1", "R27.2"],
     "GND": ["U3.1", "U3.40"] + ["U3.%d" % i for i in range(41, 50)] + ["J2.1", "J2.12", "U4.2", "U5.1", "C29.2", "C20.2", "C22.2", "SW1.3", "SW1.4", "SW2.3", "SW2.4", "LD4.2", "LD5.2", "R23.2", "R24.2", "R25.2", "C21.2", "P2.4"],
     "MCU_RX": ["U3.5", "OC1.6", "P2.3"],
@@ -105,7 +108,7 @@ for name, pins in NEW.items():
     if name in ("UART0_GND",):
         continue
     nm = sorted(c.groups[g]["names"])
-    if name in ("VBUS", "V3V3", "GND", "MCU_RX", "ESP_TX", "MCU_TX", "USB_DP", "USB_DN", "EN", "BOOT", "P2_3V3", "SHELL") and name not in nm:
+    if name in ("VBUS", "VBUS_F", "V3V3", "GND", "MCU_RX", "ESP_TX", "MCU_TX", "USB_DP", "USB_DN", "EN", "BOOT", "P2_3V3", "SHELL") and name not in nm:
         ok = False
         print("FAIL %-10s net names %s" % (name, nm))
         continue

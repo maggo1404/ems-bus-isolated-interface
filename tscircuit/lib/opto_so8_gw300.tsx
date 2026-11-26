@@ -16,7 +16,7 @@ export const OptoSo8Gw300Footprint = () => {
         <smtpad key={`r${i}`} portHints={[`pin${8 - i}`]} shape="rect" width="1.8mm" height="1.4mm" pcbX={4.75} pcbY={y} />
       ))}
       <silkscreenpath route={[{ x: -3.0, y: 4.5 }, { x: 3.0, y: 4.5 }, { x: 3.0, y: -4.5 }, { x: -3.0, y: -4.5 }, { x: -3.0, y: 4.5 }]} />
-      <silkscreentext text="1" pcbX={-2.3} pcbY={3.9} fontSize="0.8mm" />
+      <silkscreentext text="1" pcbX={-2.3} pcbY={3.9} fontSize="1.0mm" />
     </footprint>
   )
 }

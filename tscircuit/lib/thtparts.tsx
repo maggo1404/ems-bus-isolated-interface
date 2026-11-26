@@ -13,7 +13,7 @@ export const Mstba2 = (props: Partial<ChipProps> & { name: string }) => (
         <platedhole portHints={["pin2"]} shape="circle" holeDiameter="1.8mm" outerDiameter="2.5mm" pcbX={2.54} pcbY={0} />
         {/* right-angle body (EasyEDA C441236): x +-5.88, y -10.9 ... +1.3 about the pin axis; wire opening / plug face at local -Y
             (the board edge when placed with pcbRotation 270 at x = edge + 10.9) */}
-        <silkscreenpath route={[{ x: -5.88, y: 1.3 }, { x: 5.88, y: 1.3 }, { x: 5.88, y: -10.9 }, { x: -5.88, y: -10.9 }, { x: -5.88, y: 1.3 }]} />
+        <silkscreenpath route={[{ x: -5.88, y: 1.5 }, { x: 5.88, y: 1.5 }, { x: 5.88, y: -10.6 }, { x: -5.88, y: -10.6 }, { x: -5.88, y: 1.5 }]} />
         <silkscreentext text="EMS BUS" pcbX={0} pcbY={-5.5} fontSize="1.0mm" />
       </footprint>
     }
@@ -43,14 +43,17 @@ export const CapE5_10p5 = (props: Partial<ChipProps> & { name: string }) => (
   />
 )
 
-// Inductor 3225 (L3225M in lbr): pads 1.6 x 2.2 at +-1.4 mm
+// Inductor LQH32PN4R7NN0L (JLC C98021), EasyEDA footprint IND-SMD_L3.2-W2.5_82103C (scratch/easyeda/C98021.json):
+// pads 1.52 (x) x 3.1 (y) mm at x = +-1.145 (centre-to-centre 2.29).  Replaces the V1 L3225M land pattern (1.6 x 2.2 at +-1.4).
 export const Inductor3225 = (props: Partial<ChipProps> & { name: string }) => (
   <chip pinLabels={{ pin1: ["A"], pin2: ["B"] }}
     manufacturerPartNumber="LQH32PN4R7NN0L"
     supplierPartNumbers={{ jlcpcb: ["C98021"] }}
     footprint={<footprint>
-      <smtpad portHints={["pin1"]} shape="rect" width="1.6mm" height="2.2mm" pcbX={-1.4} pcbY={0} />
-      <smtpad portHints={["pin2"]} shape="rect" width="1.6mm" height="2.2mm" pcbX={1.4} pcbY={0} />
+      <smtpad portHints={["pin1"]} shape="rect" width="1.52mm" height="3.1mm" pcbX={-1.145} pcbY={0} />
+      <smtpad portHints={["pin2"]} shape="rect" width="1.52mm" height="3.1mm" pcbX={1.145} pcbY={0} />
+      <silkscreenpath route={[{ x: -0.3, y: 1.45 }, { x: 0.3, y: 1.45 }]} />
+      <silkscreenpath route={[{ x: -0.3, y: -1.45 }, { x: 0.3, y: -1.45 }]} />
     </footprint>}
     {...(props as any)} />
 )
@@ -88,7 +91,10 @@ export const Tactile5x5 = (props: Partial<ChipProps> & { name: string }) => (
       <smtpad portHints={["pin2"]} shape="rect" width="1.0mm" height="0.75mm" pcbX={3.0} pcbY={1.85} />
       <smtpad portHints={["pin3"]} shape="rect" width="1.0mm" height="0.75mm" pcbX={-3.0} pcbY={-1.85} />
       <smtpad portHints={["pin4"]} shape="rect" width="1.0mm" height="0.75mm" pcbX={3.0} pcbY={-1.85} />
-      <silkscreenpath route={[{ x: -2.55, y: 2.55 }, { x: 2.55, y: 2.55 }, { x: 2.55, y: -2.55 }, { x: -2.55, y: -2.55 }, { x: -2.55, y: 2.55 }]} />
+      <silkscreenpath route={[{ x: -2.1, y: 2.55 }, { x: 2.1, y: 2.55 }]} />
+      <silkscreenpath route={[{ x: -2.1, y: -2.55 }, { x: 2.1, y: -2.55 }]} />
+      <silkscreenpath route={[{ x: -2.55, y: -0.9 }, { x: -2.55, y: 0.9 }]} />
+      <silkscreenpath route={[{ x: 2.55, y: -0.9 }, { x: 2.55, y: 0.9 }]} />
     </footprint>}
     {...(props as any)} />
 )
@@ -108,4 +114,24 @@ export const TantalumB = (props: Partial<ChipProps> & { name: string }) => (
       <silkscreentext text="+" pcbX={-3.3} pcbY={2.3} fontSize="1.0mm" />
     </footprint>}
     {...(props as any)} />
+)
+
+// 1x4 pin header 2.54 mm, HX PZ2.54-1x4P (JLC C32713270), EasyEDA HDR-TH_4P-P2.54-V-M: holes 1.1 mm, pads 1.7 mm (pin 1 square), pin 1 at -3.81
+export const PinHeader1x4 = (props: Partial<ChipProps> & { name: string }) => (
+  <chip
+    manufacturerPartNumber="PZ2.54-1x4P"
+    supplierPartNumbers={{ jlcpcb: ["C32713270"] }}
+    pinLabels={{ pin1: ["V3V3"], pin2: ["MCU_TX"], pin3: ["MCU_RX"], pin4: ["GND"] }}
+    schPinArrangement={{ leftSide: { direction: "top-to-bottom", pins: ["V3V3", "MCU_TX", "MCU_RX", "GND"] } }}
+    footprint={
+      <footprint>
+        <platedhole portHints={["pin1"]} shape="circular_hole_with_rect_pad" holeDiameter="1.1mm" rectPadWidth="1.7mm" rectPadHeight="1.7mm" pcbX={-3.81} pcbY={0} />
+        <platedhole portHints={["pin2"]} shape="circle" holeDiameter="1.1mm" outerDiameter="1.7mm" pcbX={-1.27} pcbY={0} />
+        <platedhole portHints={["pin3"]} shape="circle" holeDiameter="1.1mm" outerDiameter="1.7mm" pcbX={1.27} pcbY={0} />
+        <platedhole portHints={["pin4"]} shape="circle" holeDiameter="1.1mm" outerDiameter="1.7mm" pcbX={3.81} pcbY={0} />
+        <silkscreenpath route={[{ x: -5.08, y: 1.27 }, { x: 5.08, y: 1.27 }, { x: 5.08, y: -1.27 }, { x: -5.08, y: -1.27 }, { x: -5.08, y: 1.27 }]} />
+      </footprint>
+    }
+    {...(props as any)}
+  />
 )

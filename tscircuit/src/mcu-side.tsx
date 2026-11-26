@@ -3,7 +3,7 @@
 // Placement is absolute (board centre 0,0). MCU region x in [6,55], y in [-25,25].
 import { Esp32S3Wroom1 } from "../lib/esp32s3wroom1"
 import { UsbC16 } from "../lib/usbc16"
-import { Tactile5x5, TantalumB } from "../lib/thtparts"
+import { Tactile5x5, TantalumB, PinHeader1x4 } from "../lib/thtparts"
 import { traceWidth } from "../lib/netclass"
 import { LedGreen } from "../lib/diodes"
 import { SolderJumper2Footprint } from "../lib/jumper"
@@ -13,17 +13,17 @@ const T = (from: string, to: string) => (
 )
 const J = (c: string) => ({ jlcpcb: [c] })
 const R = (n: string, v: string, x: number, y: number, rot: number, lcsc?: string, sx = 0, sy = 0) => (
-  <resistor name={n} resistance={v} footprint="0805" pcbX={x} pcbY={y} pcbRotation={rot} schX={sx} schY={sy}
+  <resistor name={n} resistance={v} footprint="0805" pcbStyle={{ silkscreenTextVisibility: "hidden" }} pcbX={x} pcbY={y} pcbRotation={rot} schX={sx} schY={sy}
     {...(lcsc ? { supplierPartNumbers: J(lcsc) } : {})} />
 )
 const C = (n: string, v: string, x: number, y: number, rot: number, lcsc?: string, fp = "0805", sx = 0, sy = 0) => (
-  <capacitor name={n} capacitance={v} footprint={fp} pcbX={x} pcbY={y} pcbRotation={rot} schX={sx} schY={sy}
+  <capacitor name={n} capacitance={v} footprint={fp} pcbStyle={{ silkscreenTextVisibility: "hidden" }} pcbX={x} pcbY={y} pcbRotation={rot} schX={sx} schY={sy}
     {...(lcsc ? { supplierPartNumbers: J(lcsc) } : {})} />
 )
 // single-pad test point
 const TestPad = (p: { name: string; x: number; y: number; sx: number; sy: number }) => (
   <chip name={p.name} pinLabels={{ pin1: ["TP"] }} pcbX={p.x} pcbY={p.y} schX={p.sx} schY={p.sy}
-    footprint={<footprint><smtpad portHints={["pin1"]} shape="circle" radius="0.6mm" pcbX={0} pcbY={0} /></footprint>}
+    footprint={<footprint><smtpad portHints={["pin1"]} shape="circle" radius="0.6mm" pcbX={0} pcbY={0} noSolderPaste /></footprint>}
     schPinArrangement={{ leftSide: { direction: "top-to-bottom", pins: ["TP"] } }} />
 )
 
@@ -65,7 +65,7 @@ export const McuSide = () => (
     {T(".U3 > .IO17", "net.ESP_TX")}
 
     {/* status LED GPIO2 (S32S3 profile: LED=GPIO2, active high) */}
-    {R("R22", "1k", 47.0, -12.5, 90, "C17513", -8, -6)}
+    {R("R22", "220", 47.0, -12.5, 90, "C17557", -8, -6)}
     <LedGreen name="LD4" pcbX={47.0} pcbY={-16.5} pcbRotation={90} schX={-8} schY={-8} />
     {T(".U3 > .IO2", ".R22 > .pin1")}
     {T(".R22 > .pin2", ".LD4 > .A")}{T(".LD4 > .K", "net.GND")}
@@ -75,9 +75,9 @@ export const McuSide = () => (
     <TestPad name="TP2" x={43.2} y={-13} sx={14} sy={-8} />
     <TestPad name="TP3" x={45.1} y={-13} sx={14} sy={-10} />
     {T(".U3 > .TXD0", ".TP1 > .TP")}{T(".U3 > .RXD0", ".TP2 > .TP")}{T(".TP3 > .TP", "net.GND")}
-    <silkscreentext text="TX" pcbX={41.3} pcbY={-14.9} fontSize="0.8mm" />
-    <silkscreentext text="RX" pcbX={43.2} pcbY={-14.9} fontSize="0.8mm" />
-    <silkscreentext text="G" pcbX={45.1} pcbY={-14.9} fontSize="0.8mm" />
+    <silkscreentext text="TX" pcbX={41.3} pcbY={-14.9} fontSize="1.0mm" />
+    <silkscreentext text="RX" pcbX={43.2} pcbY={-14.9} fontSize="1.0mm" />
+    <silkscreentext text="G" pcbX={45.1} pcbY={-14.9} fontSize="1.0mm" />
 
     {/* ---------------- USB-C at bottom edge ---------------- */}
     <UsbC16 name="J2" pcbX={33} pcbY={22.43} pcbRotation={0} schX={-24} schY={0} />
@@ -87,7 +87,7 @@ export const McuSide = () => (
     {T(".J2 > .DP_L", "net.USB_DP")}{T(".J2 > .DP_R", "net.USB_DP")}
     {T(".J2 > .DN_L", "net.USB_DN")}{T(".J2 > .DN_R", "net.USB_DN")}
     {R("R23", "5.1k", 28.6, 19.2, 90, "C27834", -20, -6)}
-    {R("R24", "5.1k", 37.3, 20.3, 90, "C27834", -20, -8)}
+    {R("R24", "5.1k", 37.0, 20.3, 90, "C27834", -20, -8)}
     {T(".J2 > .CC1", ".R23 > .pin1")}{T(".R23 > .pin2", "net.GND")}
     {T(".J2 > .CC2", ".R24 > .pin1")}{T(".R24 > .pin2", "net.GND")}
     {R("R25", "1M", 26.6, 26.5, 90, "C17514", -20, -12)}
@@ -106,42 +106,46 @@ export const McuSide = () => (
     {T(".U4 > .GND", "net.GND")}{T(".U4 > .VBUS", "net.VBUS")}
     {T(".U3 > .IO19", "net.USB_DN")}{T(".U3 > .IO20", "net.USB_DP")}
 
+    {/* VBUS PTC F3 (same part as F1/F2, BSMD0805-050-24V, 500 mA hold, R4 m5): connector side net VBUS (J2, U4 ESD) -> VBUS_F (U5, C24, C25) */}
+    <chip name="F3" footprint="0805" pcbX={26.2} pcbY={15.0} pcbRotation={180} schX={-20} schY={-20} manufacturerPartNumber="BSMD0805-050-24V" supplierPartNumbers={J("C910822")}
+      pinLabels={{ pin1: ["VBUS"], pin2: ["VBUS_F"] }} />
+    {T(".F3 > .pin1", "net.VBUS")}{T(".F3 > .pin2", "net.VBUS_F")}
+
     {/* ---------------- LDO AMS1117-3.3, SOT-223: 1=GND/ADJ 2=VOUT 3=VIN 4(tab)=VOUT ---------------- */}
     <chip name="U5" footprint="sot223" manufacturerPartNumber="AMS1117-3.3" supplierPartNumbers={J("C6186")}
       pcbX={20.5} pcbY={18.2} pcbRotation={90} schX={-16} schY={-8}
       pinLabels={{ pin1: ["GND"], pin2: ["VOUT"], pin3: ["VIN"], pin4: ["TAB"] }}
       schPinArrangement={{ leftSide: { direction: "top-to-bottom", pins: ["VIN", "GND"] }, rightSide: { direction: "top-to-bottom", pins: ["VOUT", "TAB"] } }} />
-    {T(".U5 > .VIN", "net.VBUS")}{T(".U5 > .GND", "net.GND")}
+    {T(".U5 > .VIN", "net.VBUS_F")}{T(".U5 > .GND", "net.GND")}
     {T(".U5 > .VOUT", "net.V3V3")}{T(".U5 > .TAB", "net.V3V3")}
     {C("C24", "10uF", 22.5, 11.6, 90, "C15850", "0805", -20, -16)}
     {C("C25", "100nF", 20.0, 11.6, 90, "C49678", "0805", -20, -18)}
-    {T(".C24 > .pin1", "net.VBUS")}{T(".C24 > .pin2", "net.GND")}
-    {T(".C25 > .pin1", "net.VBUS")}{T(".C25 > .pin2", "net.GND")}
+    {T(".C24 > .pin1", "net.VBUS_F")}{T(".C24 > .pin2", "net.GND")}
+    {T(".C25 > .pin1", "net.VBUS_F")}{T(".C25 > .pin2", "net.GND")}
     {/* tantalum 100 uF / 6.3 V (C16133, Basic) for AMS1117 output stability; pad 1 = + */}
-    <TantalumB name="C29" pcbX={10.5} pcbY={15.5} pcbRotation={90} schX={-12} schY={-14} />
+    <TantalumB name="C29" pcbX={14.6} pcbY={18.3} pcbRotation={270} schX={-12} schY={-14} />
     {T(".C29 > .pin1", "net.V3V3")}{T(".C29 > .pin2", "net.GND")}
     {C("C26", "22uF", 6.5, 20, 90, "C12891", "1206", -12, -16)}
-    {C("C27", "10uF", 12.5, 20.5, 90, "C15850", "0805", -12, -18)}
+    {C("C27", "10uF", 14.8, 22.6, 90, "C15850", "0805", -12, -18)}
     {C("C28", "100nF", 7.0, 25.5, 180, "C49678", "0805", -12, -20)}
     {["C26", "C27", "C28"].map((c) => [T(`.${c} > .pin1`, "net.V3V3"), T(`.${c} > .pin2`, "net.GND")])}
 
     {/* power LED on V3V3 */}
-    {R("R26", "1k", 24.0, 8.5, 90, "C17513", -4, -16)}
+    {R("R26", "220", 24.0, 8.5, 90, "C17557", -4, -16)}
     <LedGreen name="LD5" pcbX={28.0} pcbY={8.5} pcbRotation={90} schX={-4} schY={-18} />
     {T(".R26 > .pin1", "net.V3V3")}{T(".R26 > .pin2", ".LD5 > .A")}{T(".LD5 > .K", "net.GND")}
 
     {/* ---------------- JP1 (open) ESP_TX <-> MCU_TX, R_PU, P2 ---------------- */}
     <solderjumper name="JP1" pinCount={2} footprint={<SolderJumper2Footprint />} pcbX={21} pcbY={-9.5} pcbRotation={90} schX={-4} schY={8} />
     {T(".JP1 > .pin1", "net.ESP_TX")}{T(".JP1 > .pin2", "net.MCU_TX")}
-    <silkscreentext text="TX EN" pcbX={21} pcbY={-11.6} fontSize="0.8mm" />
+    <silkscreentext text="TX EN" pcbX={21} pcbY={-11.6} fontSize="1.0mm" />
     {R("R27", "100k", 16.5, -9.5, 90, "C149504", -4, 12)}
     {T(".R27 > .pin1", "net.MCU_TX")}{T(".R27 > .pin2", "net.V3V3")}
     {/* JP2 (default OPEN): V3V3 -> P2 pin 1 (net P2_3V3); close only if the 3V3 rail of this board may feed the header */}
     <solderjumper name="JP2" pinCount={2} footprint={<SolderJumper2Footprint />} pcbX={26} pcbY={-21} pcbRotation={90} schX={-4} schY={-8} />
     {T(".JP2 > .pin1", "net.V3V3")}{T(".JP2 > .pin2", "net.P2_3V3")}
-    <silkscreentext text="3V3 OUT" pcbX={22.5} pcbY={-21} fontSize="0.8mm" />
-    <pinheader name="P2" pinCount={4} pitch="2.54mm" supplierPartNumbers={J("C32713270")} manufacturerPartNumber="PZ2.54-1x4P" pcbX={12} pcbY={-26.5} pcbRotation={0} schX={-4} schY={-4}
-      pinLabels={["V3V3", "MCU_TX", "MCU_RX", "GND"]} />
+    <silkscreentext text="3V3 OUT" pcbX={21.8} pcbY={-21} fontSize="1.0mm" />
+    <PinHeader1x4 name="P2" pcbX={12} pcbY={-26.5} pcbRotation={0} schX={-4} schY={-4} />
     {T(".P2 > .pin1", "net.P2_3V3")}{T(".P2 > .pin2", "net.MCU_TX")}
     {T(".P2 > .pin3", "net.MCU_RX")}{T(".P2 > .pin4", "net.GND")}
   </group>

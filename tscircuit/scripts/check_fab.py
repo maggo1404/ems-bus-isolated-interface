@@ -30,8 +30,8 @@ from shapely.strtree import STRtree
 MIN_VIA_DRILL = 0.30
 MIN_ANNULAR = 0.13
 MIN_CLEARANCE = 0.20
-CLEAR_TOL = 0.002       # mm numeric tolerance of the router geometry (gap 0.198 counts as 0.2)
-MIN_W_POWER = 0.50      # VBUS, V3V3, V5_EMS, EMS_VIN
+CLEAR_TOL = 0.0005      # mm numeric tolerance of the router geometry (gap 0.198 counts as 0.2)
+MIN_W_POWER = 0.50      # VBUS, VBUS_F (behind PTC F3), V3V3, V5_EMS, EMS_VIN
 MIN_W_BUS = 0.40        # bus path, buck SW node
 MIN_W_GND = 0.25        # GND / GND_EMS stitching traces: the solid pours on both layers carry the return current
 MIN_W_SIGNAL = 0.25
@@ -43,9 +43,15 @@ STUB_LEN = 0.5          # mm; narrower wire segments shorter than this are warni
 MIN_EDGE = 0.30         # copper to board edge
 MIN_POUR_EDGE = 0.50    # pour to board edge / slots / NPTH
 MIN_HOLE = 0.25         # copper to the NPTH mounting holes
+MIN_HOLE_DIFF = 0.50    # hole edge to hole edge, different nets (JLC hole-to-hole)
+MIN_HOLE_SAME = 0.25    # hole edge to hole edge, same net
+MIN_SILK_W = 0.15       # JLC silkscreen line width
+MIN_SILK_H = 1.0        # JLC silkscreen character height
+MAX_SILK_PAD = 0.30     # mm2 of silkscreen of ONE item over exposed pads (JLC clips silk on pads, but keep it off; the 0805 outlines of tightly packed neighbours may touch)
+MIN_PASTE = 0.90        # paste aperture / pad area, smallest allowed (largest allowed 1.0 + tolerance)
 MIN_PEG = 0.15          # copper to the 0.6 mm NPTH positioning pegs inside a part footprint (J2)
 TOL = 1e-3
-POWER_NETS = {"VBUS", "V3V3", "V5_EMS", "EMS_VIN"}
+POWER_NETS = {"VBUS", "VBUS_F", "V3V3", "V5_EMS", "EMS_VIN"}
 GND_NETS = {"GND", "GND_EMS"}
 # nets that contain one of these pins are "bus/SW" nets (width >= MIN_W_POWER): buck SW node U2.6, bus path
 BUS_PINS = ["U2.6", "F1.1", "F1.2", "F2.1", "F2.2", "L1.1", "L1.2", "L2.1", "L2.2", "D1.1", "D1.2", "D2.1", "D2.2",
@@ -251,6 +257,7 @@ def pad_net(e):
 
 
 pad_pin = {}   # item id -> "Ref.pin"
+drill_holes = []     # (x, y, hole diameter, net, label) of vias and round plated holes (hole-to-hole check G4)
 for e in cj:
     t = e["type"]
     if t == "pcb_smtpad":
@@ -303,6 +310,8 @@ for e in cj:
         i = add("pth", pad_net(e), ["top", "bottom"], g, e.get("pcb_component_id"), lbl)
         pad_pin[i] = pin_str(e.get("pcb_port_id"))
         annular.append(("plated hole %s @(%.2f,%.2f)" % (lbl, x, y), ring))
+        if e.get("hole_diameter"):
+            drill_holes.append((x, y, e["hole_diameter"], pad_net(e), "PTH " + lbl))
 
 # traces: net from connected ports, fallback connection_name
 trace_net = {}
@@ -343,6 +352,7 @@ for e in cj:
         if net is None:
             net = ("via", e["pcb_via_id"])
         add("via", net, ["top", "bottom"], Point(e["x"], e["y"]).buffer(e["outer_diameter"] / 2, 16), None, "via")
+        drill_holes.append((e["x"], e["y"], e["hole_diameter"], net, "via"))
         annular.append(("via @(%.2f,%.2f) %.2f/%.2f" % (e["x"], e["y"], e["hole_diameter"], e["outer_diameter"]),
                         (e["outer_diameter"] - e["hole_diameter"]) / 2))
         if e["hole_diameter"] < MIN_VIA_DRILL - TOL:
@@ -411,7 +421,7 @@ for root, layer, w, ln, seg in wire_segments:
         if w >= MIN_W_NECK - TOL and need > MIN_W_NECK and near_fine_pad(sg, NECK_DIST):
             necks[(root, need)].append((w, ln, layer))
         else:
-            viol[(root, need)].append((w, ln, layer))
+            viol[(root, need)].append((w, ln, layer, seg))
 nm = lambda r: net_name.get(r, str(r)) if not isinstance(r, tuple) else str(r)
 if viol:
     FAIL("trace width: %d segments too narrow (power >= %.2f, bus/SW >= %.2f, GND pours/signals >= %.2f; neck to %.2f only <= %.1f mm from a fine-pitch pad) on %d nets; widths used: %s" % (
@@ -420,8 +430,8 @@ if viol:
     for (root, need), l in sorted(viol.items(), key=lambda kv: -len(kv[1]))[:12]:
         print("       %-28s need %.2f, got min %.3f in %d segments (%.1f mm total)" % (
             nm(root), need, min(x[0] for x in l), len(l), sum(x[1] for x in l)))
-        for x in l[:0]:
-            pass
+        for x in l[:4]:
+            print("           %s w=%.3f len=%.2f at (%.2f,%.2f)-(%.2f,%.2f)" % (x[2], x[0], x[1], *x[3][:4]))
 else:
     OK("trace widths ok (power >= %.2f, bus/SW >= %.2f, others >= %.2f)" % (MIN_W_POWER, MIN_W_BUS, MIN_W_SIGNAL))
 if necks:
@@ -435,6 +445,7 @@ for it in items:
     geoms_by_layer[it.layer].append(it)
 clear_viol = {}
 fine_clear = [0]
+fine_list = []
 for layer, its in geoms_by_layer.items():
     tree = STRtree([i.geom for i in its])
     for ia, a in enumerate(its):
@@ -452,6 +463,7 @@ for layer, its in geoms_by_layer.items():
             if d < MIN_CLEARANCE - CLEAR_TOL and d >= MIN_CLEARANCE_HARD - TOL and (
                     a.id in fine_ids or b.id in fine_ids or near_fine_pad(a.geom, NECK_DIST) or near_fine_pad(b.geom, NECK_DIST)):
                 fine_clear[0] += 1
+                fine_list.append((d, a.kind + "/" + b.kind, nm(a.net), nm(b.net), a.geom.centroid))
                 continue
             if d < MIN_CLEARANCE - CLEAR_TOL:
                 key = (layer, a.kind + "/" + b.kind, nm(a.net), nm(b.net))
@@ -461,6 +473,8 @@ for layer, its in geoms_by_layer.items():
                     cv[0], cv[2] = d, a.geom.centroid
 if fine_clear[0]:
     print("INFO %d clearance pairs between %.2f and %.2f mm at fine-pitch pads (allowed down to %.2f)" % (fine_clear[0], MIN_CLEARANCE_HARD, MIN_CLEARANCE, MIN_CLEARANCE_HARD))
+for d_, k_, n1_, n2_, c_ in sorted(fine_list, key=lambda t: t[0])[:8]:
+    print("       fine-pitch pair %s %s <-> %s: %.3f mm near (%.1f,%.1f)" % (k_, n1_, n2_, d_, c_.x, c_.y))
 if clear_viol:
     FAIL("copper clearance < %.2f mm: %d net/kind pairs, worst %.3f mm" % (
         MIN_CLEARANCE, len(clear_viol), min(v[0] for v in clear_viol.values())))
@@ -582,6 +596,190 @@ if opens:
         print("       %-28s %d islands, smallest: %s" % (n, len(cs), cs[0][:6]))
 else:
     OK("all %d nets are physically connected by copper" % sum(1 for g, d in conn.groups.items() if len(d["pins"]) > 1))
+
+
+# =====================================================================
+# G4: hole-to-hole spacing (vias and round plated drill_holes), JLC drill spacing
+# =====================================================================
+print()
+hv = collections.Counter()
+worst = {}
+htree = STRtree([Point(h[0], h[1]) for h in drill_holes])
+for i, a in enumerate(drill_holes):
+    for j in htree.query(Point(a[0], a[1]), predicate="dwithin", distance=2.0):
+        if j <= i:
+            continue
+        b = drill_holes[j]
+        gap = math.hypot(a[0] - b[0], a[1] - b[1]) - (a[2] + b[2]) / 2
+        same = a[3] == b[3]
+        need = MIN_HOLE_SAME if same else MIN_HOLE_DIFF
+        if gap < need - TOL:
+            k = ("same net" if same else "different nets", nm(a[3]) if same else "%s/%s" % (nm(a[3]), nm(b[3])))
+            hv[k] += 1
+            worst.setdefault(k, []).append((gap, a, b))
+if hv:
+    FAIL("hole-to-hole spacing: %d pairs below %.2f (same net) / %.2f mm (different nets), edge to edge" % (sum(hv.values()), MIN_HOLE_SAME, MIN_HOLE_DIFF))
+    for k, l in worst.items():
+        for gap, a, b in sorted(l)[:4]:
+            print("       %s %s: gap %.3f mm  (%.2f,%.2f) %s <-> (%.2f,%.2f) %s" % (k[0], k[1], gap, a[0], a[1], a[4], b[0], b[1], b[4]))
+else:
+    mg = min(math.hypot(a[0] - b[0], a[1] - b[1]) - (a[2] + b[2]) / 2 for i, a in enumerate(drill_holes) for b in drill_holes[i + 1:] if math.hypot(a[0] - b[0], a[1] - b[1]) < 3)
+    OK("hole-to-hole spacing of %d vias/round plated drill_holes: smallest edge-to-edge gap %.3f mm (need >= %.2f same net, >= %.2f different nets)" % (len(drill_holes), mg, MIN_HOLE_SAME, MIN_HOLE_DIFF))
+
+# =====================================================================
+# G5: silkscreen (stroke width, text height, no silk on exposed pads)
+# =====================================================================
+print()
+from shapely.ops import unary_union
+silk_by_layer = collections.defaultdict(list)    # layer -> [(ref/label, geom)]
+_src = {e["source_component_id"]: e["name"] for e in cj if e["type"] == "source_component"}
+comp_name = {e["pcb_component_id"]: _src.get(e.get("source_component_id"), e["pcb_component_id"]) for e in cj if e["type"] == "pcb_component"}
+small_text = []
+for e in cj:
+    t = e["type"]
+    if t == "pcb_silkscreen_text":
+        fs = e["font_size"]
+        if fs < MIN_SILK_H - TOL:
+            small_text.append((e["text"], fs))
+        w, h = max(len(e["text"]), 1) * 0.6 * fs, fs
+        g = box(-w / 2, -h / 2, w / 2, h / 2)
+        g = rotate(g, e.get("ccw_rotation", 0), origin=(0, 0))
+        from shapely.affinity import translate
+        g = translate(g, e["anchor_position"]["x"], e["anchor_position"]["y"])
+        silk_by_layer[e["layer"]].append(("text '%s'" % e["text"], g))
+    elif t == "pcb_silkscreen_path":
+        rt = e["route"]
+        if len(rt) >= 2:
+            silk_by_layer[e["layer"]].append(("path of %s" % comp_name.get(e.get("pcb_component_id"), e.get("pcb_component_id")), LineString([(p["x"], p["y"]) for p in rt]).buffer(max(e.get("stroke_width", 0.1), MIN_SILK_W) / 2, 4)))
+    elif t == "pcb_silkscreen_circle":
+        c = e["center"]
+        silk_by_layer[e["layer"]].append(("circle", Point(c["x"], c["y"]).buffer(e["radius"] + max(e.get("stroke_width", 0.1), MIN_SILK_W) / 2, 12).difference(Point(c["x"], c["y"]).buffer(max(e["radius"] - max(e.get("stroke_width", 0.1), MIN_SILK_W) / 2, 0), 12))))
+if small_text:
+    FAIL("silkscreen text smaller than %.1f mm: %s" % (MIN_SILK_H, sorted(set(small_text))[:8]))
+else:
+    OK("silkscreen text height >= %.1f mm (%d texts)" % (MIN_SILK_H, sum(1 for e in cj if e["type"] == "pcb_silkscreen_text")))
+if not NOGERBER:
+    thin = {}
+    for lay in ("F_SilkScreen", "B_SilkScreen"):
+        for ln in open(os.path.join(tmp, lay + ".gbr")):
+            m = re.match(r"%ADD\d+C,([\d.]+)\*%", ln.strip())
+            if m and float(m.group(1)) < MIN_SILK_W - TOL:
+                thin[(lay, float(m.group(1)))] = 1
+    if thin:
+        FAIL("silkscreen Gerber stroke widths below %.2f mm: %s (run scripts/postprocess_gerbers.py)" % (MIN_SILK_W, sorted(thin)))
+    else:
+        OK("silkscreen Gerber stroke widths all >= %.2f mm" % MIN_SILK_W)
+tot = 0.0
+bad_silk = collections.defaultdict(float)
+for layer, sl in silk_by_layer.items():
+    pads = [(it.label, it.geom) for it in items if it.kind in ("pad", "pth") and it.layer == layer]
+    ptree = STRtree([g for _, g in pads])
+    for lbl, g in sl:
+        for j in ptree.query(g, predicate="intersects"):
+            a = g.intersection(pads[j][1]).area
+            if a > 1e-6:
+                tot += a
+                bad_silk[(layer, lbl, pads[j][0])] += a
+agg = collections.defaultdict(float)
+for k, a_ in bad_silk.items():
+    agg[(k[0], k[1])] += a_
+worst_items = {k: a_ for k, a_ in agg.items() if a_ > MAX_SILK_PAD}
+if worst_items:
+    FAIL("silkscreen over exposed pads: %d items above %.2f mm2 (total %.2f mm2)" % (len(worst_items), MAX_SILK_PAD, tot))
+else:
+    OK("silkscreen over exposed pads: largest item %.3f mm2 (limit %.2f per item), total %.3f mm2 (text boxes estimated as 0.6 x font size per char)" % (max(agg.values()) if agg else 0.0, MAX_SILK_PAD, tot))
+for k, a_ in sorted(agg.items(), key=lambda kv: -kv[1])[:10]:
+    print("       %s %s: %.3f mm2 over pads %s" % (k[0], k[1], a_, sorted({kk[2] for kk in bad_silk if (kk[0], kk[1]) == k})[:6]))
+
+# =====================================================================
+# G6: solder paste apertures (Gerber) vs. the pads of circuit.json
+# =====================================================================
+print()
+if not NOGERBER:
+    def paste_flashes(fn):
+        ap, cur, out = {}, None, []
+        for ln in open(os.path.join(tmp, fn)):
+            ln = ln.strip()
+            m = re.match(r"%ADD(\d+)R,([\d.]+)X([\d.]+)\*%", ln)
+            if m:
+                ap[m.group(1)] = ("R", float(m.group(2)), float(m.group(3)))
+                continue
+            m = re.match(r"%ADD(\d+)C,([\d.]+)\*%", ln)
+            if m:
+                ap[m.group(1)] = ("C", float(m.group(2)), float(m.group(2)))
+                continue
+            m = re.match(r"%ADD(\d+)(\w+),", ln)
+            if m and m.group(1) not in ap:
+                ap[m.group(1)] = ("?", 0, 0)
+                continue
+            m = re.match(r"D(\d+)\*$", ln)
+            if m and int(m.group(1)) >= 10:
+                cur = m.group(1)
+                continue
+            m = re.match(r"X(-?\d+)Y(-?\d+)D03\*", ln)
+            if m and cur in ap:
+                out.append((int(m.group(1)) / 1e6, int(m.group(2)) / 1e6) + ap[cur])
+        return out
+    ratios, nopaste, extra = [], [], 0
+    for lay, gf in (("top", "F_Paste.gbr"), ("bottom", "B_Paste.gbr")):
+        fl = paste_flashes(gf)
+        used = set()
+        for e in cj:
+            if e["type"] != "pcb_smtpad" or e["layer"] != lay:
+                continue
+            best = None
+            for k, f in enumerate(fl):
+                if k not in used and abs(f[0] - e["x"]) < 0.01 and abs(f[1] - e["y"]) < 0.01:
+                    best = k
+                    break
+            lbl = pin_str(e.get("pcb_port_id")) or e["pcb_smtpad_id"]
+            if best is None:
+                nopaste.append(lbl)
+                continue
+            used.add(best)
+            f = fl[best]
+            if e["shape"] in ("rect", "rotated_rect") and f[2] == "R":
+                pa, fa = e["width"] * e["height"], f[3] * f[4]
+                ratios.append((fa / pa, lbl))
+            elif e["shape"] == "circle" and f[2] == "C":
+                ratios.append((f[3] ** 2 / (2 * e["radius"]) ** 2, lbl))
+        extra += len(fl) - len(used)
+    if ratios:
+        lo = min(ratios)
+        hi = max(ratios)
+        if lo[0] < MIN_PASTE - 1e-3 or hi[0] > 1.0 + 1e-3:
+            FAIL("paste aperture / pad area outside %.0f..100 %%: smallest %.0f %% (%s), largest %.0f %% (%s)" % (MIN_PASTE * 100, lo[0] * 100, lo[1], hi[0] * 100, hi[1]))
+        else:
+            OK("paste apertures: %d pads compared, aperture/pad area %.0f..%.0f %%" % (len(ratios), lo[0] * 100, hi[0] * 100))
+    bad_np = sorted(set(x for x in nopaste if not re.match(r"(JP\d|TP\d)", x)))
+    jp_np = sorted(set(x for x in nopaste if re.match(r"JP\d", x)))
+    print("       pads without paste: %d (JP1/JP2 pads must have none: %s; test pads TP: %s)" % (len(nopaste), jp_np, sorted(set(x for x in nopaste if x.startswith("TP")))))
+    if bad_np:
+        WARN("SMD pads without paste aperture: %s" % bad_np[:12])
+    if any(not (x.startswith("JP1") or x.startswith("JP2")) for x in []):
+        pass
+    for jp in ("JP1", "JP2"):
+        if sum(1 for x in nopaste if x.startswith(jp + ".")) < 2:
+            FAIL("%s pads have paste (must stay open without paste)" % jp)
+    if extra:
+        FAIL("%d paste flashes without a matching SMD pad (paste on plated holes? run scripts/postprocess_gerbers.py)" % extra)
+
+    # G7: JP1/JP2 mask openings must merge into one opening (R5 m3/m7)
+    mk = paste_flashes("F_Mask.gbr")
+    for jp in ("JP1", "JP2"):
+        pads_ = [e for e in cj if e["type"] == "pcb_smtpad" and (pin_str(e.get("pcb_port_id")) or "").startswith(jp + ".")]
+        ops = []
+        for e in pads_:
+            for f in mk:
+                if abs(f[0] - e["x"]) < 0.01 and abs(f[1] - e["y"]) < 0.01 and f[2] == "R":
+                    ops.append((e, f))
+        if len(ops) != 2:
+            FAIL("%s: %d mask openings found for 2 pads" % (jp, len(ops)))
+            continue
+        (e1, f1), (e2, f2) = ops
+        dx, dy = abs(e1["x"] - e2["x"]), abs(e1["y"] - e2["y"])
+        merged = (dx < (f1[3] + f2[3]) / 2 - 1e-6 and dy < (f1[4] + f2[4]) / 2 + 1e-6) or (dy < (f1[4] + f2[4]) / 2 - 1e-6 and dx < (f1[3] + f2[3]) / 2 + 1e-6)
+        (OK if merged else FAIL)("%s mask openings %.2fx%.2f mm each, centre distance %.2f/%.2f mm: %s" % (jp, f1[3], f1[4], dx, dy, "one common opening (merged)" if merged else "NOT merged (mask web between the pads)"))
 
 # ---- USB-C pads ----
 usb = {}

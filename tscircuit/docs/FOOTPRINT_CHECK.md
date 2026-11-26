@@ -3,7 +3,7 @@
 Source of reference data: JLCEDA / EasyEDA official library (https://easyeda.com , https://lceda.cn), fetched via
 `https://easyeda.com/api/products/<LCSC>/components?version=6.4.19.5` (pad coordinates in 10 mil units, converted to mm
 and to a Y-up frame, same as tscircuit `pcbX/pcbY`). Lib files were NOT edited; apply the corrections below in
-`lib/usbc16.tsx`, `lib/esp32s3wroom1.tsx`, `lib/thtparts.tsx`, `lib/opto_so8_gw300.tsx`.
+`lib/usbc16.tsx`, `lib/esp32s3wroom1.tsx`, `lib/thtparts.tsx`, `lib/opto_so8_gw300.tsx` (applied in V1 of the layout; see the addendum at the end for the R4/R5 follow-up).
 Priority: **1. tactile pad-to-net mapping (functional bug), 2. USB-C pad order vs mating direction (functional bug),
 3. ESP32 EPAD + bottom row, 4. USB-C shell offsets, 5. opto/inductor/terminal geometry.**
 
@@ -116,3 +116,10 @@ is below the body, as per DESIGN_SPEC).
 * **P2 header 1x4 2.54** (HX PZ2.54-1x4P ZZ C32713270): pads 1.7 round (pad 1 square), drill 1.1, x = -3.81, -1.27, +1.27, +3.81.
 * **C12** (`CapE5_10p5`, +-2.54, drill 1.016, pad 2.54): real PA25V2200M10x17: pitch 5.0 (x=+-2.5), drill 1.0, pad 1.6; the
   0.08 mm offset per lead is irrelevant for a 0.6 mm lead; body 10 mm dia (silk circle r=5.25 is fine).
+
+---
+## Nachtrag nach Review R4/R5 (V2-Fixes)
+* **U1 LM393 (C7955)**: eigener Footprint `lib/soic8_lm393.tsx` aus EasyEDA SOIC-8_L5.0-W4.0-P1.27-LS6.0-BL (Pads 0,568 x 1,95 mm, Reihenabstand 5,41 mm, Aussenmass 7,4 mm), Pin 1 = (-1,905 / -2,705) im EasyEDA-Rahmen, Platzierung pcbRotation 270. `cpl_check.py`: theta 0, Restfehler 0,000 mm (vorher generisches `soic8`: 0,555 mm).
+* **L1/L2 (C98021)**: `Inductor3225` = EasyEDA IND-SMD_L3.2-W2.5 (Pads 1,52 x 3,1 mm bei x = +-1,145 mm), Restfehler 0,000 mm.
+* **P2 (C32713270)**: `PinHeader1x4` (`lib/thtparts.tsx`) = Loch 1,1 mm, Pad 1,7 mm (Pin 1 quadratisch), Raster 2,54 mm.
+* U3-, J2-, SW-, P1-Silkscreen so gezeichnet, dass keine Linie ueber einem Pad liegt (siehe FAB_CHECKLIST).

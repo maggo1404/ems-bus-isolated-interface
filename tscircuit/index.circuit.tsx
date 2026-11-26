@@ -85,11 +85,14 @@ const MCU_POUR = [
 const V3V3_POUR = [{ x: V_X0, y: V_Y0 }, { x: V_X1, y: V_Y0 }, { x: V_X1, y: V_Y1 }, { x: V_X0, y: V_Y1 }]
 
 export default () => (
-  <board outline={outline} layers={2} autorouterEffortLevel="5x"
+  <board outline={outline} layers={2} autorouterEffortLevel="5x" routeRemaining pcbStyle={{ silkscreenFontSize: "1mm" }}
     // fab rules, honoured by the autorouter (see docs/TSCIRCUIT_API.md "Fab settings"): via 0.3/0.6, min trace 0.25
     // (per-net widths via <trace thickness>, lib/netclass.ts), pad/trace/via clearance 0.25
     minTraceWidth="0.4mm" minViaHoleDiameter="0.3mm" minViaPadDiameter="0.6mm"
-    minTraceToHoleEdgeClearance="0.25mm" minTraceToPadEdgeClearance="0.2mm" minPadEdgeToPadEdgeClearance="0.2mm" minViaEdgeToPadEdgeClearance="0.2mm">
+    minTraceToHoleEdgeClearance="0.25mm" minTraceToPadEdgeClearance="0.2mm" minPadEdgeToPadEdgeClearance="0.2mm" minViaEdgeToPadEdgeClearance="0.2mm"
+    // paste apertures = 100 % of the pad (tscircuit default would be 70 % x 70 % = 49 % area, R5 M1)
+    minViaHoleEdgeToViaHoleEdgeClearance="0.25mm"
+    defaultSolderPasteMargin="0mm">
     <NetDefs />
     <EmsSide />
     <McuSide />
@@ -129,15 +132,15 @@ export default () => (
 
     {/* silkscreen */}
     <silkscreentext text="EMS-ESP Isolated Interface V2.0" pcbX={-14} pcbY={28.2} fontSize="1.0mm" />
-    <silkscreentext text="PWR" pcbX={-8} pcbY={26.2} fontSize="0.8mm" />
-    <silkscreentext text="RX" pcbX={13.2} pcbY={13.6} fontSize="0.8mm" />
-    <silkscreentext text="TX" pcbX={10.0} pcbY={-13.8} fontSize="0.8mm" />
-    <silkscreentext text="3V3" pcbX={30.6} pcbY={8.5} fontSize="0.8mm" />
-    <silkscreentext text="EMS SIDE (bus powered)" pcbX={-27} pcbY={-28.0} fontSize="0.8mm" />
-    <silkscreentext text="MCU / USB SIDE" pcbX={20} pcbY={-29.0} fontSize="0.8mm" />
-    <silkscreentext text="ISOLATION BARRIER" pcbX={0} pcbY={0} fontSize="0.8mm" />
+    <silkscreentext text="PWR" pcbX={-8} pcbY={26.2} fontSize="1.0mm" />
+    <silkscreentext text="RX" pcbX={13.2} pcbY={13.6} fontSize="1.0mm" />
+    <silkscreentext text="TX" pcbX={10.0} pcbY={-13.8} fontSize="1.0mm" />
+    <silkscreentext text="3V3" pcbX={26.0} pcbY={5.9} fontSize="1.0mm" />
+    <silkscreentext text="EMS SIDE (bus powered)" pcbX={-27} pcbY={-28.0} fontSize="1.0mm" />
+    <silkscreentext text="MCU / USB SIDE" pcbX={20} pcbY={-29.0} fontSize="1.0mm" />
+    <silkscreentext text="ISOLATION BARRIER" pcbX={0} pcbY={0} fontSize="1.0mm" />
     <silkscreenpath route={[{ x: 0, y: SLOT_Y1 + 0.5 }, { x: 0, y: 29 }]} />
     <silkscreenpath route={[{ x: 0, y: -SLOT_Y1 - 0.5 }, { x: 0, y: -29 }]} />
-    <silkscreentext text="P2: 1=3V3(JP2) 2=TX 3=RX 4=GND" pcbX={20} pcbY={-23.0} fontSize="0.8mm" />
+    <silkscreentext text="P2 3V3(JP2) TX RX GND" pcbX={16.5} pcbY={-23.9} fontSize="1.0mm" />
   </board>
 )

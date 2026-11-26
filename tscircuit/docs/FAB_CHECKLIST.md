@@ -1,6 +1,6 @@
-# Fab-Checkliste V2.0 (Skill `.claude/skills/tscircuit/CHECKLIST.md`) - Stand Layout AP7b
+# Fab-Checkliste V2.0 (Skill `.claude/skills/tscircuit/CHECKLIST.md`) - Stand nach Review-Fixes R4/R5 (docs/review/FIX_LIST_R2.md)
 
-Reproduzierbar mit `scripts/export_fab.sh 120s` (Build + Autorouter ~35 s, Gerber-Export aus `dist/index/circuit.json`, BOM/CPL, Netlist-, Fab- und Isolationspruefung).
+Reproduzierbar mit `scripts/export_fab.sh 120s` (Build + Autorouter ~40 s, Gerber-Export aus `dist/index/circuit.json`, BOM/CPL, Gerber-Nachbearbeitung `scripts/postprocess_gerbers.py`, Netlist-, Fab- und Isolationspruefung).
 
 | Skill-Punkt | Ergebnis |
 |---|---|
@@ -9,8 +9,13 @@ Reproduzierbar mit `scripts/export_fab.sh 120s` (Build + Autorouter ~35 s, Gerbe
 | `tsci check pcb-style` | 1 Hinweis: Netz source_net_5, ein 6,5-mm-Segment mit 8 Grad Abweichung von 0 deg (kosmetisch) |
 | `tsci check placement` | 0 DRC-Fehler; Hinweise: 3 Courtyard-Ueberlappungen (C24/R26 0,26 mm, R9/C13 0,25 mm, R11/C13 0,09 mm; Pads ueberlappen nicht) und "Drehung 180 deg" Vorschlaege fuer 2-Pin-Teile (nur Kosmetik der Pfadfuehrung). `tsci build` laeuft deshalb mit `--ignore-placement-drc` (zusaetzlich die gewollte Meldung "OC1/OC2 overlap cutout") |
 | Routing-DRC (`tsci build`, Autorouter) | 0 Fehler (`errors.json` leer) |
-| Gerber (F_Cu 853 / B_Cu 266 Leiterbahnen, 116 Vias 0,3/0,6, Ringbreite 0,15) | `scripts/check_fab.py`: 0 FAIL |
-| Isolation EMS <-> MCU | `scripts/check_isolation.py`: 7,085 mm (oben) / 7,400 mm (unten), Kupfer in Schlitzen 0, nichts ueber x = 0 |
+| Gerber (F_Cu 781 / B_Cu 262 Leiterbahnen, 120 Vias 0,3/0,6, Ringbreite 0,15) | `scripts/check_fab.py`: 0 FAIL, 0 WARN |
+| Isolation EMS <-> MCU | `scripts/check_isolation.py`: 7,047 mm (oben) / 7,400 mm (unten), Kupfer in Schlitzen 0, nichts ueber x = 0 |
+| Loetpaste (R5 M1) | `defaultSolderPasteMargin="0mm"` im `<board>`: Paste-Oeffnung = 100 % des Pads (tscircuit-Standard waere 70 % x 70 % = 49 % Flaeche); JP1/JP2/TP1..3 ohne Paste (`noSolderPaste`); Paste auf den J2-Schalen-Langloechern wird von `postprocess_gerbers.py` entfernt. `check_fab.py` G6 parst F_Paste/B_Paste: 252 Pads, Verhaeltnis 100..100 % |
+| Lotstopplack (R5 m3/m4/m7) | Maskenoeffnung = Pad (Expansion 0, JLC addiert seine eigene Kompensation, typ. 0,05 mm; Pad-Abstand 0,5-mm-USB-C-Raster 0,2 mm bleibt als Steg). JP1/JP2: `solderMaskMargin` 0,22 mm je Pad -> EINE gemeinsame Oeffnung 2,04 x 3,24 mm (`check_fab.py` G7) |
+| Via-/Bohrungsabstand (R5 M3) | Board-Parameter `minViaHoleEdgeToViaHoleEdgeClearance="0.25mm"` + `check_fab.py` G4: Rand-zu-Rand >= 0,25 mm gleiches Netz / >= 0,5 mm verschiedene Netze (Vias und runde PTH): kleinster Abstand 0,250 mm |
+| Silkscreen (R5 m1/m2) | Text >= 1,0 mm hoch (Beschriftungen, ICs, Dioden, LEDs, Stecker); Bezeichner der 0805/1206-R/C sind ausgeblendet (passen bei 1,0 mm nicht zwischen die Pads, Bestueckungsplan `docs/img/assembly.png`); Linienbreite im Gerber >= 0,15 mm (`postprocess_gerbers.py` verbreitert die tscircuit-Striche 0,07..0,14 mm); Silk nicht auf Pads: groesstes Einzelteil 0,26 mm2 (0805-Umrisse eng stehender Nachbarn C10/C30/C27/C29, JLC schneidet Silk auf Pads ab), U3/J2/SW/P1-Umrisse an den Pads vorbeigefuehrt, nichts auf der Platinenkante |
+| Gerber-ZIP | `bom.csv`/`pick_and_place.csv` von tscircuit werden entfernt (falsche Drehungen/Mitten; hochgeladen werden nur `fab/*_BOM_JLCPCB.csv` und `*_CPL_JLCPCB.csv`) |
 | Footprints/Polaritaet | siehe docs/FOOTPRINT_CHECK.md; CPL-Drehungen/Ursprung je Teil in docs/CPL_CHECK.md |
 | Bestueckungsdaten | `fab/EMSinterface_V2.0-BOM_JLCPCB.csv`, `-CPL_JLCPCB.csv`; TP1..TP3, JP1, JP2 unbestueckt |
 
@@ -21,14 +26,20 @@ Reproduzierbar mit `scripts/export_fab.sh 120s` (Build + Autorouter ~35 s, Gerbe
 * #8 Leiterbahnbreiten (Prueflogik `check_fab.py`): VBUS/V3V3/V5_EMS/EMS_VIN >= 0,5 mm, Busweg + Buck-SW >= 0,4 mm, Signale >= 0,25 mm; Einschnuerung auf 0,25 mm nur <= 1,5 mm neben einem Pad mit Rastermass <= 1,27 mm (USB-C, ESP32, SOT-23-6, SOIC). **GND/GND_EMS-Leiterbahnen (Stitching) 0,25 mm**: die Rueckfuehrung liegt auf den durchgehenden Pours (beide Lagen); alle Netze sind zusaetzlich pro Pad per Via/Bahn angebunden.
   Technik: `lib/netdefs.tsx` (`<net nominalTraceWidth>`), `lib/netclass.ts`. Der Autorouter verengt einzelne Zweige von Mehrpin-Netzen auf 0,25 mm. Deshalb sind 9 Verbindungen des Busweges von Hand mit `<trace pcbPath>` (0,4 mm) verlegt: Bruecke D1..D4/C1 (N3, N4, N6), L1 -> D4, R1/D7 -> R2 (N6), R4 -> C4 -> Q1 (N13), C9/U2 -> L3 (N26) in `src/ems-side.tsx`.
 * #9 Abstand >= 0,2 mm zwischen Netzen (0,15 mm nur an Feinraster-Pads/-Zonen; 4 Paare 0,15..0,2 mm an J2/U4, ausgewiesen als INFO). Numerische Toleranz 0,002 mm.
-* #10 Entkopplung: C10 (Buck-Eingang) neben U2, C11 direkt an L3 (V5), C13 zwischen OC2-Pin 5/8, C7 zwischen OC1-Pin 5/8, 100 nF/10 uF an U3-Pin 2, AMS1117-Kondensatoren C24/C25/C29/C26/C27 an U5. GND_EMS-Vias (hand platziert) am Buck- und Rueckkopplungs-GND.
+* #10 Entkopplung (R5 M2): C10 (10 uF) und C30 (100 nF) direkt am VIN-Pin 5 von U2 (Abstand Pad zu Pad 0,36 mm, VIN von Hand mit `<trace pcbPath>` 0,5 mm, GND ueber den Pour/Via), L3 naeher an SW (Pad-Abstand U2.6 zu L3.B 3,3 mm statt 5,3 mm), C9 bleibt am BST-Pin;  C11 direkt an L3 (V5), C13 zwischen OC2-Pin 5/8, C7 zwischen OC1-Pin 5/8, 100 nF/10 uF an U3-Pin 2, AMS1117-Kondensatoren C24/C25/C29/C26/C27 an U5. GND_EMS-Vias (hand platziert) am Buck- und Rueckkopplungs-GND.
 * #11 AMS1117 (U5): V3V3-Pour 16,5 x 10,5 mm auf Ober- UND Unterseite (je ~165 mm2, zusammen ~3,3 cm2) am Tab + 8 Thermovias (0,3/0,6).
-* #19 Silkscreen-Text >= 0,8 mm (Platinen-Texte), Linienbreite tscircuit-Standard; Courtyard siehe oben.
+* #19 Silkscreen-Text >= 1,0 mm, Linienbreite >= 0,15 mm (Gerber-Nachbearbeitung); Courtyard siehe oben.
 * #20 USB D+/D-: U4 (ESD) 5 mm hinter J2, Leitungspaar fuehrt ca. 12 mm parallel zu den ESP32-Pins 13/14; beide D+ und beide D- Pads angebunden (`check_fab.py`, Abschnitt USB-C).
+
+## Manuelle Pruefung in der JLC-Bestueckungsvorschau (vor der Bestellung, nicht automatisch pruefbar)
+* **BAT42W D1..D5 (C22466362)**: Anode/Kathode-Orientierung. Die Bibliothek hat Pad 1 = Anode (entgegen SOD-123-Gewohnheit), das Netz ist durch `PAD_SWAP` ausgeglichen. In der 3D-Ansicht der Bestueckung pruefen, dass der Kathodenbalken bei D1..D4 (Bruecke) und D5 (Klemme) mit der Platine/Silk uebereinstimmt; Foto aufheben (R4 m1).
+* Drehung/Polung aller 90/270-Teile und polarisierter Teile (D6, D7, LD1..LD5, C12/C14/C29, U1, U2, U4, U5, Q1, OC1, OC2, J2, U3, P1), siehe docs/CPL_CHECK.md (R5 m9a).
+* THT: P1, P2, J2-Schalenbeine brauchen JLCs Durchsteck-/Handloetservice (Angebot pruefen); Montagepfosten-Raster 84,5 x 39,5 gegen das Hammond-STEP pruefen (R5 m9d).
 
 ## Offene Punkte / Einschraenkungen
 1. **Autorouter ist nicht stabil**: jede kleine Platzierungsaenderung (auch auf der anderen Platinenseite) kann das ganze Ergebnis veraendern (Kurzschluesse, 0,25-mm-Zweige). Mehrere `routingPhaseIndex`-Phasen erzeugten ueberlappende Leiterbahnen und wurden verworfen. Nach jeder Platzierungsaenderung `scripts/export_fab.sh` laufen lassen und `check_fab.py` ablesen; bei Fehlschlag Bauteile um 0,1..0,5 mm verschieben (so entstand die aktuelle Platzierung).
-2. 3 Courtyard-Ueberlappungen (s. o.), 1 pcb-style-Hinweis, Rotationshinweise von `tsci check placement`.
-3. CPL-Rotationsvorzeichen (CCW positiv) und die 90/270-Teile in der JLC-Vorschau pruefen (docs/CPL_CHECK.md).
-4. 3D-Ansicht: `tsci build --3d` braucht die Modelle von modelcdn.tscircuit.com (im Sandbox-Proxy gesperrt); `docs/img/assembly.png` (Bestueckungsplan) ersetzt sie.
-5. J2 benoetigt 0,15 mm zu den eigenen NPTH-Pegs (Ø0,6, Footprint); Montagebohrungen >= 0,25 mm.
+2. Kleinster Kupferabstand: 4 Paare 0,152..0,192 mm an den Feinraster-Pads von U4 (VBUS gegen USB_DP/USB_DN, SOT-23-6 Raster 0,95 mm; JLC-Minimum 0,1 mm); alles andere >= 0,2 mm. Die Router-Parameter weiter anzuziehen (Pad-Kanten-Abstaende 0,22/0,25 mm) liess den Autorouter scheitern (Dutzende Clearance-Fehler), deshalb bleibt es bei 0,2 mm.
+3. 3 Courtyard-Ueberlappungen (s. o.), 1 pcb-style-Hinweis, Rotationshinweise von `tsci check placement`.
+4. CPL-Rotationsvorzeichen (CCW positiv) und die 90/270-Teile in der JLC-Vorschau pruefen (docs/CPL_CHECK.md).
+5. 3D-Ansicht: `tsci build --3d` braucht die Modelle von modelcdn.tscircuit.com (im Sandbox-Proxy gesperrt); `docs/img/assembly.png` (Bestueckungsplan) ersetzt sie.
+6. J2 benoetigt 0,15 mm zu den eigenen NPTH-Pegs (Ø0,6, Footprint); Montagebohrungen >= 0,25 mm.

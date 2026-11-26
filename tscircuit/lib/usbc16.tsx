@@ -29,7 +29,8 @@ export const UsbC16Footprint = () => {
       {/* 2 x 0.6 mm NPTH positioning pegs */}
       <hole diameter="0.6mm" pcbX={-2.9} pcbY={1.268} />
       <hole diameter="0.6mm" pcbX={2.9} pcbY={1.268} />
-      <silkscreenpath route={[{ x: -4.47, y: 0.23 }, { x: 4.47, y: 0.23 }, { x: 4.47, y: 7.57 }, { x: -4.47, y: 7.57 }, { x: -4.47, y: 0.23 }]} />
+      {/* U-shaped outline outside the shell legs (x = +-5.2), open towards the SMD row, 0.27 mm inside the mating face (= board edge) */}
+      <silkscreenpath route={[{ x: -5.2, y: 0.0 }, { x: -5.2, y: 7.3 }, { x: 5.2, y: 7.3 }, { x: 5.2, y: 0.0 }]} />
     </footprint>
   )
 }

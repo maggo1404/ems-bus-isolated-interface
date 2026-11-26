@@ -4,6 +4,7 @@
 import { Opto6N137, Opto6N136 } from "../lib/opto_so8_gw300"
 import { DiodeKA, DiodeAK, LedRed, LedGreen } from "../lib/diodes"
 import { traceWidth } from "../lib/netclass"
+import { Soic8Lm393Footprint } from "../lib/soic8_lm393"
 import { Mstba2, CapE5_10p5, Inductor3225, Inductor0520, Res2010Footprint } from "../lib/thtparts"
 
 // ---------------------------------------------------------------------------
@@ -13,7 +14,7 @@ import { Mstba2, CapE5_10p5, Inductor3225, Inductor0520, Res2010Footprint } from
 const NETS: Record<string, string[]> = {
   // EMS side
   V5_EMS: ["C6.2", "C8.1", "C11.1", "C13.2", "L3.1", "OC2.8", "R9.2", "R10.2", "R11.2", "R12.2", "R17.2", "U1.8"],
-  GND_EMS: ["C4.1", "C5.1", "C6.1", "C8.2", "C10.1", "C11.2", "C12.2", "C14.2", "C13.1", "D2.2", "D4.2", "D5.2", "D6.1", "LD1.1", "OC2.5", "Q1.2", "R8.1", "R15.1", "U1.4", "U2.2"],
+  GND_EMS: ["C30.1", "C4.1", "C5.1", "C6.1", "C8.2", "C10.1", "C11.2", "C12.2", "C14.2", "C13.1", "D2.2", "D4.2", "D5.2", "D6.1", "LD1.1", "OC2.5", "Q1.2", "R8.1", "R15.1", "U1.4", "U2.2"],
   EMS_N1: ["F2.2", "L2.1"],
   EMS_N10: ["C3.2", "R7.2", "R8.2", "U1.2"],
   EMS_N11: ["R3.2", "R4.1"],
@@ -37,7 +38,7 @@ const NETS: Record<string, string[]> = {
   EMS_N7: ["D6.2", "R5.1", "R6.1", "R7.1", "U1.5"],
   EMS_N8: ["C2.1", "C3.1", "R1.2", "R5.2"],
   EMS_N9: ["C2.2", "R6.2", "U1.3"],
-  EMS_VIN: ["C10.2", "C12.1", "C14.1", "D7.1", "R16.1", "U2.5"],
+  EMS_VIN: ["C10.2", "C30.2", "C12.1", "C14.1", "D7.1", "R16.1", "U2.5"],
   // MCU side (shared with src/mcu-side.tsx through these net names)
   GND: ["C7.1", "OC1.5"],
   MCU_RX: ["LD3.1", "OC1.6", "R13.1"],
@@ -69,7 +70,7 @@ const V1: Record<string, P> = {
   R6: { x: 28.57, y: 5.71 }, R7: { x: 28.57, y: 1.91 }, R8: { x: 28.57, y: 13.97 },
   R9: { x: 43.81, y: 12.7, r: 90 }, Q1: { x: 42.7, y: 16.85, r: 90 }, C4: { x: 42.6, y: 20.32 },
   C5: { x: 43.81, y: 4.39, r: 90 }, C6: { x: 35.81, y: 5.71 }, R10: { x: 43.0, y: 24.13 },
-  R11: { x: 43.81, y: 8.26, r: 90 }, D7: { x: 16.51, y: 20.32 },
+  D7: { x: 16.51, y: 20.32 },
   U2: { x: 34.92, y: 24.77, r: 90 }, R12: { x: 39.6, y: 23.2, r: 90 }, R15: { x: 39.6, y: 19.7, r: 90 },
   C9: { x: 30.2, y: 24.45, r: 90 }, R16: { x: 35.24, y: 28.89 }, C10: { x: 32.07, y: 28.57, r: 90 }, C11: { x: 28.45, y: 34.98 },
   F1: { x: 7.62, y: 19.37, r: 90 }, F2: { x: 7.62, y: 14.29, r: 90 }, R17: { x: 43.0, y: 28.89 },
@@ -78,8 +79,11 @@ const V1: Record<string, P> = {
 }
 // layout overrides (enclosure layout, FIX_LIST #22/#10): absolute board coordinates
 const OVR: Record<string, P> = {
-  C12: { x: -32.5, y: 22.5, r: 90 }, C14: { x: -13.5, y: -24.3, r: 0 }, C11: { x: -25.0, y: 19.0, r: 90 }, C1: { x: -28.0, y: -10.5, r: 90 }, C10: { x: -13.4, y: 14.2, r: 90 },
-  C13: { x: -7.0, y: -8.3, r: 90 }, LD1: { x: -8, y: 24, r: 0 }, R17: { x: -14, y: 24, r: 0 },
+  C12: { x: -32.5, y: 22.5, r: 90 }, C14: { x: -13.5, y: -24.3, r: 0 }, C11: { x: -25.0, y: 19.0, r: 90 }, C1: { x: -28.0, y: -10.5, r: 90 }, C10: { x: -12.9, y: 11.1, r: 180 },
+  // buck: C10 + C30 directly at U2 VIN (pin 5, x -15.18), L3 close to SW (R5 M2)
+  C30: { x: -12.9, y: 12.9, r: 180 }, L3: { x: -20.6, y: 14.57, r: 0 }, R10: { x: -8.37, y: 9.86, r: 0 }, C8: { x: -8.37, y: 12.85, r: 0 },
+  R16: { x: -14.6, y: 16.3, r: 0 },
+  C13: { x: -7.0, y: -8.3, r: 90 }, R11: { x: -9.0, y: -11.57, r: 90 }, LD1: { x: -8, y: 24, r: 0 }, R17: { x: -14, y: 24, r: 0 },
 }
 const pos = (ref: string) => {
   const o = OVR[ref]
@@ -103,14 +107,16 @@ const mpos = (ref: string) => {
   return { ...p, schX: sch(p.pcbX) + 8, schY: sch(p.pcbY) }
 }
 
-const GND_VIAS: [number, number][] = [[-19.0, 10.0], [-12.6, 16.6], [-27.4, 22.4], [-12.4, 1.2], [-10.6, 6.7]]
+const GND_VIAS: [number, number][] = [[-19.0, 10.0], [-12.6, 16.6], [-27.4, 22.4], [-12.4, 1.2], [-10.6, 6.7], [-10.9, 11.25]]
 const J = (...c: string[]) => ({ jlcpcb: c })
+// refdes of the 0805/1206 R and C are not printed: silk text must be >= 1.0 mm high (JLC), which does not fit between the pads (docs/img/assembly.png has the refdes)
+const NOREF = { silkscreenTextVisibility: "hidden" } as const
 
 const Res = (ref: string, v: string, lcsc?: string, fp: any = "0805") => (
-  <resistor name={ref} resistance={v} footprint={fp} {...pos(ref)} {...(lcsc ? { supplierPartNumbers: J(lcsc) } : {})} />
+  <resistor name={ref} resistance={v} footprint={fp} pcbStyle={NOREF} {...pos(ref)} {...(lcsc ? { supplierPartNumbers: J(lcsc) } : {})} />
 )
-const Cap = (ref: string, v: string, lcsc?: string, fp: any = "0805") => (
-  <capacitor name={ref} capacitance={v} footprint={fp} {...pos(ref)} {...(lcsc ? { supplierPartNumbers: J(lcsc) } : {})} />
+const Cap = (ref: string, v: string, lcsc?: string, fp: any = "0805", extra: any = {}) => (
+  <capacitor name={ref} capacitance={v} footprint={fp} pcbStyle={NOREF} {...pos(ref)} {...extra} {...(lcsc ? { supplierPartNumbers: J(lcsc) } : {})} />
 )
 // Diodes: D1-D5 BAT42W (JLC pad 1 = ANODE), D6/D7 pad 1 = cathode; LD1 red pad 1 = K, LD2/LD3 green pad 1 = A.
 // The NETS table keeps the V1 convention pad 1 = cathode, pad 2 = anode; the pads of the parts whose
@@ -146,7 +152,9 @@ export const EmsSide = () => (
     {/* C12 + C14: 2 x 1000 uF/25 V SMD electrolytic in parallel (replaces the V1 2200 uF), rotated 90 deg */}
     <CapE5_10p5 name="C12" {...pos("C12")} />
     <CapE5_10p5 name="C14" {...pos("C14")} schY={sch(-24.3) + 3} />
-    {Cap("C10", "10uF", "C15850")}
+    {/* the hand-routed VIN pin -> C10 trace (1.5 mm) is longer than tscircuit's automatic 1 mm decoupling limit; its GND leg is routed to the pour (R5 M2) */}
+    {Cap("C10", "10uF", "C15850", "0805", { maxDecouplingTraceLength: 20 })}
+    {Cap("C30", "100nF", "C49678", "0805", {})}
 
     {/* ---- RX comparator (U1A) and TX comparator (U1B), Q1 bus load ---- */}
     {Res("R1", "10k", "C17414")}
@@ -169,7 +177,7 @@ export const EmsSide = () => (
     {/* LM393 SOIC-8: 1 OUTA 2 IN-A 3 IN+A 4 GND 5 IN+B 6 IN-B 7 OUTB 8 VCC (pad numbers = datasheet) */}
     <chip
       name="U1"
-      footprint="soic8"
+      footprint={<Soic8Lm393Footprint />}
       manufacturerPartNumber="LM393DR"
       supplierPartNumbers={J("C7955")}
       pinLabels={{ pin1: ["OUTA"], pin2: ["INA_N"], pin3: ["INA_P"], pin4: ["GND"], pin5: ["INB_P"], pin6: ["INB_N"], pin7: ["OUTB"], pin8: ["VCC"] }}
@@ -178,7 +186,7 @@ export const EmsSide = () => (
         rightSide: { direction: "top-to-bottom", pins: ["VCC", "OUTA", "OUTB", "GND"] },
       }}
       {...pos("U1")}
-      pcbRotation={0}
+      pcbRotation={270}
     />
     {/* Q1 BC817-40 SOT-23 (EasyEDA C20069155 verified): pad 1 = B, 2 = E, 3 = C (chip so pad numbers equal package pins) */}
     <chip
@@ -223,11 +231,11 @@ export const EmsSide = () => (
     <Opto6N136 name="OC2" pcbX={0} pcbY={-8} pcbRotation={180} schX={sch(0)} schY={sch(-8) - 2} />
 
     {/* ---- MCU-side opto helpers ---- */}
-    <capacitor name="C7" capacitance="100nF" footprint="0805" supplierPartNumbers={J("C49678")} {...mpos("C7")} />
-    <resistor name="R13" resistance="4.7k" footprint="0805" supplierPartNumbers={J("C17673")} {...mpos("R13")} />
-    <resistor name="R14" resistance="270" footprint="0805" supplierPartNumbers={J("C17590")} {...mpos("R14")} />
-    <resistor name="R18" resistance="1.2k" footprint="0805" supplierPartNumbers={J("C17379")} {...mpos("R18")} />
-    <resistor name="R19" resistance="1.2k" footprint="0805" supplierPartNumbers={J("C17379")} {...mpos("R19")} />
+    <capacitor name="C7" pcbStyle={NOREF} capacitance="100nF" footprint="0805" supplierPartNumbers={J("C49678")} {...mpos("C7")} />
+    <resistor name="R13" pcbStyle={NOREF} resistance="4.7k" footprint="0805" supplierPartNumbers={J("C17673")} {...mpos("R13")} />
+    <resistor name="R14" pcbStyle={NOREF} resistance="150" footprint="0805" supplierPartNumbers={J("C17471")} {...mpos("R14")} />
+    <resistor name="R18" pcbStyle={NOREF} resistance="220" footprint="0805" supplierPartNumbers={J("C17557")} {...mpos("R18")} />
+    <resistor name="R19" pcbStyle={NOREF} resistance="220" footprint="0805" supplierPartNumbers={J("C17557")} {...mpos("R19")} />
     <LedGreen name="LD2" {...mpos("LD2")} />
     <LedGreen name="LD3" {...mpos("LD3")} />
 
@@ -251,7 +259,11 @@ export const EmsSide = () => (
     <trace from="R4.pin2" to="Q1.pin3" thickness="0.4mm"
       pcbPath={[{ x: 3.0, y: -0.7 }, { x: 3.0, y: -12.69 }, "C4.pin2", { x: 0, y: -12.69 }, { x: -0.6, y: -11.87 }]} />
     <trace from="C9.pin2" to="L3.pin2" thickness="0.4mm" pcbPath={["C9.pin2"]} />
-    <trace from="U2.pin6" to="L3.pin2" thickness="0.4mm" pcbPath={[{ x: 1.3, y: 2.28 }, { x: -4.97, y: 2.28 }]} />
+    <trace from="U2.pin6" to="L3.pin2" thickness="0.4mm" pcbPath={[{ x: 1.3, y: 2.28 }, { x: -2.12, y: 2.28 }]} />
+
+    {/* buck input: hand-routed VIN (0.5 mm) U2.VIN -> C10.2 -> C30.2, shorter than 2 mm, no vias (R5 M2); frame of U2 (centre -16.48/10.72) */}
+    <trace from="U2.pin5" to="C10.pin2" thickness="0.5mm" pcbPath={[{ x: 2.48, y: 0 }]} />
+    <trace from="C10.pin2" to="C30.pin2" thickness="0.5mm" pcbPath={["C10.pin2"]} />
 
     {/* ---- connectivity (V1 netlist) ---- */}
     {Object.entries(NETS).flatMap(([net, pins]) =>

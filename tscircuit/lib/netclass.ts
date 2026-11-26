@@ -1,6 +1,6 @@
 // Net classes -> trace width (FIX_LIST #8). tscircuit has no per-net width prop: the width is set per <trace> with
 // `thickness`, so every <trace ... net.X> gets thickness={traceWidth("X")}. The board sets minTraceWidth = SIGNAL_W.
-export const POWER_NETS = ["VBUS", "V3V3", "V5_EMS", "EMS_VIN"]
+export const POWER_NETS = ["VBUS", "VBUS_F", "V3V3", "V5_EMS", "EMS_VIN"]
 // GND / GND_EMS: solid pours on both layers carry the return current; their stitching traces are routed last at signal width
 export const GND_NETS = ["GND", "GND_EMS"]
 // bus path (F1/F2, L1/L2, bridge D1-D4, R2-R4, Q1 collector) and the buck switch node (EMS_N26 = U2.SW / L3 / C9)
