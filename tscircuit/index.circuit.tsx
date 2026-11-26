@@ -4,6 +4,7 @@
 import { EmsSide } from "./src/ems-side"
 import { McuSide } from "./src/mcu-side"
 import { NetDefs } from "./lib/netdefs"
+import { FS } from "./lib/silk"
 
 const W = 110, H = 60
 const NX = 5.5, NY = 8.0, NR = 3.5 // corner notch (X, Y) for the lid-screw bosses, R3.5 on the inner corner
@@ -77,21 +78,21 @@ const EMS_POUR = [
 ]
 // V3V3 pour area for the AMS1117 tab (FIX_LIST #11): x 8..24.5, y 19..29.5 on both layers (~ 2 x 165 mm2 = 3.3 cm2)
 const V_X0 = 8, V_X1 = 24.5, V_Y0 = 19, V_Y1 = 29.5
-const VG = 0.6 // gap between the V3V3 pour and the GND pour
+const VG = 0.8 // gap between the V3V3 pour and the GND pour
 const MCU_POUR = [
   { x: POUR_GAP, y: hy - PM }, { x: V_X0 - VG, y: hy - PM }, { x: V_X0 - VG, y: V_Y0 - VG }, { x: V_X1 + VG, y: V_Y0 - VG },
-  { x: V_X1 + VG, y: hy - PM }, { x: ANT_X - 0.4, y: hy - PM }, { x: ANT_X - 0.4, y: -hy + PM }, { x: POUR_GAP, y: -hy + PM },
+  { x: V_X1 + VG, y: hy - PM }, { x: ANT_X - 1.4, y: hy - PM }, { x: ANT_X - 1.4, y: -hy + PM }, { x: POUR_GAP, y: -hy + PM },
 ]
 const V3V3_POUR = [{ x: V_X0, y: V_Y0 }, { x: V_X1, y: V_Y0 }, { x: V_X1, y: V_Y1 }, { x: V_X0, y: V_Y1 }]
 
 export default () => (
-  <board outline={outline} layers={2} autorouterEffortLevel="5x" routeRemaining pcbStyle={{ silkscreenFontSize: "1mm" }}
+  <board outline={outline} layers={2} autorouterEffortLevel="5x" routeRemaining pcbStyle={{ silkscreenFontSize: "1.85mm" }}
     // fab rules, honoured by the autorouter (see docs/TSCIRCUIT_API.md "Fab settings"): via 0.3/0.6, min trace 0.25
     // (per-net widths via <trace thickness>, lib/netclass.ts), pad/trace/via clearance 0.25
     minTraceWidth="0.4mm" minViaHoleDiameter="0.3mm" minViaPadDiameter="0.6mm"
     minTraceToHoleEdgeClearance="0.25mm" minTraceToPadEdgeClearance="0.2mm" minPadEdgeToPadEdgeClearance="0.2mm" minViaEdgeToPadEdgeClearance="0.2mm"
     // paste apertures = 100 % of the pad (tscircuit default would be 70 % x 70 % = 49 % area, R5 M1)
-    minViaHoleEdgeToViaHoleEdgeClearance="0.25mm"
+    minViaHoleEdgeToViaHoleEdgeClearance="0.5mm"
     defaultSolderPasteMargin="0mm">
     <NetDefs />
     <EmsSide />
@@ -113,16 +114,16 @@ export default () => (
     <cutout name="SLOT_TOP" shape="rect" width={`${SLOT_W}mm`} height={`${SLOT_Y1 - SLOT_Y0}mm`} pcbX={0} pcbY={(SLOT_Y0 + SLOT_Y1) / 2} />
     <cutout name="SLOT_BOT" shape="rect" width={`${SLOT_W}mm`} height={`${SLOT_Y1 - SLOT_Y0}mm`} pcbX={0} pcbY={-(SLOT_Y0 + SLOT_Y1) / 2} />
 
-    {/* copper pours: GND_EMS only on the EMS side, GND only on the MCU side, both layers, 0.3 mm clearance */}
+    {/* copper pours: GND_EMS only on the EMS side, GND only on the MCU side, both layers, 0.25 mm clearance (R7 m2: no slivers < 0.15 mm) */}
     {(["top", "bottom"] as const).map((layer) => (
-      <copperpour key={`e${layer}`} layer={layer} connectsTo="net.GND_EMS" clearance="0.3mm" boardEdgeMargin="0.5mm" cutoutMargin="0.55mm" outline={EMS_POUR} />
+      <copperpour key={`e${layer}`} layer={layer} connectsTo="net.GND_EMS" clearance="0.25mm" boardEdgeMargin="0.5mm" cutoutMargin="0.55mm" outline={EMS_POUR} />
     ))}
     {(["top", "bottom"] as const).map((layer) => (
-      <copperpour key={`m${layer}`} layer={layer} connectsTo="net.GND" clearance="0.3mm" boardEdgeMargin="0.5mm" cutoutMargin="0.55mm" outline={MCU_POUR} />
+      <copperpour key={`m${layer}`} layer={layer} connectsTo="net.GND" clearance="0.25mm" boardEdgeMargin="0.5mm" cutoutMargin="0.55mm" outline={MCU_POUR} />
     ))}
     {/* V3V3 heat spreader for the AMS1117 tab (both layers + thermal vias) */}
     {(["top", "bottom"] as const).map((layer) => (
-      <copperpour key={`v${layer}`} layer={layer} connectsTo="net.V3V3" clearance="0.3mm" boardEdgeMargin="0.5mm" cutoutMargin="0.55mm" outline={V3V3_POUR} />
+      <copperpour key={`v${layer}`} layer={layer} connectsTo="net.V3V3" clearance="0.25mm" boardEdgeMargin="0.5mm" cutoutMargin="0.55mm" outline={V3V3_POUR} />
     ))}
 
     {/* thermal vias of the V3V3 heat spreader (AMS1117 tab): top pour <-> bottom pour, 2 x 4 grid beside the tab */}
@@ -130,17 +131,23 @@ export default () => (
       <via key={`tv${x}_${y}`} pcbX={x} pcbY={y} fromLayer="top" toLayer="bottom" holeDiameter="0.3mm" outerDiameter="0.6mm" connectsTo="net.V3V3" />
     )))}
 
-    {/* silkscreen */}
-    <silkscreentext text="EMS-ESP Isolated Interface V2.0" pcbX={-14} pcbY={28.2} fontSize="1.0mm" />
-    <silkscreentext text="PWR" pcbX={-8} pcbY={26.2} fontSize="1.0mm" />
-    <silkscreentext text="RX" pcbX={13.2} pcbY={13.6} fontSize="1.0mm" />
-    <silkscreentext text="TX" pcbX={10.0} pcbY={-13.8} fontSize="1.0mm" />
-    <silkscreentext text="3V3" pcbX={26.0} pcbY={5.9} fontSize="1.0mm" />
-    <silkscreentext text="EMS SIDE (bus powered)" pcbX={-27} pcbY={-28.0} fontSize="1.0mm" />
-    <silkscreentext text="MCU / USB SIDE" pcbX={20} pcbY={-29.0} fontSize="1.0mm" />
-    <silkscreentext text="ISOLATION BARRIER" pcbX={0} pcbY={0} fontSize="1.0mm" />
+    {/* silkscreen: every text >= 1.0 mm glyph height (fontSize 1.85 mm, R7 M1); descriptive texts sit on free areas, the title on the bottom side */}
+    <silkscreentext text="EMS-ESP Isolated Interface V2.0" pcbX={0} pcbY={26.5} layer="bottom" fontSize={FS} />
+    <silkscreentext text="PWR" pcbX={-8} pcbY={26.2} fontSize={FS} />
+    <silkscreentext text="RX" pcbX={13.2} pcbY={13.6} fontSize={FS} />
+    <silkscreentext text="TX" pcbX={10.0} pcbY={-13.8} fontSize={FS} />
+    <silkscreentext text="3V3" pcbX={26.0} pcbY={5.9} fontSize={FS} />
+    <silkscreentext text="RESET" pcbX={33.5} pcbY={-28.2} fontSize={FS} />
+    <silkscreentext text="BOOT" pcbX={27.6} pcbY={-14.8} fontSize={FS} />
+    <silkscreentext text="EMS SIDE" pcbX={-40} pcbY={-28.2} fontSize={FS} />
+    <silkscreentext text="MCU SIDE" pcbX={22.5} pcbY={-28.2} fontSize={FS} />
+    <silkscreentext text="ISOLATION" pcbX={0} pcbY={0} fontSize={FS} />
     <silkscreenpath route={[{ x: 0, y: SLOT_Y1 + 0.5 }, { x: 0, y: 29 }]} />
     <silkscreenpath route={[{ x: 0, y: -SLOT_Y1 - 0.5 }, { x: 0, y: -29 }]} />
-    <silkscreentext text="P2 3V3(JP2) TX RX GND" pcbX={16.5} pcbY={-23.9} fontSize="1.0mm" />
+    {/* P2 pin labels (vertical, one per pin of the 2.54 mm header at x = 8.19 / 10.73 / 13.27 / 15.81, y = -26.5) */}
+    <silkscreentext text="3V3" pcbX={8.19} pcbY={-23.2} pcbRotation={90} fontSize={FS} />
+    <silkscreentext text="TX" pcbX={10.73} pcbY={-22.9} pcbRotation={90} fontSize={FS} />
+    <silkscreentext text="RX" pcbX={13.27} pcbY={-22.9} pcbRotation={90} fontSize={FS} />
+    <silkscreentext text="GND" pcbX={15.81} pcbY={-23.2} pcbRotation={90} fontSize={FS} />
   </board>
 )

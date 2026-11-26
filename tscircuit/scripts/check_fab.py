@@ -15,6 +15,8 @@ Checks
     Pad-to-pad inside one component is a library property and is not reported.
  C4 No copper inside <cutout>s (slots), no copper inside <keepout>s (antenna) except the keepout's own component,
     copper-to-NPTH-hole and copper-to-board-edge distance.
+ G5 Silkscreen: glyph height/stroke MEASURED in the silk Gerber (>= 1.0 mm / 0.16 mm), texts vs pads/vias/holes/slots/edge/other texts, pin-1 + polarity marks.
+ G8 Pour slivers < 0.15 mm cleared in the copper Gerbers (scripts/slivers.py), no island created; G9 C23 within 2 mm of the ESP32 3V3 pad; Gerber file names (JLC/KiCad).
  C5 Every net is physically connected by copper (traces/vias/pours) = no open/unrouted connection; the USB-C pads
     are listed one by one (both D+ pads, both D- pads, all VBUS/GND pads, CC1/CC2, shell legs).
 """
@@ -44,8 +46,9 @@ MIN_EDGE = 0.30         # copper to board edge
 MIN_POUR_EDGE = 0.50    # pour to board edge / slots / NPTH
 MIN_HOLE = 0.25         # copper to the NPTH mounting holes
 MIN_HOLE_DIFF = 0.50    # hole edge to hole edge, different nets (JLC hole-to-hole)
-MIN_HOLE_SAME = 0.25    # hole edge to hole edge, same net
-MIN_SILK_W = 0.15       # JLC silkscreen line width
+MIN_HOLE_SAME = 0.50    # hole edge to hole edge, same net (R7 m3: JLC recommends 0.5 mm for all pairs; router param minViaHoleEdgeToViaHoleEdgeClearance=0.5mm)
+MIN_SILK_W = 0.16       # JLC silkscreen line width (min 0.153; R7 M1)
+MIN_SILK_EDGE = 0.30    # silk text envelope to the board edge
 MIN_SILK_H = 1.0        # JLC silkscreen character height
 MAX_SILK_PAD = 0.30     # mm2 of silkscreen of ONE item over exposed pads (JLC clips silk on pads, but keep it off; the 0805 outlines of tightly packed neighbours may touch)
 MIN_PASTE = 0.90        # paste aperture / pad area, smallest allowed (largest allowed 1.0 + tolerance)
@@ -85,7 +88,25 @@ tmp = tempfile.mkdtemp(prefix="checkfab_")
 if not NOGERBER:
     with zipfile.ZipFile(gz) as z:
         z.extractall(tmp)
+        zip_names = z.namelist()
+    # the zip carries JLC/KiCad-style names (<proj>-F_Cu.gtl ...); the parsers below use the tscircuit names -> copy under the old names
+    JLC_NAMES = {"F_Cu.gbr": "F_Cu.gtl", "B_Cu.gbr": "B_Cu.gbl", "F_Mask.gbr": "F_Mask.gts", "B_Mask.gbr": "B_Mask.gbs",
+                 "F_Paste.gbr": "F_Paste.gtp", "B_Paste.gbr": "B_Paste.gbp", "F_SilkScreen.gbr": "F_Silkscreen.gto",
+                 "B_SilkScreen.gbr": "B_Silkscreen.gbo", "Edge_Cuts.gbr": "Edge_Cuts.gm1", "drill-L1-L2.drl": "PTH.drl", "drill_npth.drl": "NPTH.drl"}
+    SILK_FILE = {}
+    for old, new in JLC_NAMES.items():
+        hit = [n for n in zip_names if n.endswith("-" + new)]
+        if hit:
+            import shutil
+            shutil.copy(os.path.join(tmp, hit[0]), os.path.join(tmp, old))
+        elif old not in zip_names:
+            pass
 print("== Gerber / drill (%s) ==" % gz)
+if not NOGERBER:
+    miss = [new for old, new in JLC_NAMES.items() if not any(n.endswith("-" + new) for n in zip_names)]
+    bad_names = [n for n in zip_names if not any(n.endswith("-" + new) for new in JLC_NAMES.values())]
+    (FAIL if miss or bad_names else OK)("Gerber file names follow the JLC/KiCad pattern <project>-F_Cu.gtl ... -PTH.drl, -NPTH.drl%s" % (
+        " (missing %s, unexpected %s)" % (miss, bad_names) if miss or bad_names else " (%d files)" % len(zip_names)))
 
 
 def parse_gerber(path):
@@ -627,38 +648,103 @@ else:
     OK("hole-to-hole spacing of %d vias/round plated drill_holes: smallest edge-to-edge gap %.3f mm (need >= %.2f same net, >= %.2f different nets)" % (len(drill_holes), mg, MIN_HOLE_SAME, MIN_HOLE_DIFF))
 
 # =====================================================================
-# G5: silkscreen (stroke width, text height, no silk on exposed pads)
+# G5: silkscreen. Glyph height and stroke are MEASURED in the silk Gerber (not taken from fontSize), R7 M1:
+#     per text the Gerber strokes inside the text's box are collected (strokes of circuit.json silk paths/circles are excluded),
+#     height = extent along the text's up axis + stroke width.  Texts must not touch pads/vias/holes, the board edge, other texts.
 # =====================================================================
 print()
 from shapely.ops import unary_union
-silk_by_layer = collections.defaultdict(list)    # layer -> [(ref/label, geom)]
+from shapely.affinity import translate
+silk_by_layer = collections.defaultdict(list)    # layer -> [(ref/label, geom)]   (paths/circles only, texts are handled exactly below)
 _src = {e["source_component_id"]: e["name"] for e in cj if e["type"] == "source_component"}
 comp_name = {e["pcb_component_id"]: _src.get(e.get("source_component_id"), e["pcb_component_id"]) for e in cj if e["type"] == "pcb_component"}
-small_text = []
+silk_texts = [e for e in cj if e["type"] == "pcb_silkscreen_text"]
+silk_circles = {"top": [], "bottom": []}
+silk_pathsegs = {"top": set(), "bottom": set()}
 for e in cj:
     t = e["type"]
-    if t == "pcb_silkscreen_text":
-        fs = e["font_size"]
-        if fs < MIN_SILK_H - TOL:
-            small_text.append((e["text"], fs))
-        w, h = max(len(e["text"]), 1) * 0.6 * fs, fs
-        g = box(-w / 2, -h / 2, w / 2, h / 2)
-        g = rotate(g, e.get("ccw_rotation", 0), origin=(0, 0))
-        from shapely.affinity import translate
-        g = translate(g, e["anchor_position"]["x"], e["anchor_position"]["y"])
-        silk_by_layer[e["layer"]].append(("text '%s'" % e["text"], g))
-    elif t == "pcb_silkscreen_path":
+    if t == "pcb_silkscreen_path":
         rt = e["route"]
+        for a_, b_ in zip(rt, rt[1:]):
+            silk_pathsegs[e["layer"]].add(frozenset({(round(a_["x"], 3), round(a_["y"], 3)), (round(b_["x"], 3), round(b_["y"], 3))}))
         if len(rt) >= 2:
             silk_by_layer[e["layer"]].append(("path of %s" % comp_name.get(e.get("pcb_component_id"), e.get("pcb_component_id")), LineString([(p["x"], p["y"]) for p in rt]).buffer(max(e.get("stroke_width", 0.1), MIN_SILK_W) / 2, 4)))
     elif t == "pcb_silkscreen_circle":
         c = e["center"]
+        silk_circles[e["layer"]].append((c["x"], c["y"], e["radius"] + max(e.get("stroke_width", 0.1), MIN_SILK_W)))
         silk_by_layer[e["layer"]].append(("circle", Point(c["x"], c["y"]).buffer(e["radius"] + max(e.get("stroke_width", 0.1), MIN_SILK_W) / 2, 12).difference(Point(c["x"], c["y"]).buffer(max(e["radius"] - max(e.get("stroke_width", 0.1), MIN_SILK_W) / 2, 0), 12))))
-if small_text:
-    FAIL("silkscreen text smaller than %.1f mm: %s" % (MIN_SILK_H, sorted(set(small_text))[:8]))
-else:
-    OK("silkscreen text height >= %.1f mm (%d texts)" % (MIN_SILK_H, sum(1 for e in cj if e["type"] == "pcb_silkscreen_text")))
+
+
+def silk_segments(path):
+    """dark draws with round apertures of a Gerber file: [(x1, y1, x2, y2, width)]"""
+    ap, cur, pol, x, y, out = {}, None, "D", 0.0, 0.0, []
+    for ln in open(path):
+        ln = ln.strip()
+        m = re.match(r"%ADD(\d+)C,([\d.]+)\*%", ln)
+        if m:
+            ap[m.group(1)] = float(m.group(2))
+            continue
+        if ln.startswith("%LP"):
+            pol = ln[3]
+        m = re.match(r"D(\d+)\*$", ln)
+        if m and int(m.group(1)) >= 10:
+            cur = m.group(1)
+            continue
+        m = re.match(r"(?:X(-?\d+))?(?:Y(-?\d+))?D0([123])\*", ln)
+        if m:
+            nx = int(m.group(1)) / 1e6 if m.group(1) else x
+            ny = int(m.group(2)) / 1e6 if m.group(2) else y
+            if m.group(3) == "1" and pol == "D" and cur in ap:
+                out.append((x, y, nx, ny, ap[cur]))
+            x, y = nx, ny
+    return out
+
+
+text_env = []     # (e, envelope geometry or None, height, stroke)
+small_h, thin_w, missing = [], [], []
 if not NOGERBER:
+    silk_segs = {"top": silk_segments(os.path.join(tmp, "F_SilkScreen.gbr")), "bottom": silk_segments(os.path.join(tmp, "B_SilkScreen.gbr"))}
+    for e in silk_texts:
+        lay = e["layer"]
+        ax, ay, fs = e["anchor_position"]["x"], e["anchor_position"]["y"], e["font_size"]
+        rot = math.radians(e.get("ccw_rotation", 0) or 0)
+        hw, hh = max(len(e["text"]), 1) * 0.9 * fs / 2 + 0.3, fs * 0.7
+        loc, ws, geoms = [], [], []
+        for (x1, y1, x2, y2, w) in silk_segs[lay]:
+            if frozenset({(round(x1, 3), round(y1, 3)), (round(x2, 3), round(y2, 3))}) in silk_pathsegs[lay]:
+                continue
+            if any(math.hypot(x1 - cx, y1 - cy) <= r_ and math.hypot(x2 - cx, y2 - cy) <= r_ for cx, cy, r_ in silk_circles[lay]):
+                continue
+            pl = []
+            for (px, py) in ((x1, y1), (x2, y2)):
+                dx, dy = px - ax, py - ay
+                pl.append((dx * math.cos(rot) + dy * math.sin(rot), -dx * math.sin(rot) + dy * math.cos(rot)))
+            if all(abs(q[0]) <= hw and abs(q[1]) <= hh for q in pl):
+                loc += pl
+                ws.append(w)
+                geoms.append(LineString([(x1, y1), (x2, y2)]).buffer(w / 2, 4) if (x1, y1) != (x2, y2) else Point(x1, y1).buffer(w / 2, 4))
+        if not loc:
+            missing.append(e["text"])
+            text_env.append((e, None, 0.0, 0.0))
+            continue
+        stroke = min(ws)
+        height = max(q[1] for q in loc) - min(q[1] for q in loc) + stroke
+        text_env.append((e, unary_union(geoms), height, stroke))
+        if height < MIN_SILK_H - 0.01:
+            small_h.append("%s %.2f" % (e["text"], height))
+        if stroke < MIN_SILK_W - TOL:
+            thin_w.append("%s %.3f" % (e["text"], stroke))
+    if missing:
+        FAIL("silkscreen texts without strokes in the Gerber (dropped by the exporter?): %s" % sorted(set(missing)))
+    if small_h:
+        FAIL("silkscreen glyph height measured in the Gerber below %.1f mm (JLC minimum): %s" % (MIN_SILK_H, sorted(set(small_h))[:10]))
+    else:
+        hs = [h for _, g, h, _ in text_env if g is not None]
+        OK("silkscreen glyph height measured in the Gerber >= %.1f mm for all %d texts (smallest %.3f mm, largest %.3f mm)" % (MIN_SILK_H, len(hs), min(hs), max(hs)))
+    if thin_w:
+        FAIL("silkscreen text stroke below %.2f mm: %s" % (MIN_SILK_W, sorted(set(thin_w))[:10]))
+    else:
+        OK("silkscreen text strokes measured in the Gerber >= %.2f mm (smallest %.3f mm)" % (MIN_SILK_W, min(st for _, g, _, st in text_env if g is not None)))
     thin = {}
     for lay in ("F_SilkScreen", "B_SilkScreen"):
         for ln in open(os.path.join(tmp, lay + ".gbr")):
@@ -668,7 +754,50 @@ if not NOGERBER:
     if thin:
         FAIL("silkscreen Gerber stroke widths below %.2f mm: %s (run scripts/postprocess_gerbers.py)" % (MIN_SILK_W, sorted(thin)))
     else:
-        OK("silkscreen Gerber stroke widths all >= %.2f mm" % MIN_SILK_W)
+        OK("silkscreen Gerber stroke widths (all apertures: text, outlines, marks) >= %.2f mm" % MIN_SILK_W)
+else:
+    for e in silk_texts:
+        if e["font_size"] < 1.8:
+            FAIL("silkscreen text '%s' fontSize %.2f too small (geometry-only mode: needs >= 1.8 mm)" % (e["text"], e["font_size"]))
+# texts vs pads / vias / holes / board edge / other texts
+board_ = next(e for e in cj if e["type"] == "pcb_board")
+outline_ = Polygon([(p["x"], p["y"]) for p in board_["outline"]]) if board_.get("outline") else rect_poly(board_["center"]["x"], board_["center"]["y"], board_["width"], board_["height"])
+bad_t = []
+for e, env, h, st in text_env:
+    if env is None:
+        continue
+    lay = e["layer"]
+    for it in items:
+        if it.kind in ("pad", "pth", "via") and (it.layer == lay or it.kind == "pth" or it.kind == "via") and it.geom.intersects(env):
+            bad_t.append("'%s' on %s %s" % (e["text"], it.kind, it.label))
+    for h_ in (x for x in cj if x["type"] == "pcb_hole"):
+        if Point(h_["x"], h_["y"]).buffer(h_.get("hole_diameter", 0.6) / 2).intersects(env):
+            bad_t.append("'%s' on NPTH (%.1f,%.1f)" % (e["text"], h_["x"], h_["y"]))
+    for cid, cg in cut:
+        if cg.intersects(env):
+            bad_t.append("'%s' over cutout %s" % (e["text"], cid))
+    if not outline_.contains(env) or outline_.exterior.distance(env) < MIN_SILK_EDGE:
+        bad_t.append("'%s' %.2f mm from the board edge" % (e["text"], 0.0 if not outline_.contains(env) else outline_.exterior.distance(env)))
+envs = [(e, env) for e, env, h, st in text_env if env is not None]
+for i, (e1, g1) in enumerate(envs):
+    for e2, g2 in envs[i + 1:]:
+        if e1["layer"] == e2["layer"] and g1.distance(g2) < 0.1:
+            bad_t.append("'%s' touches text '%s'" % (e1["text"], e2["text"]))
+if NOGERBER:
+    pass
+elif bad_t:
+    FAIL("silkscreen text overlaps pads/vias/holes/edge (>= %.2f mm)/other text: %s" % (MIN_SILK_EDGE, sorted(set(bad_t))[:12]))
+else:
+    OK("silkscreen texts (measured glyph envelopes): no overlap with pads, vias, holes, slots or other texts, >= %.2f mm from the board edge" % MIN_SILK_EDGE)
+# texts over component outlines (warning only)
+tp_warn = []
+for e, env in envs:
+    for lbl, g in silk_by_layer[e["layer"]]:
+        if g.intersects(env) and g.intersection(env).area > 0.02:
+            tp_warn.append("'%s' over %s" % (e["text"], lbl))
+if tp_warn:
+    WARN("silkscreen text crosses component outlines: %s" % sorted(set(tp_warn))[:8])
+# silk paths / circles over exposed pads (JLC clips the silk, keep it small)
 tot = 0.0
 bad_silk = collections.defaultdict(float)
 for layer, sl in silk_by_layer.items():
@@ -685,11 +814,122 @@ for k, a_ in bad_silk.items():
     agg[(k[0], k[1])] += a_
 worst_items = {k: a_ for k, a_ in agg.items() if a_ > MAX_SILK_PAD}
 if worst_items:
-    FAIL("silkscreen over exposed pads: %d items above %.2f mm2 (total %.2f mm2)" % (len(worst_items), MAX_SILK_PAD, tot))
+    FAIL("silkscreen outlines over exposed pads: %d items above %.2f mm2 (total %.2f mm2)" % (len(worst_items), MAX_SILK_PAD, tot))
 else:
-    OK("silkscreen over exposed pads: largest item %.3f mm2 (limit %.2f per item), total %.3f mm2 (text boxes estimated as 0.6 x font size per char)" % (max(agg.values()) if agg else 0.0, MAX_SILK_PAD, tot))
+    OK("silkscreen outlines/marks over exposed pads: largest item %.3f mm2 (limit %.2f per item), total %.3f mm2" % (max(agg.values()) if agg else 0.0, MAX_SILK_PAD, tot))
 for k, a_ in sorted(agg.items(), key=lambda kv: -kv[1])[:10]:
     print("       %s %s: %.3f mm2 over pads %s" % (k[0], k[1], a_, sorted({kk[2] for kk in bad_silk if (kk[0], kk[1]) == k})[:6]))
+# silk path/circle closer than MIN_SILK_EDGE to the board edge (JLC clips silk at the edge)
+edge_silk = []
+for layer, sl in silk_by_layer.items():
+    for lbl, g in sl:
+        if not outline_.contains(g) or outline_.exterior.distance(g) < 0.15:
+            edge_silk.append("%s (%s)" % (lbl, layer))
+(WARN if edge_silk else OK)("silkscreen outlines %s" % ("within 0.15 mm of / outside the board edge: %s" % sorted(set(edge_silk))[:6] if edge_silk else ">= 0.15 mm from the board edge"))
+
+# ---- pin-1 / polarity marks (R7 m6): a silk dot/bar/'+' must sit next to the marked pad and nearer to it than to the part's other pads ----
+MARK_REFS = {"U1": 1, "U2": 1, "U3": 1, "U4": 1, "U5": 1, "Q1": 1, "OC1": 1, "OC2": 1,     # ref -> pad number to mark (IC pin 1, cathode, '+')
+             "D1": 2, "D2": 2, "D3": 2, "D4": 2, "D5": 2, "D6": 1, "D7": 1,                   # BAT42W pad 2 = K; 1N4148W/B5819W pad 1 = K
+             "LD1": 1, "LD2": 2, "LD3": 2, "LD4": 2, "LD5": 2, "C12": 1, "C14": 1, "C29": 1}  # NCD0805R1 pad 1 = K; KT-0805Y pad 2 = K; '+' = pad 1
+marks_missing = []
+for ref, pn in MARK_REFS.items():
+    pads_ = [it for it in items if it.kind in ("pad", "pth") and it.label.startswith(ref + ".") and it.label.split(".")[1] != ""]
+    mine = [it for it in pads_ if it.label == "%s.%d" % (ref, pn) or it.label == "%s.pin%d" % (ref, pn)]
+    if not mine:
+        marks_missing.append("%s (no pad %d)" % (ref, pn))
+        continue
+    tgt = mine[0]
+    oth = [it for it in pads_ if it.comp == tgt.comp and it.layer == tgt.layer and it.label not in (tgt.label,) and not it.label.endswith(("_internal_1",))
+           and it.geom.distance(tgt.geom) > 0.01]
+    # exclude the other pad of a pin shared by several pads (EPAD, shell legs): only the pads of OTHER pins matter
+    ok_ = False
+    for lbl, g in silk_by_layer[tgt.layer]:
+        d_t = g.distance(tgt.geom)
+        if d_t > 1.6:
+            continue
+        if all(g.distance(o.geom) > d_t + 0.3 for o in oth):
+            ok_ = True
+            break
+    if not ok_:
+        marks_missing.append(ref)
+(FAIL if marks_missing else OK)("pin-1 / polarity silk marks next to the marked pad (%d parts: ICs pin 1, diode/LED cathodes, polarised caps)%s" % (len(MARK_REFS), ": missing " + ", ".join(marks_missing) if marks_missing else ""))
+
+# =====================================================================
+# G8 (R7 m2): copper pour slivers. Morphological opening of every pour polygon: anything narrower than MIN_NECK is a sliver / neck that can peel off
+# (acid trap) and is flagged by JLC DFM. G9 (R7 m4): decoupling cap of the ESP32 3V3 pin within MAX_DECOUP mm.
+# =====================================================================
+print()
+import slivers as _sl
+
+
+def gerber_clear_regions(path):
+    """clear-polarity (%LPC) G36 regions of a Gerber file as polygons"""
+    pol, reg, cur, x, y, out = "D", False, [], 0.0, 0.0, []
+    for ln in open(path):
+        ln = ln.strip()
+        if ln.startswith("%LP"):
+            pol = ln[3]
+        elif ln.startswith("G36"):
+            reg, cur = True, []
+        elif ln.startswith("G37"):
+            if reg and pol == "C" and len(cur) >= 3:
+                pg = Polygon(cur)
+                out.append(pg if pg.is_valid else pg.buffer(0))
+            reg = False
+        elif reg:
+            m = re.match(r"(?:X(-?\d+))?(?:Y(-?\d+))?D0([12])\*", ln)
+            if m:
+                x = int(m.group(1)) / 1e6 if m.group(1) else x
+                y = int(m.group(2)) / 1e6 if m.group(2) else y
+                cur.append((x, y))
+    return out
+
+
+n_sl, n_unclear, removed_area, islands, kept_necks = 0, 0, 0.0, [], []
+for lay, gfile in (("top", "F_Cu.gbr"), ("bottom", "B_Cu.gbr")):
+    clears, necks_, allp = _sl.sliver_clears(cj, lay)
+    for nk in necks_:
+        kept_necks.append((lay, nk.centroid.x, nk.centroid.y, nk.area))
+    n_sl += len(clears)
+    removed_area += sum(c.area for c in clears)
+    if NOGERBER:
+        continue
+    gclear = unary_union(gerber_clear_regions(os.path.join(tmp, gfile)))
+    for c in clears:
+        if c.intersection(gclear).area < 0.95 * c.area:
+            n_unclear += 1
+            print("       sliver left in %s copper near (%.2f,%.2f) %.3f mm2" % (lay, c.centroid.x, c.centroid.y, c.area))
+    # no pour island may be created by the removal (every remaining piece must touch a pad/via/trace of its own net)
+    if clears:
+        cu = unary_union(clears)
+        for it in items:
+            if it.kind == "pour" and it.layer == lay:
+                rest = it.geom.difference(cu)
+                for piece in (rest.geoms if hasattr(rest, "geoms") else [rest]):
+                    if piece.area < 0.5:
+                        continue
+                    if not any(o.net == it.net and o.kind != "pour" and o.layer == lay and o.geom.intersects(piece) for o in items):
+                        islands.append("%s pour piece %.1f mm2 near (%.1f,%.1f)" % (lay, piece.area, piece.centroid.x, piece.centroid.y))
+if NOGERBER:
+    print("INFO %d pour slivers < %.2f mm found (geometry-only mode: not checked in the Gerber)" % (n_sl, _sl.NECK))
+elif n_unclear:
+    FAIL("%d copper pour slivers/necks narrower than %.2f mm remain in the copper Gerbers (run scripts/postprocess_gerbers.py)" % (n_unclear, _sl.NECK))
+elif islands:
+    FAIL("sliver removal isolates pour copper: %s" % islands[:4])
+else:
+    OK("copper pour slivers narrower than %.2f mm: %d found in the routed pours (total %.2f mm2), all cleared in the Gerbers, no pour island created" % (_sl.NECK, n_sl, removed_area))
+if kept_necks:
+    WARN("%d copper pour necks narrower than %.2f mm kept (removing them would split the pour): %s" % (len(kept_necks), _sl.NECK, "; ".join("%s (%.1f,%.1f) %.2f mm2" % k for k in kept_necks[:6])))
+MAX_DECOUP = 2.0
+u3p2 = [it for it in items if it.kind == "pad" and it.label in ("U3.2", "U3.pin2")]
+dec = {}
+for it in items:
+    if it.kind == "pad" and it.label.startswith("C23.") and u3p2:
+        dec[it.label] = min(it.geom.distance(u.geom) for u in u3p2)
+if dec:
+    (FAIL if min(dec.values()) > MAX_DECOUP else OK)("C23 (100 nF) pad is %.2f mm from the ESP32 3V3 pin (U3.2) pad, limit %.1f mm (R7 m4)" % (min(dec.values()), MAX_DECOUP))
+else:
+    FAIL("C23 / U3 pin 2 pads not found for the decoupling distance check")
 
 # =====================================================================
 # G6: solder paste apertures (Gerber) vs. the pads of circuit.json

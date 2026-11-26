@@ -1,4 +1,4 @@
-# Fab-Checkliste V2.0 (Skill `.claude/skills/tscircuit/CHECKLIST.md`) - Stand nach Review-Fixes R4/R5 (docs/review/FIX_LIST_R2.md)
+# Fab-Checkliste V2.0 (Skill `.claude/skills/tscircuit/CHECKLIST.md`) - Stand nach Review-Fixes R4/R5 (docs/review/FIX_LIST_R2.md) und R6/R7 (docs/review/FIX_LIST_R3.md)
 
 Reproduzierbar mit `scripts/export_fab.sh 120s` (Build + Autorouter ~40 s, Gerber-Export aus `dist/index/circuit.json`, BOM/CPL, Gerber-Nachbearbeitung `scripts/postprocess_gerbers.py`, Netlist-, Fab- und Isolationspruefung).
 
@@ -9,12 +9,15 @@ Reproduzierbar mit `scripts/export_fab.sh 120s` (Build + Autorouter ~40 s, Gerbe
 | `tsci check pcb-style` | 1 Hinweis: Netz source_net_5, ein 6,5-mm-Segment mit 8 Grad Abweichung von 0 deg (kosmetisch) |
 | `tsci check placement` | 0 DRC-Fehler; Hinweise: 3 Courtyard-Ueberlappungen (C24/R26 0,26 mm, R9/C13 0,25 mm, R11/C13 0,09 mm; Pads ueberlappen nicht) und "Drehung 180 deg" Vorschlaege fuer 2-Pin-Teile (nur Kosmetik der Pfadfuehrung). `tsci build` laeuft deshalb mit `--ignore-placement-drc` (zusaetzlich die gewollte Meldung "OC1/OC2 overlap cutout") |
 | Routing-DRC (`tsci build`, Autorouter) | 0 Fehler (`errors.json` leer) |
-| Gerber (F_Cu 781 / B_Cu 262 Leiterbahnen, 120 Vias 0,3/0,6, Ringbreite 0,15) | `scripts/check_fab.py`: 0 FAIL, 0 WARN |
+| Gerber (F_Cu 795 / B_Cu 309 Leiterbahnen, 132 Vias 0,3/0,6, Ringbreite 0,15) | `scripts/check_fab.py`: 0 FAIL, 0 WARN |
 | Isolation EMS <-> MCU | `scripts/check_isolation.py`: 7,047 mm (oben) / 7,400 mm (unten), Kupfer in Schlitzen 0, nichts ueber x = 0 |
 | Loetpaste (R5 M1) | `defaultSolderPasteMargin="0mm"` im `<board>`: Paste-Oeffnung = 100 % des Pads (tscircuit-Standard waere 70 % x 70 % = 49 % Flaeche); JP1/JP2/TP1..3 ohne Paste (`noSolderPaste`); Paste auf den J2-Schalen-Langloechern wird von `postprocess_gerbers.py` entfernt. `check_fab.py` G6 parst F_Paste/B_Paste: 252 Pads, Verhaeltnis 100..100 % |
 | Lotstopplack (R5 m3/m4/m7) | Maskenoeffnung = Pad (Expansion 0, JLC addiert seine eigene Kompensation, typ. 0,05 mm; Pad-Abstand 0,5-mm-USB-C-Raster 0,2 mm bleibt als Steg). JP1/JP2: `solderMaskMargin` 0,22 mm je Pad -> EINE gemeinsame Oeffnung 2,04 x 3,24 mm (`check_fab.py` G7) |
-| Via-/Bohrungsabstand (R5 M3) | Board-Parameter `minViaHoleEdgeToViaHoleEdgeClearance="0.25mm"` + `check_fab.py` G4: Rand-zu-Rand >= 0,25 mm gleiches Netz / >= 0,5 mm verschiedene Netze (Vias und runde PTH): kleinster Abstand 0,250 mm |
-| Silkscreen (R5 m1/m2) | Text >= 1,0 mm hoch (Beschriftungen, ICs, Dioden, LEDs, Stecker); Bezeichner der 0805/1206-R/C sind ausgeblendet (passen bei 1,0 mm nicht zwischen die Pads, Bestueckungsplan `docs/img/assembly.png`); Linienbreite im Gerber >= 0,15 mm (`postprocess_gerbers.py` verbreitert die tscircuit-Striche 0,07..0,14 mm); Silk nicht auf Pads: groesstes Einzelteil 0,26 mm2 (0805-Umrisse eng stehender Nachbarn C10/C30/C27/C29, JLC schneidet Silk auf Pads ab), U3/J2/SW/P1-Umrisse an den Pads vorbeigefuehrt, nichts auf der Platinenkante |
+| Via-/Bohrungsabstand (R5 M3, R7 m3) | Board-Parameter `minViaHoleEdgeToViaHoleEdgeClearance="0.5mm"` + `check_fab.py` G4: Rand-zu-Rand >= 0,5 mm fuer alle Paare (Vias + runde PTH): kleinster Abstand 0,500 mm (138 Loecher) |
+| Kupfer-Pour (R7 m2, m8) | Pour-Abstand 0,25 mm, V3V3/GND-Pour-Spalt 0,8 mm; verbleibende Splitter < 0,15 mm (21, 34,7 mm2 inkl. toter Pour-Lappen) werden in `postprocess_gerbers.py` (`scripts/slivers.py`) mit Clear-Regionen entfernt, `check_fab.py` G8 prueft das im Gerber und dass keine Pour-Insel entsteht. MCU-GND-Pour an der Antenne von x = 47,6 auf 46,6 zurueckgezogen |
+| Gerber-Dateinamen (R7 m7) | `EMSinterface_V2.0-F_Cu.gtl, -B_Cu.gbl, -F_Mask.gts, -B_Mask.gbs, -F_Paste.gtp, -B_Paste.gbp, -F_Silkscreen.gto, -B_Silkscreen.gbo, -Edge_Cuts.gm1, -PTH.drl, -NPTH.drl` (geprueft von check_fab, mit gerbonara lesbar) |
+| 3V3-Entkopplung ESP32 (R7 m4) | C23 100 nF 1,08 mm (Pad zu Pad) vom 3V3-Pin (U3.2), `check_fab.py` G9 (<= 2 mm) |
+| Silkscreen (R7 M1, m6) | Schrift 1,85 mm: **im Gerber gemessene** Glyphenhoehe 1,044..1,124 mm (>= 1,0), Strich 0,167 mm (>= 0,16; `postprocess_gerbers.py` verbreitert Umrisse/Marken von 0,1 auf 0,16 mm). `check_fab.py` G5 misst beides aus dem Silk-Gerber und prueft, dass kein Text Pads/Vias/Bohrungen/Schlitze/anderen Text beruehrt und >= 0,3 mm von der Kante bleibt. Bezeichner der R/C/D/F/kleinen ICs sind ausgeblendet (`docs/img/assembly.png`); Pin-1-Punkte an U2, U3, U4, U5, Q1, OC1, OC2 (U1 im Footprint), Kathodenbalken D1..D7, LED-Kathodenbalken, C12/C14/C29 Plus-Marken: G5 prueft 23 Marken. Silk-Umrisse auf Pads: groesstes Teil 0,275 mm2 (JLC schneidet ab), nichts naeher als 0,15 mm an der Kante |
 | Gerber-ZIP | `bom.csv`/`pick_and_place.csv` von tscircuit werden entfernt (falsche Drehungen/Mitten; hochgeladen werden nur `fab/*_BOM_JLCPCB.csv` und `*_CPL_JLCPCB.csv`) |
 | Footprints/Polaritaet | siehe docs/FOOTPRINT_CHECK.md; CPL-Drehungen/Ursprung je Teil in docs/CPL_CHECK.md |
 | Bestueckungsdaten | `fab/EMSinterface_V2.0-BOM_JLCPCB.csv`, `-CPL_JLCPCB.csv`; TP1..TP3, JP1, JP2 unbestueckt |
@@ -28,12 +31,14 @@ Reproduzierbar mit `scripts/export_fab.sh 120s` (Build + Autorouter ~40 s, Gerbe
 * #9 Abstand >= 0,2 mm zwischen Netzen (0,15 mm nur an Feinraster-Pads/-Zonen; 4 Paare 0,15..0,2 mm an J2/U4, ausgewiesen als INFO). Numerische Toleranz 0,002 mm.
 * #10 Entkopplung (R5 M2): C10 (10 uF) und C30 (100 nF) direkt am VIN-Pin 5 von U2 (Abstand Pad zu Pad 0,36 mm, VIN von Hand mit `<trace pcbPath>` 0,5 mm, GND ueber den Pour/Via), L3 naeher an SW (Pad-Abstand U2.6 zu L3.B 3,3 mm statt 5,3 mm), C9 bleibt am BST-Pin;  C11 direkt an L3 (V5), C13 zwischen OC2-Pin 5/8, C7 zwischen OC1-Pin 5/8, 100 nF/10 uF an U3-Pin 2, AMS1117-Kondensatoren C24/C25/C29/C26/C27 an U5. GND_EMS-Vias (hand platziert) am Buck- und Rueckkopplungs-GND.
 * #11 AMS1117 (U5): V3V3-Pour 16,5 x 10,5 mm auf Ober- UND Unterseite (je ~165 mm2, zusammen ~3,3 cm2) am Tab + 8 Thermovias (0,3/0,6).
-* #19 Silkscreen-Text >= 1,0 mm, Linienbreite >= 0,15 mm (Gerber-Nachbearbeitung); Courtyard siehe oben.
+* #19 Silkscreen-Glyphen >= 1,0 mm (im Gerber gemessen), Linienbreite >= 0,16 mm (Gerber-Nachbearbeitung); Courtyard siehe oben.
 * #20 USB D+/D-: U4 (ESD) 5 mm hinter J2, Leitungspaar fuehrt ca. 12 mm parallel zu den ESP32-Pins 13/14; beide D+ und beide D- Pads angebunden (`check_fab.py`, Abschnitt USB-C).
 
 ## Manuelle Pruefung in der JLC-Bestueckungsvorschau (vor der Bestellung, nicht automatisch pruefbar)
 * **BAT42W D1..D5 (C22466362)**: Anode/Kathode-Orientierung. Die Bibliothek hat Pad 1 = Anode (entgegen SOD-123-Gewohnheit), das Netz ist durch `PAD_SWAP` ausgeglichen. In der 3D-Ansicht der Bestueckung pruefen, dass der Kathodenbalken bei D1..D4 (Bruecke) und D5 (Klemme) mit der Platine/Silk uebereinstimmt; Foto aufheben (R4 m1).
 * Drehung/Polung aller 90/270-Teile und polarisierter Teile (D6, D7, LD1..LD5, C12/C14/C29, U1, U2, U4, U5, Q1, OC1, OC2, J2, U3, P1), siehe docs/CPL_CHECK.md (R5 m9a).
+* **Pin 1 / Polung in der JLC-Bestueckungsvorschau gegen die Silk-Marken pruefen (R6 m1, R7 i2/m6)**: Pin-1-Punkt von **U1** (LM393), **U3** (ESP32: Punkt neben Pad 1, Antenne nach +X), **U4**, **U5**, **OC1**, **OC2** (Pin 1 oben links), **Q1** (Punkt links oben neben Pad 1 = Basis); Kathoden (Balken) von **D1..D6** (D7 ebenso) und **LD1..LD5** (Kathode links bei Drehung 0, Balken auf der Kathodenseite); Plus-Marken von **C29**, **C12**, **C14** (Pad 1 = +, abgeschraegte Ecke). Die CPL-Drehung (positiv = CCW) ist offline nicht beweisbar.
+* Gerber-Upload: Lagenzuordnung (Top/Bottom, Maske, Paste, Silk), Bohrdateien PTH (mit 4 Langloechern, G85) und NPTH erkannt; F3 (C269119, Extended) und LD2..LD5 (C2296) im Bestueckungsplan vorhanden.
 * THT: P1, P2, J2-Schalenbeine brauchen JLCs Durchsteck-/Handloetservice (Angebot pruefen); Montagepfosten-Raster 84,5 x 39,5 gegen das Hammond-STEP pruefen (R5 m9d).
 
 ## Offene Punkte / Einschraenkungen

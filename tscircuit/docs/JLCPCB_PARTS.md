@@ -21,7 +21,7 @@ In tscircuit set the number on the component: `supplierPartNumbers={{ jlcpcb: ["
 | LM393 | C7955 "Ext" | C7955 is **Basic** | = LM393DR2G (onsemi, 0..70 C); TI LM393DR is C67470 (Ext) |
 | SW tactile | C318884 "Ext" | C318884 is **Basic** | stock 651k |
 | 100n | C49678 / C1710 | 100n **C49678**, 10n **C1710** (both Basic); note C1711 (CL21B104KBCNNNC) is Ext, do not use | |
-| LD2/LD3 green | "look up" | **C2297** (Basic) | KT-0805G |
+| LD2/LD3 green | "look up" | **C2296** yellow KT-0805Y (Basic) (R3: C2297 green KT-0805G has Vf 2.6-3.1 V, unusable on 3.3 V) | |
 | 1n | C46653 | ok (Basic) | |
 
 ## Verified table
@@ -46,27 +46,29 @@ In tscircuit set the number on the component: `supplierPartNumbers={{ jlcpcb: ["
 | D1-D5 | BAT42-class low-cap Schottky | SOD-123 | **BAT42W (hongjiacheng)** | **C22466362** | **Pref** | 22k | 30 V, 200 mA, Cj ~7-10 pF @1 V (BAT42 class; vs B5819W ~100 pF). Genuine alt: BAT42W-7-F Diodes Inc C134396 (Ext, 10.7k). Higher-voltage alt: BAT46W (100 V) C7420332 (Pref, 643k) |
 | D7 | PMEG3020EGW (power path) | SOD-123 | B5819W SL (Changjing) | C8598 | **Basic** | 886k | 1 A 40 V |
 | D6 | 1N4148 | SOD-123 | 1N4148W | C81598 | **Basic** | 4.2M | |
-| F1,F2,F3 | resettable fuse 0805 (F3 = USB VBUS protection, V2) | 0805 | BSMD0805-050-24V (BHFUSE) | C910822 | Ext | 137k | 0.5 A hold / 1 A trip, 24 V (bus ~15 V). F3 uses the same part (no additional Ext fee). Cheaper 15 V: C883109 (46k); 100 mA types too low |
+| F1,F2 | resettable fuse 0805 (EMS bus) | 0805 | BSMD0805-050-24V (BHFUSE) | C910822 | Ext | 137k | 0.5 A hold / 1 A trip, 24 V (bus ~15 V). Cheaper 15 V: C883109 (46k); 100 mA types too low |
+| F3 | PTC in the USB VBUS path (R3: was the 0.5 A 0805 part) | 1206 | SMD1206B110TFT | **C269119** | Ext | 99k | 1.1 A hold / 2.2 A trip, 8 V, R 0.04..0.21 ohm; EasyEDA pads 1.19 x 1.73 at +-1.445 mm (`Ptc1206Footprint`). AMS1117 headroom 0.2..0.28 V at 4.75 V host (docs/review/FIX_LIST_R3.md). Alternatives: C126818 1206L110THYR (13k), C70163 SL1206110 (100 mohm, 1.3k) |
 | LD1 | LED red | 0805 | NCD0805R1 (NationStar) | C84256 | **Basic** | 3.2M | |
-| LD2,LD3,(GPIO2 LED) | LED green | 0805 | KT-0805G (Kento) | C2297 | **Basic** | 2.9M | 525 nm, 430 mcd |
+| LD2..LD5 | LED yellow (R3; was green KT-0805G C2297) | 0805 | KT-0805Y (Kento) | **C2296** | **Basic** | 429k | Vf 1.8..2.4 V @ 20 mA, 175 mcd; same EasyEDA footprint/polarity as C2297 (pad 1 = anode) |
 | L1,L2 | 4.7uH series (V2 footprint = EasyEDA C98021: pads 1.52 x 3.1 at +-1.145) | 1210 (3225) | LQH32PN4R7NN0L (Murata) | C98021 | Ext | 5.9k | 1 A, 216 mOhm. Lower-stock/ lower-R: C90319 CBC3225T4R7MR 1.01 A (0.9k); pricey 1.9 A: C5331021. TDK NLV32T-4R7J-PF C76842 only 220 mA: too small if buck input flows through it |
 | L3 | 4.7uH buck | 5x5x2 shielded | SWPA5020S4R7MT (Sunlord) | C43183 | Ext | 1.9k | 2.2 A Isat 2.7 A, 74 mOhm; footprint differs from lib `Inductor0520` (see FOOTPRINT_CHECK). alt CD54-style ZECD54-4R7M C41408590 (11.9k, 2.8 A, unshielded, 5.8x5.2); smaller 4x4: SWPA4030S4R7MT C57269 (45k, 2 A) |
 | R2,R3,R4 | 68R 1% | 2010 | CL2010FN68RB (Changlong) | C53284030 | Ext | 23k | alts: FRC2010F68R0TS C3000767 (12k), RTT2068R0FTE C159225 (3.4k). No Basic/Pref 2010 68R |
 | R1,R7 | 10k | 0805 | 0805W8F1002T5E | C17414 | Basic | 43.8M | also EN/BOOT pull-ups |
 | R8,R16,R_PU | 100k | 0805 | 0805W8F1003T5E | C149504 | Basic | 2.7M | |
-| R9,R11,R13 | 4k7 | 0805 | 0805W8F4701T5E | C17673 | Basic | 5.1M | |
+| R9,R11 | 4k7 | 0805 | 0805W8F4701T5E | C17673 | Basic | 5.1M | |
+| R13 | **3k3** (R3; V1 4k7, 6N137 RL 330R..4k) | 0805 | 0805W8F3301T5E | **C26010** | Basic | 1.4M | OC1 output pull-up at 3.3 V |
 | R6 | 47k | 0805 | 0805W8F4702T5E | C17713 | Basic | 1.2M | |
 | R10 | 470R | 0805 | 0805W8F4700T5E | C17710 | Basic | 1.5M | |
 | R5 | 390R | 0805 | 0805W8F3900T5E | C17655 | Basic | 1.1M | |
 | R14 | **150R** (V2; V1: 270R) | 0805 | 0805W8F1500T5E | **C17471** | **Basic** | 538k | OC2 LED current limit, CTR margin >= 1.5 (calculation: docs/netlist_v1.md "V2 deviations"); old 270R C17590 (Pref) no longer used |
-| R18, R19, R22, R26 | **220R** (V2; V1 R18/R19 1k2, V2 draft R22/R26 1k) | 0805 | 0805W8F2200T5E | **C17557** | **Basic** | 791k | green LEDs LD2..LD5 at about 2 mA from 3.3 V (Vf 2.6..3.1 V) |
+| R18, R19, R22, R26 | **330R** (R3; V2 220R C17557 for green LEDs) | 0805 | 0805W8F3300T5E | **C17630** | **Basic** | 1.1M | yellow LD2..LD5: 2.0..4.8 mA from 3.3 V (Vf 1.7..2.2 V), docs/netlist_v1.md |
 | R17 | 1k2 | 0805 | 0805W8F1201T5E | C17379 | Basic | 1.3M | red power LED on 5 V (V1 value) |
 | R15 | 1k3 | 0805 | 0805W8F1301T5E | **C17384** | **Ext** | 116k | 6k8/1k3 sets 5.0 V; 1k5 C4310 is Basic (-> 4.4 V, not suitable), 1k2 -> 5.3 V |
 | R12 | 6k8 | 0805 | 0805W8F6801T5E | C17772 | Basic | 395k | |
 | R(CC1,CC2) | 5.1k | 0805 | 0805W8F5101T5E | C27834 | Basic | 2.4M | |
 | R(shield) | 1M | 0805 | 0805W8F1004T5E | C17514 | Basic | 1.66M | |
 | C5,C6,C8,C9,C13,C7,C30,100n | 100n 50V X7R | 0805 | CC0805KRX7R9BB104 (Yageo) | C49678 | Basic | 20M | |
-| C5,(10n) | 10n 50V X7R | 0805 | CL21B103KBANNNC | C1710 | Basic | 3.3M | |
+| C5 | **4.7n** (R3; V1 10n C1710, TX falling delay) | 0805 | 0805B472K500NT (FH) | C1744 | Basic | 200k | same part as the shield cap |
 | C3 | 1n 50V X7R | 0805 | CL21B102KBCNNNC | C46653 | Basic | 1.08M | |
 | C4 | 1n5 50V X7R | 0805 | 0805B152K500NT (FH) | C1717 | **Pref** | 89k | |
 | C1 | 68p 50V C0G/NP0 | 0805 | CC0805JRNPO9BN680 (Yageo) | C107120 | Ext | 68k | alt FH C1834 (28k). Basic-only option: 47p C0G C14857 (178k) if circuit tolerates |
@@ -79,9 +81,9 @@ In tscircuit set the number on the component: `supplierPartNumbers={{ jlcpcb: ["
 ## Extended-part count (extra fees)
 Q1 BC817-40 (C20069155) and C29 (C16133) need an availability/class check at order time. Distinct **Ext** (fee) part numbers: C2913202 (ESP32), C165948 (USB-C), C7519 (USBLC6), C92651 (6N137), C336082 (6N136),
 C371172 (JW5017S), C98021 (L1/L2), C43183 (L3), C53284030 (68R 2010), C17384 (1k3), C107120 (68p), C441236 (P1),
-C32713270 (P2), C49256851 (C12/C14, one fee for both), C910822 (fuses) = **15**; 13 if P1 and P2 are hand-soldered (THT, not assembled). C12/C14 are now SMD and assembled by JLC.
-Preferred-extended (no fee): C22466362 (BAT42W), C1717 (1n5). V2 changes (R4/R5 fixes): F3 (C910822, same part as F1/F2), C30 (C49678), R14 150R C17471 and R18/R19/R22/R26 220R C17557 are Basic: the Extended count stays at 15.
-R15 (C17384, Ext) is kept on purpose: the alternative R12 5k1 (C27834) / R15 1k (C17513) would lower the 5 V rail to 4.88 V (R4 m10), see docs/review/FIX_LIST_R2.md.
+C32713270 (P2), C49256851 (C12/C14, one fee for both), C910822 (F1/F2), C269119 (F3, R3) = **16**; 14 if P1 and P2 are hand-soldered (THT, not assembled). C12/C14 are now SMD and assembled by JLC.
+Preferred-extended (no fee): C22466362 (BAT42W), C1717 (1n5). V2 changes (R4/R5 fixes): C30 (C49678), R14 150R C17471 are Basic. R3 (FIX_LIST_R3.md): LD2..LD5 C2296 / R18,R19,R22,R26 C17630 / R13 C26010 / C5 C1744 are Basic, F3 C269119 is Extended (+1 fee, 1.1 A hold for the Wi-Fi peaks).
+R15 (C17384, Ext) is kept on purpose: R12 5k1 / R15 1k gives 4.88 V (R4 m10) and R12 6k2 (C17767) is Extended itself (R6 m9, FIX_LIST_R3.md); C4 1n5 C1717 is Preferred-extended (no fee).
 P1 mating plug (NOT in the BOM, bought separately): 2-pole 5.08 mm pluggable screw-terminal plug of the KF2EDGK-5.08-2P / Phoenix MSTB 2,5/2-STF-5,08 class (wire entry parallel to the board, 90 deg); article number to be chosen at the distributor (not verified here).
 Possible fee savings: C1 68p -> 47p Basic C14857 (-1); LM393 already Basic; no Basic alternative for 2010 68R
 (two 1206/0805 in parallel would need a footprint change); fuses could be Pref if a Pref 0805 PTC is chosen.

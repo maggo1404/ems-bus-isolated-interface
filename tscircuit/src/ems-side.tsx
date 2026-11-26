@@ -2,9 +2,10 @@
 // Contains everything of V1 except P2, incl. OC1/OC2 and the MCU-side opto helpers
 // (R13, R14, R18, R19, LD2, LD3, C7).  Net names follow docs/DESIGN_SPEC.md.
 import { Opto6N137, Opto6N136 } from "../lib/opto_so8_gw300"
-import { DiodeKA, DiodeAK, LedRed, LedGreen } from "../lib/diodes"
+import { DiodeKA, DiodeAK, LedRed, LedYellow } from "../lib/diodes"
 import { traceWidth } from "../lib/netclass"
 import { Soic8Lm393Footprint } from "../lib/soic8_lm393"
+import { PartDot, CathodeBar } from "../lib/silk"
 import { Mstba2, CapE5_10p5, Inductor3225, Inductor0520, Res2010Footprint } from "../lib/thtparts"
 
 // ---------------------------------------------------------------------------
@@ -109,7 +110,8 @@ const mpos = (ref: string) => {
 
 const GND_VIAS: [number, number][] = [[-19.0, 10.0], [-12.6, 16.6], [-27.4, 22.4], [-12.4, 1.2], [-10.6, 6.7], [-10.9, 11.25]]
 const J = (...c: string[]) => ({ jlcpcb: c })
-// refdes of the 0805/1206 R and C are not printed: silk text must be >= 1.0 mm high (JLC), which does not fit between the pads (docs/img/assembly.png has the refdes)
+// refdes of the passives, diodes, fuses and small ICs are not printed: silk text must be >= 1.0 mm high (JLC, R7 M1) and does not fit between the
+// pads (docs/img/assembly.png has the refdes). Polarity/pin 1 is marked by cathode bars / dots instead (lib/silk.tsx)
 const NOREF = { silkscreenTextVisibility: "hidden" } as const
 
 const Res = (ref: string, v: string, lcsc?: string, fp: any = "0805") => (
@@ -124,7 +126,14 @@ const Cap = (ref: string, v: string, lcsc?: string, fp: any = "0805", extra: any
 const PAD_SWAP = new Set(["D1", "D2", "D3", "D4", "D5", "LD2", "LD3"])
 const Dio = (ref: string, mpn: string, lcsc: string) => {
   const D = PAD_SWAP.has(ref) ? DiodeAK : DiodeKA
-  return <D name={ref} manufacturerPartNumber={mpn} supplierPartNumbers={J(lcsc)} {...pos(ref)} />
+  const p = pos(ref)
+  // cathode bar between the pads: SOD-123 pad 1 is at local -x, pad 2 at +x; D1-D5 (BAT42W) cathode = pad 2, D6/D7 cathode = pad 1
+  return (
+    <>
+      <D name={ref} manufacturerPartNumber={mpn} supplierPartNumbers={J(lcsc)} pcbStyle={NOREF} {...p} />
+      <CathodeBar part={p} side={PAD_SWAP.has(ref) ? 1 : -1} />
+    </>
+  )
 }
 
 const selector = (pin: string) => {
@@ -138,8 +147,8 @@ export const EmsSide = () => (
     {/* ---- bus terminal, fuses, input filter (L1/L2), bridge D1-D4, clamp D5 ---- */}
     <Mstba2 name="P1" pcbX={-44.1} pcbY={0} pcbRotation={270} schX={-12} schY={0} />
     {/* fuses: 2-pad 0805 chips, pad1 = bus side, pad2 = inductor side */}
-    <chip name="F1" footprint="0805" pcbX={tx(7.62)} pcbY={ty(19.37)} pcbRotation={90} schX={-9} schY={3} manufacturerPartNumber="BSMD0805-050-24V" supplierPartNumbers={J("C910822")} />
-    <chip name="F2" footprint="0805" pcbX={tx(7.62)} pcbY={ty(14.29)} pcbRotation={270} schX={-9} schY={-3} manufacturerPartNumber="BSMD0805-050-24V" supplierPartNumbers={J("C910822")} />
+    <chip name="F1" pcbStyle={NOREF} footprint="0805" pcbX={tx(7.62)} pcbY={ty(19.37)} pcbRotation={90} schX={-9} schY={3} manufacturerPartNumber="BSMD0805-050-24V" supplierPartNumbers={J("C910822")} />
+    <chip name="F2" pcbStyle={NOREF} footprint="0805" pcbX={tx(7.62)} pcbY={ty(14.29)} pcbRotation={270} schX={-9} schY={-3} manufacturerPartNumber="BSMD0805-050-24V" supplierPartNumbers={J("C910822")} />
     <Inductor3225 name="L1" {...pos("L1")} />
     <Inductor3225 name="L2" {...pos("L2")} />
     {Cap("C1", "68pF", "C107120")}
@@ -164,7 +173,7 @@ export const EmsSide = () => (
     {Cap("C2", "10uF", "C15850")}
     {Cap("C3", "1nF", "C46653")}
     {Cap("C4", "1.5nF", "C1717")}
-    {Cap("C5", "10nF", "C1710")}
+    {Cap("C5", "4.7nF", "C1744")}
     {Cap("C6", "100nF", "C49678")}
     {Res("R5", "390", "C17655")}
     {Res("R6", "47k", "C17713")}
@@ -189,8 +198,10 @@ export const EmsSide = () => (
       pcbRotation={270}
     />
     {/* Q1 BC817-40 SOT-23 (EasyEDA C20069155 verified): pad 1 = B, 2 = E, 3 = C (chip so pad numbers equal package pins) */}
+    <PartDot part={pos("Q1")} lx={-2.35} ly={0.95} />
     <chip
       name="Q1"
+      pcbStyle={NOREF}
       footprint="sot23"
       manufacturerPartNumber="BC817-40"
       supplierPartNumbers={J("C20069155")}
@@ -200,8 +211,10 @@ export const EmsSide = () => (
 
     {/* ---- buck converter U2 JW5017S, L3, 5 V rail, power LED ---- */}
     {/* JW5017S SOT-23-6: 1 BST 2 GND 3 FB 4 EN 5 VIN 6 SW */}
+    <PartDot part={{ ...pos("U2"), pcbRotation: 0 }} lx={-2.35} ly={0.95} />
     <chip
       name="U2"
+      pcbStyle={NOREF}
       footprint="sot23_6"
       manufacturerPartNumber="JW5017S"
       supplierPartNumbers={J("C371172")}
@@ -232,12 +245,12 @@ export const EmsSide = () => (
 
     {/* ---- MCU-side opto helpers ---- */}
     <capacitor name="C7" pcbStyle={NOREF} capacitance="100nF" footprint="0805" supplierPartNumbers={J("C49678")} {...mpos("C7")} />
-    <resistor name="R13" pcbStyle={NOREF} resistance="4.7k" footprint="0805" supplierPartNumbers={J("C17673")} {...mpos("R13")} />
+    <resistor name="R13" pcbStyle={NOREF} resistance="3.3k" footprint="0805" supplierPartNumbers={J("C26010")} {...mpos("R13")} />
     <resistor name="R14" pcbStyle={NOREF} resistance="150" footprint="0805" supplierPartNumbers={J("C17471")} {...mpos("R14")} />
-    <resistor name="R18" pcbStyle={NOREF} resistance="220" footprint="0805" supplierPartNumbers={J("C17557")} {...mpos("R18")} />
-    <resistor name="R19" pcbStyle={NOREF} resistance="220" footprint="0805" supplierPartNumbers={J("C17557")} {...mpos("R19")} />
-    <LedGreen name="LD2" {...mpos("LD2")} />
-    <LedGreen name="LD3" {...mpos("LD3")} />
+    <resistor name="R18" pcbStyle={NOREF} resistance="330" footprint="0805" supplierPartNumbers={J("C17630")} {...mpos("R18")} />
+    <resistor name="R19" pcbStyle={NOREF} resistance="330" footprint="0805" supplierPartNumbers={J("C17630")} {...mpos("R19")} />
+    <LedYellow name="LD2" {...mpos("LD2")} />
+    <LedYellow name="LD3" {...mpos("LD3")} />
 
     {/* GND_EMS stitching vias next to the buck / feedback pads: the router connects the pad to the via, the via drops into the
         bottom GND_EMS pour (keeps the congested bus/buck area routable, FIX_LIST #10) */}

@@ -64,7 +64,7 @@ fetch failures when offline.
   // defaultTraceWidth / nominalTraceWidth="0.4mm" also set the width of all traces without thickness (tested)
   minTraceToPadEdgeClearance="0.25mm" minPadEdgeToPadEdgeClearance="0.25mm" minViaEdgeToPadEdgeClearance="0.25mm">
   <trace from=".U1 > .VCC" to="net.V3V3" thickness="0.5mm" />   // per-trace width ("width" is an alias); NO per-net prop -> lib/netclass.ts traceWidth(net)
-  <copperpour layer="top" connectsTo="net.GND" clearance="0.3mm" padMargin traceMargin boardEdgeMargin cutoutMargin />   // pour clearance honoured (0.2 default -> gap 0.297 measured with 0.3)
+  <copperpour layer="top" connectsTo="net.GND" clearance="0.25mm" padMargin traceMargin boardEdgeMargin cutoutMargin />   // pour clearance honoured (0.2 default -> gap 0.297 measured with 0.3)
   <via pcbX={0} pcbY={0} fromLayer="top" toLayer="bottom" holeDiameter="0.3mm" outerDiameter="0.6mm" connectsTo="net.GND" />   // hand-placed via (thermal/stitching)
 </board>
 ```
@@ -93,3 +93,9 @@ Does the autorouter honour them? (measured with scripts/check_fab.py on the rout
 * **1-mm-Limit**: Eine Handbahn `<trace from="U2.pin5" to="C10.pin2">` zwischen Chip-Versorgungspin und Kondensator loest das automatische 1-mm-Decoupling-Limit aus ("Autorouting was skipped because the 1mm maximum length"). `maxDecouplingTraceLength={20}` am Kondensator hebt es auf (das Limit gilt sonst auch fuer das GND-Bein, das mit 2 mm Grenze 13,7 mm lang geroutet wurde und den Build mit Fehlern beendete).
 * **Autorouter bleibt fragil**: schon 0,5 mm Verschiebung von L3, R16 oder R24 kippte das ganze Ergebnis (>100 Fehler). Vorgehen: einzeln aendern, `scripts/export_fab.sh` ablesen, bei Fehlern Teil um 0,3..1 mm verschieben. Gefundene Platzierung: C10/C30 rot 180 bei (-12,9 / 11,1) und (-12,9 / 12,9), R10/C8 1 mm nach rechts, R11 (-9,0 / -11,57), L3 (-20,6 / 14,57), R16 (-14,6 / 16,3), R24 (37,0 / 20,3), C29 (14,6 / 18,3) rot 270, F3 (26,2 / 15,0).
 * Handverlegte VBUS-Bahnen am J2 (`pcbPath` J2.11 -> F3, U4.5 -> J2.11) erzeugten Kurzschluesse mit den USB-/CC-Bahnen: verworfen, VBUS bleibt autogeroutet (Verengung nur nahe der Feinraster-Pads).
+
+## Review-Fix-Erkenntnisse (R6/R7 = FIX_LIST_R3.md, tscircuit 0.0.3296)
+* **Silk-Text**: Gerber-Glyphenhoehe = 0,475 x fontSize + Strich (Strich 0,09 x fontSize); fontSize 1,85 mm -> 1,044 mm Glyphe, 0,167 mm Strich. `<silkscreentext pcbRotation={90}>` und `layer="bottom"` funktionieren (Bottom-Text wird gespiegelt). `<silkscreencircle radius strokeWidth>` = Ring (Pin-1-Punkt), Funktionskomponenten (`lib/silk.tsx`) duerfen innerhalb von `<footprint>` verwendet werden. Footprinter-Gehaeuse (sod123, sot23, sot23_6, sot223) haben keine Pin-1-Marke: Board-Ebene mit `toWorld()` aus Position/Drehung.
+* **Pour-Splitter**: `clearance` 0,2/0,22/0,25/0,28 liefert jeweils andere 0,04-0,13-mm-Finger an anderen Stellen; kein Pour-Parameter dafuer. Loesung: Nachbearbeitung im Gerber (`scripts/slivers.py`).
+* **Router**: `minViaHoleEdgeToViaHoleEdgeClearance="0.5mm"` wird eingehalten (kleinster Abstand 0,500 mm), aber ein handplatziertes Via neben einem Pad kollidiert mit dem Router-Via am selben Pad (Fehler `same_net_vias_close`) -> Hand-Via entfernt. C22/C23-Tausch: C22 rot 270 erzeugte 12 Routingfehler (V3V3-Hals an der Antenne), rot 90 laeuft sauber; F3 als 1206-Footprint (Pads 1,19 x 1,73 bei +-1,445) ohne Folgen fuer den Router.
+* Gerber-Namen werden nur im ZIP geaendert (`postprocess_gerbers.py`), die Pruefskripte lesen sie ueber die JLC-Namen.

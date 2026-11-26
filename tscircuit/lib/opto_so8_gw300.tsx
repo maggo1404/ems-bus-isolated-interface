@@ -4,6 +4,7 @@
 // Pin1 top-left, pins 1-4 down the left column, 5-8 UP the right column (pin5 opposite pin4, pin8 opposite pin1;
 // counter-clockwise like the EasyEDA C92651/C336082 footprint: pin1 (-3.81,-4.545) .. pin8 (-3.81,+4.545) in its frame).
 import type { ChipProps } from "tscircuit"
+import { Dot } from "./silk"
 
 export const OptoSo8Gw300Footprint = () => {
   const ys = [3.81, 1.27, -1.27, -3.81]
@@ -16,7 +17,8 @@ export const OptoSo8Gw300Footprint = () => {
         <smtpad key={`r${i}`} portHints={[`pin${8 - i}`]} shape="rect" width="1.8mm" height="1.4mm" pcbX={4.75} pcbY={y} />
       ))}
       <silkscreenpath route={[{ x: -3.0, y: 4.5 }, { x: 3.0, y: 4.5 }, { x: 3.0, y: -4.5 }, { x: -3.0, y: -4.5 }, { x: -3.0, y: 4.5 }]} />
-      <silkscreentext text="1" pcbX={-2.3} pcbY={3.9} fontSize="1.0mm" />
+      {/* pin-1 dot above pad 1 (R7 m6) */}
+      <Dot x={-4.75} y={5.3} />
     </footprint>
   )
 }

@@ -42,7 +42,7 @@ LED=GPIO2, Dallas=GPIO18, button=GPIO0. Its `valid_system_gpios_ = {0,2,5,17,18}
 |---|---|---|---|
 | EMS Rx (from RX optocoupler output) | **GPIO5** | pin 5 | profile S32S3 Rx; no boot function; plain GPIO |
 | EMS Tx (to TX optocoupler/driver) | **GPIO17** | pin 10 | profile S32S3 Tx; no boot function |
-| Status LED | **GPIO2** | pin 38 | profile S32S3 LED (green/red LED via resistor, active high) |
+| Status LED | **GPIO2** | pin 38 | profile S32S3 LED (LED via resistor, active high; here yellow LD4) |
 | BOOT / user button | **GPIO0** | pin 27 | strapping + firmware button (profile: button=0); tactile to GND, 10k pull-up already internal |
 | EN / RESET | EN | pin 3 | tactile to GND + 10k pull-up + 1uF-100nF to GND |
 | optional Dallas 1-wire | GPIO18 | pin 11 | profile S32S3 Dallas, spare |
@@ -60,6 +60,6 @@ The `S32S3` profile is auto-selected by the firmware on ESP32-S3 builds (R3 revi
 
 ## This board (V2.0 as built in tscircuit)
 * GPIO5 = `MCU_RX` (OC1 output, direct), GPIO17 = `ESP_TX` -> **JP1 (default OPEN: RX-only)** -> `MCU_TX` (OC2 LED / R27 100 k pull-up to 3V3). Close JP1 to allow transmitting on the EMS bus.
-* GPIO2 = status LED (R22 1 k + green LD4, active high), GPIO0 = BOOT button, EN = RESET button, GPIO19/20 = USB D-/D+ (USBLC6-2SC6 + USB-C), GPIO43/44 test pads TP1/TP2 (+ TP3 GND).
+* GPIO2 = status LED (R22 330 R + yellow LD4 KT-0805Y, 2.7..4.8 mA, active high), GPIO0 = BOOT button, EN = RESET button, GPIO19/20 = USB D-/D+ (USBLC6-2SC6 + USB-C), GPIO43/44 test pads TP1 (TXD0, pin 37) / TP2 (RXD0, pin 36) (+ TP3 GND) at x = 41.3 / 43.2 / 45.1, y = -13 (below the module, left to right; no silk labels since R3: the legible 1.85 mm text does not fit between the vias).
 * P2 (1=3V3 via JP2 default OPEN, 2=MCU_TX, 3=MCU_RX, 4=GND) is kept for an external MCU; close JP2 only to power it from the on-board 3V3.
 * 3V3 from AMS1117-3.3 (USB VBUS) with 22 uF + 10 uF + 100 nF + 100 uF tantalum (C29).

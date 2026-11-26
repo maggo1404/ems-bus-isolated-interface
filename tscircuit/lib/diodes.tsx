@@ -2,7 +2,8 @@
 //  * 1N4148W C81598, B5819W C8598 (SOD-123):   pad 1 = cathode (K), pad 2 = anode (A)
 //  * BAT42W  C22466362 (SOD-123):              pad 1 = ANODE (A),   pad 2 = cathode (K)
 //  * LED red C84256 (0805):                    pad 1 = cathode, pad 2 = anode (pad 1 left)
-//  * LED green C2297 (0805):                   pad 1 = ANODE (right), pad 2 = cathode (left)
+//  * LED yellow C2296 KT-0805Y (0805, Basic): pad 1 = ANODE (right), pad 2 = cathode (left); same EasyEDA footprint LED0805-R-RD as the
+//    green C2297 it replaces (R6 M1: C2297 Vf 2.6-3.1 V is unsuitable on 3.3 V; C2296 Vf 1.8-2.4 V)
 // In every LED footprint the cathode is on the left (-X) at rotation 0, like the JLC footprint.
 import type { ChipProps } from "tscircuit"
 
@@ -28,10 +29,10 @@ export const LedRed = (p: any) => (
       {ledSilk}
     </footprint>} {...p} />
 )
-/** 0805 green LED C2297: pad 1 = A at x=+1.05, pad 2 = K at x=-1.05 (cathode left, as the JLC footprint) */
-export const LedGreen = (p: any) => (
+/** 0805 yellow LED C2296 (was green C2297): pad 1 = A at x=+1.05, pad 2 = K at x=-1.05 (cathode left, as the JLC footprint) */
+export const LedYellow = (p: any) => (
   <chip pinLabels={{ pin1: ["A"], pin2: ["K"] }} schPinArrangement={kaArr}
-    supplierPartNumbers={{ jlcpcb: ["C2297"] }} manufacturerPartNumber="KT-0805G"
+    supplierPartNumbers={{ jlcpcb: ["C2296"] }} manufacturerPartNumber="KT-0805Y"
     footprint={<footprint>
       <smtpad portHints={["pin1"]} shape="rect" width="1.0mm" height="1.4mm" pcbX={1.05} pcbY={0} />
       <smtpad portHints={["pin2"]} shape="rect" width="1.0mm" height="1.4mm" pcbX={-1.05} pcbY={0} />

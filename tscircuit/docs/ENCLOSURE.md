@@ -77,13 +77,13 @@ Alle LEDs 0805 (Seite oben), Lichtleiter-Abstand >= 5 mm. Koordinaten = LED-Mitt
 | LED | Funktion | Mitte (Platinenmitte = 0|0) | ab unten links | Farbe |
 |---|---|---|---|---|
 | LD1 | EMS-Seite Betriebsspannung (5 V Buck) | (-8,0 / +24,0) | (47,0 / 54,0) | rot |
-| LD3 | RX (EMS-Bus -> ESP) | (+16,0 / +13,6) | (71,0 / 43,6) | grün |
-| LD2 | TX (ESP -> EMS-Bus) | (+12,5 / -13,8) | (67,5 / 16,2) | grün |
-| LD5 | 3,3 V Betriebsspannung MCU-Seite | (+28,0 / +8,5) | (83,0 / 38,5) | grün |
-| LD4 | Status GPIO2 | (+47,0 / -16,5) | (102,0 / 13,5) | grün |
+| LD3 | RX (EMS-Bus -> ESP) | (+16,0 / +13,6) | (71,0 / 43,6) | gelb (R3: KT-0805Y statt grün, Position unverändert) |
+| LD2 | TX (ESP -> EMS-Bus) | (+12,5 / -13,8) | (67,5 / 16,2) | gelb (R3: KT-0805Y statt grün, Position unverändert) |
+| LD5 | 3,3 V Betriebsspannung MCU-Seite | (+28,0 / +8,5) | (83,0 / 38,5) | gelb (R3: KT-0805Y statt grün, Position unverändert) |
+| LD4 | Status GPIO2 | (+47,0 / -16,5) | (102,0 / 13,5) | gelb (R3: KT-0805Y statt grün, Position unverändert) |
 
 Hinweis LD4: liegt 5 mm neben der Antennenzone (x < 48) und 0,3 mm neben der Sperrzone des Schraubenkopfes (Hole 42,25 / -19,75); Lichtleiter dort bitte nicht aus Metall.
-Silkscreen auf der Platine: "PWR" (LD1), "RX" (LD3), "TX" (LD2), "3V3" (LD5; Beschriftung unter der LED bei (26,0 / 5,9)); Text jetzt 1,0 mm hoch.
+Silkscreen auf der Platine: "PWR" (LD1), "RX" (LD3), "TX" (LD2), "3V3" (LD5; Beschriftung unter der LED bei (26,0 / 5,9)); Text jetzt 1,85 mm Schrift (Glyphe 1,04 mm hoch, R3); neu: "RESET" (SW1), "BOOT" (SW2). LED-/Steckerpositionen haben sich in R3 NICHT geändert (nur die LED-Farbe grün -> gelb).
 
 ### USB-C-Ausschnitt (R5 m8)
 Die Buchse J2 steht bündig mit der Platinenkante (Mündung bei y = +30,0). Die Gehäusewand ist 2,0 mm dick, zwischen Platinenkante und Wand bleiben rund 0,3 mm Spiel (Hammond: Innenmaß 60,65 gegen Platine 60,0): die Steckermündung liegt damit **2,3 mm hinter der Außenfläche**.

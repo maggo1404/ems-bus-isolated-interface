@@ -23,7 +23,7 @@ Toolchain/API: `docs/TOOLCHAIN.md`, `docs/TSCIRCUIT_API.md`. Parts: `docs/JLCPCB
 | `MCU_TX` | MCU | OC2 LED cathode / LD2 cathode, interface side of JP1 (V1 MCUTX) | MCUTX |
 | `ESP_TX` | MCU | ESP32 GPIO17, ESP side of JP1 | – |
 | `VBUS` | MCU | USB 5 V at J2 / U4 (connector side of the PTC F3) | – |
-| `VBUS_F` | MCU | 5 V behind PTC F3 (BSMD0805-050-24V, 500 mA hold): U5.VIN, C24, C25 (V2, review R4 m5) | – |
+| `VBUS_F` | MCU | 5 V behind PTC F3 (SMD1206B110TFT C269119, 1.1 A hold, <= 0.21 ohm; R3 R6 m2/R7 m9): U5.VIN, C24, C25 | – |
 | `USB_DP`/`USB_DN` | MCU | USB data (both A/B contacts of J2 tied to the same net) | – |
 | `P2_3V3` | MCU | P2 pin 1, connected to `V3V3` only through the open jumper JP2 | – |
 | `SHELL` | MCU | USB shield (4 legs), 1 MΩ ∥ 4.7 nF to GND | – |
@@ -68,4 +68,4 @@ Via 0.3 mm drill / 0.6 mm pad, annular ring ≥ 0.13 mm; trace width ≥ 0.4 mm 
 
 ## V2 review fixes (R4/R5), see docs/review/FIX_LIST_R2.md
 Buck input: C10 10 µF + C30 100 nF directly at U2 VIN (pin 5), L3 moved towards the SW pin; U1 / L1, L2 / P2 footprints from EasyEDA; paste apertures 100 % of the pad;
-hole-to-hole spacing checked (check_fab G4), silkscreen text ≥ 1.0 mm / stroke ≥ 0.15 mm / off pads (G5), paste/mask parsed from the Gerbers (G6/G7); R14 150R, green LED resistors 220R (docs/netlist_v1.md "V2 deviations"); VBUS fuse F3 (net VBUS_F behind it).
+hole-to-hole spacing checked (check_fab G4), silkscreen glyph ≥ 1.0 mm / stroke ≥ 0.16 mm measured in the Gerber, off pads, pin-1 marks (G5), pour slivers (G8), paste/mask parsed from the Gerbers (G6/G7); R14 150R, LD2..LD5 yellow KT-0805Y C2296 with 330R (R3, docs/netlist_v1.md "V2 deviations"), R13 3k3, C5 4.7 nF, F3 1.1 A PTC (docs/review/FIX_LIST_R3.md); VBUS fuse F3 (net VBUS_F behind it).

@@ -3,9 +3,10 @@
 // Placement is absolute (board centre 0,0). MCU region x in [6,55], y in [-25,25].
 import { Esp32S3Wroom1 } from "../lib/esp32s3wroom1"
 import { UsbC16 } from "../lib/usbc16"
-import { Tactile5x5, TantalumB, PinHeader1x4 } from "../lib/thtparts"
+import { Tactile5x5, TantalumB, PinHeader1x4, Ptc1206Footprint } from "../lib/thtparts"
 import { traceWidth } from "../lib/netclass"
-import { LedGreen } from "../lib/diodes"
+import { LedYellow } from "../lib/diodes"
+import { PartDot, FS } from "../lib/silk"
 import { SolderJumper2Footprint } from "../lib/jumper"
 
 const T = (from: string, to: string) => (
@@ -36,14 +37,14 @@ export const McuSide = () => (
     {/* EPAD = 9 separate pads (ports GND_EP1..9), each tied to GND explicitly */}
     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => T(`.U3 > .GND_EP${i}`, "net.GND"))}
     {T(".U3 > .V3V3", "net.V3V3")}
-    {C("C22", "10uF", 46.9, 12.0, 270, "C15850", "0805", -8, 8)}
-    {C("C23", "100nF", 46.9, 16.0, 90, "C49678", "0805", -8, 6)}
+    {/* R7 m4: the 100 nF (C23) sits next to U3 pin 2 (3V3), the 10 uF (C22) behind it */}
+    {/* R7 m4: the 100 nF (C23) sits next to U3 pin 2 (3V3), the 10 uF (C22) behind it */}
+    {C("C23", "100nF", 46.9, 12.0, 90, "C49678", "0805", -8, 6)}
+    {C("C22", "10uF", 46.9, 16.0, 90, "C15850", "0805", -8, 8)}
     {T(".C22 > .pin1", "net.V3V3")}{T(".C22 > .pin2", "net.GND")}
     {T(".C23 > .pin1", "net.V3V3")}{T(".C23 > .pin2", "net.GND")}
 
-    {/* GND stitching via for the 3V3 caps next to the antenna zone (top pad of C23) */}
-    <via name="VG_C23" pcbX={46.9} pcbY={18.5} fromLayer="top" toLayer="bottom" holeDiameter="0.3mm" outerDiameter="0.6mm" connectsTo="net.GND" />
-    {/* EN: pull-up + 1uF + RESET */}
+        {/* EN: pull-up + 1uF + RESET */}
     {R("R20", "10k", 44.4, 11.4, 270, "C17414", -8, 4)}
     {C("C20", "1uF", 38.6, 12.8, 180, "C28323", "0805", -8, 2)}
     <Tactile5x5 name="SW1" pcbX={33.5} pcbY={-23.5} pcbRotation={0} schX={-12} schY={2} />
@@ -65,8 +66,8 @@ export const McuSide = () => (
     {T(".U3 > .IO17", "net.ESP_TX")}
 
     {/* status LED GPIO2 (S32S3 profile: LED=GPIO2, active high) */}
-    {R("R22", "220", 47.0, -12.5, 90, "C17557", -8, -6)}
-    <LedGreen name="LD4" pcbX={47.0} pcbY={-16.5} pcbRotation={90} schX={-8} schY={-8} />
+    {R("R22", "330", 47.0, -12.5, 90, "C17630", -8, -6)}
+    <LedYellow name="LD4" pcbX={47.0} pcbY={-16.5} pcbRotation={90} schX={-8} schY={-8} />
     {T(".U3 > .IO2", ".R22 > .pin1")}
     {T(".R22 > .pin2", ".LD4 > .A")}{T(".LD4 > .K", "net.GND")}
 
@@ -75,9 +76,7 @@ export const McuSide = () => (
     <TestPad name="TP2" x={43.2} y={-13} sx={14} sy={-8} />
     <TestPad name="TP3" x={45.1} y={-13} sx={14} sy={-10} />
     {T(".U3 > .TXD0", ".TP1 > .TP")}{T(".U3 > .RXD0", ".TP2 > .TP")}{T(".TP3 > .TP", "net.GND")}
-    <silkscreentext text="TX" pcbX={41.3} pcbY={-14.9} fontSize="1.0mm" />
-    <silkscreentext text="RX" pcbX={43.2} pcbY={-14.9} fontSize="1.0mm" />
-    <silkscreentext text="G" pcbX={45.1} pcbY={-14.9} fontSize="1.0mm" />
+    {/* the UART0 pad labels (TX RX G) were dropped: at >= 1 mm glyph height they do not fit between the router's vias (docs/ESP32_EMSESP.md lists the pads) */}
 
     {/* ---------------- USB-C at bottom edge ---------------- */}
     <UsbC16 name="J2" pcbX={33} pcbY={22.43} pcbRotation={0} schX={-24} schY={0} />
@@ -97,7 +96,8 @@ export const McuSide = () => (
     {T(".R25 > .pin2", "net.GND")}{T(".C21 > .pin2", "net.GND")}
 
     {/* ESD: USBLC6-2SC6 pins 1,6 = I/O1; 3,4 = I/O2; 2 = GND; 5 = VBUS */}
-    <chip name="U4" footprint="sot23_6" manufacturerPartNumber="USBLC6-2SC6" supplierPartNumbers={J("C7519")}
+    <PartDot part={{ pcbX: 32.3, pcbY: 17.4 }} lx={-2.35} ly={0.95} />
+    <chip name="U4" pcbStyle={{ silkscreenTextVisibility: "hidden" }} footprint="sot23_6" manufacturerPartNumber="USBLC6-2SC6" supplierPartNumbers={J("C7519")}
       pcbX={32.3} pcbY={17.4} pcbRotation={0} schX={-16} schY={0}
       pinLabels={{ pin1: ["IO1a"], pin2: ["GND"], pin3: ["IO2a"], pin4: ["IO2b"], pin5: ["VBUS"], pin6: ["IO1b"] }}
       schPinArrangement={{ leftSide: { direction: "top-to-bottom", pins: ["IO1a", "IO2a", "GND"] }, rightSide: { direction: "top-to-bottom", pins: ["IO1b", "IO2b", "VBUS"] } }} />
@@ -106,13 +106,14 @@ export const McuSide = () => (
     {T(".U4 > .GND", "net.GND")}{T(".U4 > .VBUS", "net.VBUS")}
     {T(".U3 > .IO19", "net.USB_DN")}{T(".U3 > .IO20", "net.USB_DP")}
 
-    {/* VBUS PTC F3 (same part as F1/F2, BSMD0805-050-24V, 500 mA hold, R4 m5): connector side net VBUS (J2, U4 ESD) -> VBUS_F (U5, C24, C25) */}
-    <chip name="F3" footprint="0805" pcbX={26.2} pcbY={15.0} pcbRotation={180} schX={-20} schY={-20} manufacturerPartNumber="BSMD0805-050-24V" supplierPartNumbers={J("C910822")}
+    {/* VBUS PTC F3 (SMD1206B110TFT C269119: 1.1 A hold, 0.21 ohm max, 8 V; R6 m2 / R7 m9, replaces the 0.5 A 0805 type): connector side net VBUS (J2, U4 ESD) -> VBUS_F (U5, C24, C25) */}
+    <chip name="F3" pcbStyle={{ silkscreenTextVisibility: "hidden" }} footprint={<Ptc1206Footprint />} pcbX={26.2} pcbY={15.0} pcbRotation={180} schX={-20} schY={-20} manufacturerPartNumber="SMD1206B110TFT" supplierPartNumbers={J("C269119")}
       pinLabels={{ pin1: ["VBUS"], pin2: ["VBUS_F"] }} />
     {T(".F3 > .pin1", "net.VBUS")}{T(".F3 > .pin2", "net.VBUS_F")}
 
     {/* ---------------- LDO AMS1117-3.3, SOT-223: 1=GND/ADJ 2=VOUT 3=VIN 4(tab)=VOUT ---------------- */}
-    <chip name="U5" footprint="sot223" manufacturerPartNumber="AMS1117-3.3" supplierPartNumbers={J("C6186")}
+    <PartDot part={{ pcbX: 20.5, pcbY: 18.2, pcbRotation: 90 }} lx={-4.85} ly={2.3} />
+    <chip name="U5" pcbStyle={{ silkscreenTextVisibility: "hidden" }} footprint="sot223" manufacturerPartNumber="AMS1117-3.3" supplierPartNumbers={J("C6186")}
       pcbX={20.5} pcbY={18.2} pcbRotation={90} schX={-16} schY={-8}
       pinLabels={{ pin1: ["GND"], pin2: ["VOUT"], pin3: ["VIN"], pin4: ["TAB"] }}
       schPinArrangement={{ leftSide: { direction: "top-to-bottom", pins: ["VIN", "GND"] }, rightSide: { direction: "top-to-bottom", pins: ["VOUT", "TAB"] } }} />
@@ -131,20 +132,20 @@ export const McuSide = () => (
     {["C26", "C27", "C28"].map((c) => [T(`.${c} > .pin1`, "net.V3V3"), T(`.${c} > .pin2`, "net.GND")])}
 
     {/* power LED on V3V3 */}
-    {R("R26", "220", 24.0, 8.5, 90, "C17557", -4, -16)}
-    <LedGreen name="LD5" pcbX={28.0} pcbY={8.5} pcbRotation={90} schX={-4} schY={-18} />
+    {R("R26", "330", 24.0, 8.5, 90, "C17630", -4, -16)}
+    <LedYellow name="LD5" pcbX={28.0} pcbY={8.5} pcbRotation={90} schX={-4} schY={-18} />
     {T(".R26 > .pin1", "net.V3V3")}{T(".R26 > .pin2", ".LD5 > .A")}{T(".LD5 > .K", "net.GND")}
 
     {/* ---------------- JP1 (open) ESP_TX <-> MCU_TX, R_PU, P2 ---------------- */}
     <solderjumper name="JP1" pinCount={2} footprint={<SolderJumper2Footprint />} pcbX={21} pcbY={-9.5} pcbRotation={90} schX={-4} schY={8} />
     {T(".JP1 > .pin1", "net.ESP_TX")}{T(".JP1 > .pin2", "net.MCU_TX")}
-    <silkscreentext text="TX EN" pcbX={21} pcbY={-11.6} fontSize="1.0mm" />
+    <silkscreentext text="TX EN" pcbX={21} pcbY={-11.9} fontSize={FS} />
     {R("R27", "100k", 16.5, -9.5, 90, "C149504", -4, 12)}
     {T(".R27 > .pin1", "net.MCU_TX")}{T(".R27 > .pin2", "net.V3V3")}
     {/* JP2 (default OPEN): V3V3 -> P2 pin 1 (net P2_3V3); close only if the 3V3 rail of this board may feed the header */}
     <solderjumper name="JP2" pinCount={2} footprint={<SolderJumper2Footprint />} pcbX={26} pcbY={-21} pcbRotation={90} schX={-4} schY={-8} />
     {T(".JP2 > .pin1", "net.V3V3")}{T(".JP2 > .pin2", "net.P2_3V3")}
-    <silkscreentext text="3V3 OUT" pcbX={21.8} pcbY={-21} fontSize="1.0mm" />
+    <silkscreentext text="3V3 OUT" pcbX={22.5} pcbY={-18.3} fontSize={FS} />
     <PinHeader1x4 name="P2" pcbX={12} pcbY={-26.5} pcbRotation={0} schX={-4} schY={-4} />
     {T(".P2 > .pin1", "net.P2_3V3")}{T(".P2 > .pin2", "net.MCU_TX")}
     {T(".P2 > .pin3", "net.MCU_RX")}{T(".P2 > .pin4", "net.GND")}

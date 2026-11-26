@@ -1,5 +1,6 @@
 // THT / odd footprints taken from Eagle EMSinterface_V1.0.lbr
 import type { ChipProps } from "tscircuit"
+import { FS, Plus } from "./silk"
 
 // 2-pin 5.08 mm header KF2EDGRC-5.08-2P (JLC C441236; replaces Phoenix MSTBA): pads 2.5 mm, drill 1.8 mm, pin1 left
 export const Mstba2 = (props: Partial<ChipProps> & { name: string }) => (
@@ -14,7 +15,7 @@ export const Mstba2 = (props: Partial<ChipProps> & { name: string }) => (
         {/* right-angle body (EasyEDA C441236): x +-5.88, y -10.9 ... +1.3 about the pin axis; wire opening / plug face at local -Y
             (the board edge when placed with pcbRotation 270 at x = edge + 10.9) */}
         <silkscreenpath route={[{ x: -5.88, y: 1.5 }, { x: 5.88, y: 1.5 }, { x: 5.88, y: -10.6 }, { x: -5.88, y: -10.6 }, { x: -5.88, y: 1.5 }]} />
-        <silkscreentext text="EMS BUS" pcbX={0} pcbY={-5.5} fontSize="1.0mm" />
+        <silkscreentext text="EMS BUS" pcbX={0} pcbY={-5.5} fontSize={FS} />
       </footprint>
     }
     {...(props as any)}
@@ -35,8 +36,8 @@ export const CapE5_10p5 = (props: Partial<ChipProps> & { name: string }) => (
         {/* body outline 10.4 x 10.4, chamfered on the + side (left); side lines stop short of the pads */}
         <silkscreenpath route={[{ x: -5.2, y: 1.5 }, { x: -5.2, y: 3.1 }, { x: -3.1, y: 5.2 }, { x: 5.2, y: 5.2 }, { x: 5.2, y: 1.5 }]} />
         <silkscreenpath route={[{ x: -5.2, y: -1.5 }, { x: -5.2, y: -3.1 }, { x: -3.1, y: -5.2 }, { x: 5.2, y: -5.2 }, { x: 5.2, y: -1.5 }]} />
-        <silkscreentext text="+" pcbX={-3.2} pcbY={3.2} fontSize="1.6mm" />
-        <silkscreentext text="+" pcbX={-7.4} pcbY={2.0} fontSize="1.6mm" />
+        <Plus x={-3.2} y={3.2} />
+        <Plus x={-7.4} y={2.0} />
       </footprint>
     }
     {...(props as any)}
@@ -111,7 +112,7 @@ export const TantalumB = (props: Partial<ChipProps> & { name: string }) => (
       <silkscreenpath route={[{ x: -3.4, y: 1.6 }, { x: -3.4, y: -1.6 }]} />
       <silkscreenpath route={[{ x: -0.8, y: 1.6 }, { x: 2.8, y: 1.6 }]} />
       <silkscreenpath route={[{ x: -0.8, y: -1.6 }, { x: 2.8, y: -1.6 }]} />
-      <silkscreentext text="+" pcbX={-3.3} pcbY={2.3} fontSize="1.0mm" />
+      <Plus x={-3.3} y={2.6} />
     </footprint>}
     {...(props as any)} />
 )
@@ -134,4 +135,14 @@ export const PinHeader1x4 = (props: Partial<ChipProps> & { name: string }) => (
     }
     {...(props as any)}
   />
+)
+
+// PTC 1206 SMD1206B110TFT (JLC C269119): EasyEDA pads 1.19 x 1.73 mm at x = +-1.445 (scratch/easyeda/C269119.json). Both pads are symmetric.
+export const Ptc1206Footprint = () => (
+  <footprint>
+    <smtpad portHints={["pin1"]} shape="rect" width="1.19mm" height="1.73mm" pcbX={-1.445} pcbY={0} />
+    <smtpad portHints={["pin2"]} shape="rect" width="1.19mm" height="1.73mm" pcbX={1.445} pcbY={0} />
+    <silkscreenpath route={[{ x: -0.7, y: 1.1 }, { x: 0.7, y: 1.1 }]} />
+    <silkscreenpath route={[{ x: -0.7, y: -1.1 }, { x: 0.7, y: -1.1 }]} />
+  </footprint>
 )

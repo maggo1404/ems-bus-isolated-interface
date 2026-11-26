@@ -65,7 +65,7 @@ Conventions: `Ref.pad`. Diode / LED pads are `A`/`C`; C12 pads are `+`/`-`. Auto
 
 **b) Floating Tx.** OC2 LED: anode `N$19` = R14 -> `MCUVCC`; cathode = `MCUTX` (P2.2). LD2: anode via R19 to `MCUVCC`, cathode `MCUTX`. Both LEDs are forward-biased from the 3.3V side; the only current path to ground is through the MCU Tx driver pulling low. With Tx floating/high-Z there is no sink path, so no LED current flows and the cathode node sits at about `MCUVCC` (the LEDs themselves hold it high). So OC2 is off, VO (`N$15`) is pulled to +5V by R11, U1.6 (5V) > U1.5 (~0.6V), comparator B output stays low, Q1 off: the bus sees IDLE (no transmission). An open solder jumper in the Tx line is therefore safe by design, as long as `MCUVCC` is powered or off (0V: also off). A pull-up on the interface side is NOT needed to guarantee idle; it would be only a belt-and-braces option against EMI pickup on a long open wire (e.g. 47k-100k from `MCUTX` to `MCUVCC`; harmless: ~35-70uA extra only when Tx low). Do not add a pull-DOWN or tie Tx to GND: that would continuously transmit. Caveat: Tx must also be high at ESP32 boot, but a floating pin is equivalent.
 
-**c) MCU-side helpers.** LD2 (green) + R19 1k2: Tx activity LED, shares `MCUTX` with the OC2 cathode, lit when Tx low (~1 mA extra sink current; OC2 LED about (3.3-1.4)/270 ~ 7 mA). LD3 (green) + R18 1k2: Rx activity LED, from `MCUVCC` to `MCURX`, lit when MCURX low. LD1 (red) + R17 1k2 is on the EMS side (+5V power-on LED), not an MCU-side part. R13 4k7: pull-up for the open-collector 6N137 output on `MCURX`. C7 100n: decoupling of OC1 VCC (`MCUVCC` to `MCUGND`). R14 270R: OC2 LED current limit.
+**c) MCU-side helpers.** LD2 (yellow since R3) + R19 330R: Tx activity LED, shares `MCUTX` with the OC2 cathode, lit when Tx low (~1 mA extra sink current; OC2 LED about (3.3-1.4)/270 ~ 7 mA). LD3 (green) + R18 1k2: Rx activity LED, from `MCUVCC` to `MCURX`, lit when MCURX low. LD1 (red) + R17 1k2 is on the EMS side (+5V power-on LED), not an MCU-side part. R13 4k7: pull-up for the open-collector 6N137 output on `MCURX`. C7 100n: decoupling of OC1 VCC (`MCUVCC` to `MCUGND`). R14 270R: OC2 LED current limit.
 
 **d) Isolation check.** Only OC1 and OC2 have pins on both an EMS net and an MCU net (checked per part from netlist). No shared nets: `GND` and `MCUGND` are not connected anywhere; `+5V`/`MCUVCC` are distinct. No exceptions (no Y-capacitor, no resistor across the barrier). Note: OC1.7 (VE) is on `MCUVCC` (MCU side) as intended, OC2.7 (VB) is left open.
 
@@ -145,10 +145,13 @@ Pin-for-pin the 33 V1 nets are unchanged (`scripts/check_netlist.py`); the follo
 | Item | V1 | V2 | Reason |
 |---|---|---|---|
 | C30 (new) | - | 100 nF 50 V X7R (C49678) parallel to C10 (EMS_VIN / GND_EMS) | buck input HF decoupling directly at U2 VIN (R5 M2) |
-| F3 (new, MCU side) | - | PTC 0805 BSMD0805-050-24V (C910822, 500 mA hold, same part as F1/F2) between J2/U4 `VBUS` and `VBUS_F` (U5.VIN, C24, C25) | USB host protection, a fault on the 3V3 rail cannot load the host above the PTC trip (R4 m5) |
+| F3 (new, MCU side) | - | PTC 1206 SMD1206B110TFT (C269119, 1.1 A hold, <= 0.21 ohm, R3) between J2/U4 `VBUS` and `VBUS_F` (U5.VIN, C24, C25) | USB-side fuse; 1.1 A hold keeps AMS1117 headroom 0.2..0.28 V at 4.75 V host and passes the 0.35-0.5 A Wi-Fi peaks (R6 m2, R7 m9) |
 | R14 | 270R | **150R** (C17471, Basic) | OC2 CTR margin, calculation below (R4 m3) |
-| R18, R19 (LD3, LD2) | 1k2 | **220R** (C17557, Basic) | green LEDs about 2 mA from 3.3 V (R4 m6) |
-| R22, R26 (LD4 GPIO2, LD5 3V3) | 1k (V2 draft) | **220R** (C17557) | same, R4 m6 |
+| R18, R19 (LD3, LD2) | 1k2 | **330R** (C17630, Basic) | yellow LEDs C2296, 2.0..4.8 mA from 3.3 V (R6 M1; was 220R for the green C2297) |
+| R22, R26 (LD4 GPIO2, LD5 3V3) | 1k (V2 draft) | **330R** (C17630) | same |
+| LD2..LD5 | green | **yellow KT-0805Y C2296** (Basic) | Vf 1.8..2.4 V instead of 2.6..3.1 V (R6 M1) |
+| R13 | 4k7 | **3k3** (C26010, Basic) | 6N137 RL range 330R..4k (R6 m5) |
+| C5 | 10n | **4.7n** (C1744, Basic) | TX falling-edge delay 56 % -> 26 % of a bit worst case (R6 m4) |
 | U1 / L1, L2 / P2 | generic soic8, V1 L3225M, `<pinheader>` | footprints copied from EasyEDA C7955 / C98021 / C32713270 | R4 M1, m2, m8 |
 
 ### OC2 (6N136S-TA1-L) LED current, R14 = 150 R
@@ -162,10 +165,19 @@ CTR: JLC/datasheet minimum of the 6N136 class is 19 % (at IF = 16 mA); assumed f
 | typical | 3.30 V | 1.4 V | 0.10 V | 6.7 mA -> 1.27 mA | 12.0 mA | 2.28 mA | **2.4 x** (270 R: 1.35 x) |
 | best (V3V3 +2 %, Vf 1.3 V, VOL 0.1 V) | 3.366 V | 1.3 V | 0.1 V | | 13.1 mA | | |
 
-Limits: GPIO17 sink = IF(OC2) + IF(LD2) = 12 + 2.3 mA typical, 16 mA worst-high (ESP32-S3 default drive strength 20 mA, IOL abs max 28 mA); OC2 LED (6N136 absolute max 25 mA): <= 13.1 mA; R14 dissipation 25 mW.
+Limits (R3: LD2 is yellow with R19 330R, 3.8 mA typ / 4.8 mA max, so the worst-high is 18.3 mA): GPIO17 sink = IF(OC2) + IF(LD2) = 12 + 2.3 mA typical (V2 green LED), 16 mA worst-high (V2) (ESP32-S3 default drive strength 20 mA, IOL abs max 28 mA); OC2 LED (6N136 absolute max 25 mA): <= 13.1 mA; R14 dissipation 25 mW.
 220 R (C17557, Basic) would give only 1.2 x in the worst case, 100/120 R would raise the GPIO load without need: 150 R (C17471, Basic) is the choice.
 V1 never ran from a 3.3 V LDO rail; with 270 R the worst-case margin is below 1 (marginal switching with an aged LED or a hot, low-CTR part), so this is a real improvement, not cosmetics.
 
-### Green LEDs (LD2..LD5) at about 2 mA
-KT-0805G (C2297): Vf 2.6 .. 3.1 V at 20 mA, 2.8 V typical at 2 mA.  With 220 R from 3.3 V: IF = (3.3 - 2.8 V) / 220 = 2.3 mA typical (0.9 mA at Vf 3.1 V, 3.2 mA at 2.6 V).
-LD2/LD3 are active-low (`MCU_TX`/`MCU_RX` low: GPIO VOL 0.1 V gives 2.3 mA); LD3 adds that current to the OC1 output sink (6N137 IOL max 13 mA, here 0.7 mA R13 + 2.3 mA).
+### Yellow LEDs (LD2..LD5), R3 (replaces the green KT-0805G C2297, Vf 2.6..3.1 V)
+KT-0805Y (C2296, Basic): Vf 1.8..2.4 V at 20 mA, 1.7..2.2 V at 2..5 mA (typ 1.95 V).  330 R (C17630), V3V3 = 3.27..3.33 V:
+
+| LED | cathode / anode drive | IF min | IF typ | IF max |
+|---|---|---|---|---|
+| LD5 (R26, V3V3 -> GND) | - | (3.27-2.2)/330 = 3.2 mA | 4.1 mA | 4.9 mA |
+| LD4 (R22 from GPIO2, VOH >= 3.1 V at these currents) | VOH | 2.7 mA | 3.8 mA | 4.8 mA |
+| LD2 (R19, cathode MCU_TX = GPIO17 low, VOL 0.05..0.4 V) | VOL | 2.0 mA | 3.8 mA | 4.8 mA |
+| LD3 (R18, cathode MCU_RX = OC1 VO low, 0.1..0.4 V) | VOL | 2.0 mA | 3.8 mA | 4.8 mA |
+
+GPIO17 sinks OC2 LED (7.8..13.5 mA) + LD2 <= 4.8 mA = 18.3 mA max (default drive 20 mA, IOL abs max 28 mA).  OC1 output sink = R13 3.3 V/3k3 = 1.0 mA + LD3 <= 4.8 mA = 5.8 mA (6N137 IOL max 13 mA, VOL <= 0.6 V < ESP32 VIL 0.82 V).
+LD2/LD3 stay active-low (`MCU_TX`/`MCU_RX` low).

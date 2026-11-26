@@ -22,7 +22,7 @@ C1    C107120    -28.000  -10.500  90   90    0      ( 0.00, 0.00)  assumed equa
 C2    C15850     -22.060  -11.570  0    0     0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 C3    C46653     -22.060   -7.290  0    0     0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 C4    C1717       -9.720    4.710  0    0     0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
-C5    C1710       -8.650  -16.790  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
+C5    C1744       -8.650  -16.790  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 C6    C49678     -15.690  -15.010  0    0     0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 C7    C49678       8.500    8.000  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 C8    C49678      -8.370   12.850  0    0     0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
@@ -34,8 +34,8 @@ C13   C49678      -7.000   -8.300  90   90    0      ( 0.00, 0.00)  assumed equa
 C14   C49256851  -13.500  -24.300  0    0     0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.000 mm
 C20   C28323      38.600   12.800  180  180   0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 C21   C1744       26.600   23.000  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
-C22   C15850      46.900   12.000  270  270   0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
-C23   C49678      46.900   16.000  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
+C22   C15850      46.900   16.000  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
+C23   C49678      46.900   12.000  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 C24   C15850      22.500   11.600  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 C25   C49678      20.000   11.600  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 C26   C12891       6.500   20.000  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
@@ -52,16 +52,16 @@ D6    C81598     -25.410  -17.580  90   90    0      (-0.00,-0.00)  EasyEDA matc
 D7    C8598      -32.680    4.710  0    0     0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.050 mm
 F1    C910822    -40.500    3.430  90   90    0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.187 mm
 F2    C910822    -40.500   -3.430  270  270   0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.187 mm
-F3    C910822     26.200   15.000  180  180   0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.187 mm
+F3    C269119     26.200   15.000  180  180   0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.000 mm
 J2    C165948     33.000   24.904  180  0     180    (-0.00, 2.47)  EasyEDA match on 16 pads, residual 0.000 mm (geometric pad-set match)
 L1    C98021     -37.710    4.280  270  270   0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.000 mm
 L2    C98021     -37.710   -6.010  270  270   0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.000 mm
 L3    C43183     -20.600   14.570  180  0     180    ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.000 mm
 LD1   C84256      -8.000   24.000  0    0     0      (-0.00, 0.00)  EasyEDA match on 2 pads, residual 0.050 mm
-LD2   C2297       12.500  -13.800  90   90    0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.000 mm
-LD3   C2297       16.000   13.600  90   90    0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.000 mm
-LD4   C2297       47.000  -16.500  90   90    0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.000 mm
-LD5   C2297       28.000    8.500  90   90    0      (-0.00,-0.00)  EasyEDA match on 2 pads, residual 0.000 mm
+LD2   C2296       12.500  -13.800  90   90    0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.000 mm
+LD3   C2296       16.000   13.600  90   90    0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.000 mm
+LD4   C2296       47.000  -16.500  90   90    0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.000 mm
+LD5   C2296       28.000    8.500  90   90    0      (-0.00,-0.00)  EasyEDA match on 2 pads, residual 0.000 mm
 OC1   C92651       0.000    8.000  270  0     90     ( 0.00, 0.00)  EasyEDA match on 8 pads, residual 0.205 mm
 OC2   C336082      0.000   -8.000  90   180   90     ( 0.00, 0.00)  EasyEDA match on 8 pads, residual 0.205 mm
 P1    C441236    -44.100    0.000  270  270   0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.000 mm
@@ -79,20 +79,20 @@ R9    C17673      -8.650   -5.580  90   90    0      ( 0.00, 0.00)  assumed equa
 R10   C17710      -8.370    9.860  0    0     0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 R11   C17673      -9.000  -11.570  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 R12   C17772     -12.360    8.600  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
-R13   C17673      12.500    8.200  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
+R13   C26010      12.500    8.200  90   90    0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.087 mm
 R14   C17471       9.000   -9.500  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 R15   C17384     -12.360    3.870  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 R16   C149504    -14.600   16.300  0    0     0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 R17   C17379     -14.000   24.000  0    0     0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
-R18   C17557      16.000    8.200  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
-R19   C17557      12.500   -9.500  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
+R18   C17630      16.000    8.200  90   90    0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.087 mm
+R19   C17630      12.500   -9.500  90   90    0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.087 mm
 R20   C17414      44.400   11.400  270  270   0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 R21   C17414      28.000  -12.500  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
-R22   C17557      47.000  -12.500  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
+R22   C17630      47.000  -12.500  90   90    0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.087 mm
 R23   C27834      28.600   19.200  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 R24   C27834      37.000   20.300  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 R25   C17514      26.600   26.500  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
-R26   C17557      24.000    8.500  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
+R26   C17630      24.000    8.500  90   90    0      ( 0.00, 0.00)  EasyEDA match on 2 pads, residual 0.087 mm
 R27   C149504     16.500   -9.500  90   90    0      ( 0.00, 0.00)  assumed equal to EasyEDA footprint (no cached EasyEDA data)
 SW1   C318884     33.500  -23.500  0    0     0      ( 0.00, 0.00)  EasyEDA match on 4 pads, residual 0.000 mm
 SW2   C318884     34.000  -14.800  0    0     0      ( 0.00, 0.00)  EasyEDA match on 4 pads, residual 0.000 mm

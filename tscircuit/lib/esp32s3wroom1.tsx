@@ -5,6 +5,7 @@
 // the datasheet/KiCad lib (0.9 x 1.5 mm pads, 1.27 mm pitch); EPAD position is
 // verified against EasyEDA C2913202 (docs/FOOTPRINT_CHECK.md): 3x3 EPAD at (-1.5,-2.47), bottom row y=-12.54.
 import type { ChipProps } from "tscircuit"
+import { Dot } from "./silk"
 
 export const ESP32S3_PINLABELS = {
   pin1: ["GND1"], pin2: ["V3V3"], pin3: ["EN"], pin4: ["IO4"], pin5: ["IO5"],
@@ -58,7 +59,8 @@ export const Esp32S3Footprint = () => {
           Top edge 0.3 mm inside the module end so the silk does not sit on the board edge; lower outline 0.35 mm outside the pads. */}
       <silkscreenpath route={[{ x: -9, y: 5.9 }, { x: -9, y: 12.45 }, { x: 9, y: 12.45 }, { x: 9, y: 5.9 }]} />
       <silkscreenpath route={[{ x: -9.85, y: 5.9 }, { x: -9.85, y: -13.4 }, { x: 9.85, y: -13.4 }, { x: 9.85, y: 5.9 }]} />
-      <silkscreentext text="ESP32-S3" pcbY={0} fontSize="1.2mm" />
+      {/* pin-1 dot inside the module outline next to pad 1 (R7 m6); the module label is dropped (silk text must be >= 1 mm high and the EPAD sits in the middle) */}
+      <Dot x={-7.3} y={6.9} />
     </footprint>
   )
 }
