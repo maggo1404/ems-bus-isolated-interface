@@ -55,3 +55,25 @@ Ports are `.JP1 > .pin1`, `.pin2` (pinCount 3 also possible, footprint "solderju
 "X is missing a name" (give `name` to traces), "No <schematicsheet>", "Port pinN missing a trace",
 "overlaps" (schematic body overlaps: set schX/schY), "J/C/L prefix used with <chip>" (cosmetic), supplier
 fetch failures when offline.
+
+## Fab settings (verified with scratch boards `scratch/rt/*`, tscircuit 0.0.3296, 2-layer; also see `.claude/skills/tscircuit/elements/{board,trace,via,copperpour}.md`)
+```tsx
+<board layers={2}
+  minViaHoleDiameter="0.3mm" minViaPadDiameter="0.6mm"      // vias: default 0.2/0.3 -> 0.3/0.6 (all autorouter vias). Documented equivalent: pcbStyle={{ viaHoleDiameter: "0.3mm", viaPadDiameter: "0.6mm" }} (both tested)
+  minTraceWidth="0.2mm"                                      // router floor; with NO thickness all traces get 0.15 (default). Setting 0.4 makes EVERY trace >= 0.4 (honoured)
+  // defaultTraceWidth / nominalTraceWidth="0.4mm" also set the width of all traces without thickness (tested)
+  minTraceToPadEdgeClearance="0.25mm" minPadEdgeToPadEdgeClearance="0.25mm" minViaEdgeToPadEdgeClearance="0.25mm">
+  <trace from=".U1 > .VCC" to="net.V3V3" thickness="0.5mm" />   // per-trace width ("width" is an alias); NO per-net prop -> lib/netclass.ts traceWidth(net)
+  <copperpour layer="top" connectsTo="net.GND" clearance="0.3mm" padMargin traceMargin boardEdgeMargin cutoutMargin />   // pour clearance honoured (0.2 default -> gap 0.297 measured with 0.3)
+  <via pcbX={0} pcbY={0} fromLayer="top" toLayer="bottom" holeDiameter="0.3mm" outerDiameter="0.6mm" connectsTo="net.GND" />   // hand-placed via (thermal/stitching)
+</board>
+```
+Does the autorouter honour them? (measured with scripts/check_fab.py on the routed circuit.json)
+* Via size: yes, exactly 0.3/0.6 (pcb_via + ViaDrill T0.3 in drill-L1-L2.drl). Without the props: 0.2/0.3 (fails JLC ring/drill).
+* Trace width: `thickness` is only the NOMINAL width: in tight spots the router narrows the trace down to `minTraceWidth` (we saw 0.2 mm segments on 0.5 mm power nets and 0.35/0.45 stubs at narrow pads). To GUARANTEE a width: raise the board `minTraceWidth` (applies to all nets, then fine-pitch USB-C/SOT-23-6 breakouts violate clearance), or hand-route with `pcbPath` (elements/trace.md) / loosen the placement around the net.
+* Clearance: `min*Clearance` props are honoured but only as router preference: 0.25 gives 0 DRC errors, 0.3 gives 14 `pcb_pad_trace_clearance_error` (build exit 1) because the 0.5 mm-pitch USB-C pads (gap 0.2) cannot satisfy it. Defaults give 0.10 mm gaps. Trace-to-trace default gap is not configurable separately; check_fab.py reports the real minimum.
+* Pour: `clearance` honoured for straight traces; around WIDE DIAGONAL traces the pour hole was observed to be too small (gap 0.05 mm, see check_fab.py). Pour edge/NPTH margin is 0.2 by default (`boardEdgeMargin`, `cutoutMargin` raise it; check_fab wants 0.3 / 0.25).
+* Keepouts/cutouts: pours and traces respected them in our build (no copper in slots/antenna area).
+* `<solderpaste>`: pads take `noSolderPaste` (used in lib/jumper.tsx -> no paste aperture, verified in F_Paste.gbr).
+* Gerber export: `npx tsci export dist/index/circuit.json -f gerbers -o <ABSOLUTE zip path>` (relative -o is resolved inside dist/index/). Exporting index.circuit.tsx directly re-runs without autorouting. Full flow: `scripts/export_fab.sh` (build ~20-40 s incl. autorouter), check: `scripts/check_fab.py [zip] [circuit.json]` (use `-` as zip for geometry-only).
+* Documented checks worth running (skill CHECKLIST.md): `tsci check netlist`, `tsci check placement`, `tsci check shorts`.
