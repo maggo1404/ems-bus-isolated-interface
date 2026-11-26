@@ -16,7 +16,7 @@ Usage: python3 scripts/postprocess_gerbers.py [fab/EMSinterface_V2.0-gerbers.zip
 """
 import re, shutil, sys, zipfile, os, json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import slivers
+import slivers, silk_extras
 
 MIN_STROKE = 0.16   # JLC min silk line width 0.153 mm (R7 M1)
 # tscircuit file name -> JLC/KiCad-style name (<project>-<name>), R7 m7
@@ -54,6 +54,13 @@ with zipfile.ZipFile(zp) as zin, zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED)
                     return "%%ADD%sC,%.6f*%%" % (m.group(1), MIN_STROKE)
                 return m.group(0)
             data = re.sub(r"%ADD(\d+)C,([\d.]+)\*%", widen, data.decode()).encode()
+        if name == "F_SilkScreen.gbr":
+            # 5. JLCPCB 2D-barcode marker (solid 8x8 mm square) + black-swan logo as filled G36/G37 regions (scripts/silk_extras.py);
+            #    idempotent: a previous run's regions are not duplicated (the file is rebuilt from tscircuit's export each time)
+            txt = data.decode()
+            k = txt.rindex("M02*")
+            art = "G04 JLCPCB 2D barcode marker (solid square) and swan logo*\n" + silk_extras.gerber_regions(silk_extras.barcode_poly()) + silk_extras.gerber_regions(silk_extras.logo_printable(CJ))
+            data = (txt[:k] + art + txt[k:]).encode()
         if name in ("F_Cu.gbr", "B_Cu.gbr"):
             # R7 m2: remove copper pour slivers narrower than 0.15 mm by clear-polarity regions appended after the pour (scripts/slivers.py)
             clears, _necks, _ = slivers.sliver_clears(CJ, "top" if name == "F_Cu.gbr" else "bottom")
@@ -77,4 +84,4 @@ with zipfile.ZipFile(zp) as zin, zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED)
             data = ("\n".join(keep) + "\n").encode()
         zout.writestr(PREFIX + "-" + RENAME[name] if name in RENAME else name, data)
 shutil.move(tmp, zp)
-print("postprocess_gerbers: renamed %d files to %s-<layer>.<ext>; removed %s; widened %d silkscreen apertures to %.2f mm; removed %d paste flashes on plated holes; cleared %d copper pour slivers < %.2f mm" % (len(RENAME), PREFIX, ", ".join(dropped) or "nothing", changed, MIN_STROKE, removed_paste, sliver_n, slivers.NECK))
+print("postprocess_gerbers: renamed %d files to %s-<layer>.<ext>; removed %s; silk barcode square + logo added; widened %d silkscreen apertures to %.2f mm; removed %d paste flashes on plated holes; cleared %d copper pour slivers < %.2f mm" % (len(RENAME), PREFIX, ", ".join(dropped) or "nothing", changed, MIN_STROKE, removed_paste, sliver_n, slivers.NECK))

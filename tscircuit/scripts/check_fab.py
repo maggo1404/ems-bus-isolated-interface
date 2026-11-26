@@ -678,6 +678,7 @@ for e in cj:
 def silk_segments(path):
     """dark draws with round apertures of a Gerber file: [(x1, y1, x2, y2, width)]"""
     ap, cur, pol, x, y, out = {}, None, "D", 0.0, 0.0, []
+    in_reg = False
     for ln in open(path):
         ln = ln.strip()
         m = re.match(r"%ADD(\d+)C,([\d.]+)\*%", ln)
@@ -686,6 +687,13 @@ def silk_segments(path):
             continue
         if ln.startswith("%LP"):
             pol = ln[3]
+        if ln.startswith("G36"):
+            in_reg = True
+        elif ln.startswith("G37"):
+            in_reg = False
+            continue
+        if in_reg:
+            continue            # filled regions (barcode square, logo) are no strokes
         m = re.match(r"D(\d+)\*$", ln)
         if m and int(m.group(1)) >= 10:
             cur = m.group(1)
@@ -789,6 +797,107 @@ elif bad_t:
     FAIL("silkscreen text overlaps pads/vias/holes/edge (>= %.2f mm)/other text: %s" % (MIN_SILK_EDGE, sorted(set(bad_t))[:12]))
 else:
     OK("silkscreen texts (measured glyph envelopes): no overlap with pads, vias, holes, slots or other texts, >= %.2f mm from the board edge" % MIN_SILK_EDGE)
+# ---- G5b: JLCPCB 2D-barcode marker (solid 8x8 mm silk square) + black-swan logo (filled silk regions, scripts/silk_extras.py) ----
+def silk_regions(path):
+    """filled G36/G37 regions of a Gerber: [shapely geometry], each dark region with the clear-polarity regions that follow it subtracted"""
+    out, pol, ring, reg, x, y = [], "D", [], False, 0.0, 0.0
+    for ln in open(path):
+        ln = ln.strip()
+        if ln.startswith("%LP"):
+            pol = ln[3]
+        elif ln.startswith("G36"):
+            reg, ring = True, []
+        elif ln.startswith("G37"):
+            reg = False
+            if len(ring) >= 3:
+                pg = Polygon(ring).buffer(0)
+                if pol == "D":
+                    out.append(pg)
+                elif out:
+                    out[-1] = out[-1].difference(pg)
+        elif reg:
+            m = re.match(r"(?:X(-?\d+))?(?:Y(-?\d+))?D0([123])\*", ln)
+            if m:
+                x = int(m.group(1)) / 1e6 if m.group(1) else x
+                y = int(m.group(2)) / 1e6 if m.group(2) else y
+                ring.append((x, y))
+    return out
+
+
+if not NOGERBER:
+    import silk_extras as SX
+    regs = silk_regions(os.path.join(tmp, "F_SilkScreen.gbr"))
+    bc_box = SX.barcode_poly()
+    bc = [g for g in regs if g.centroid.distance(bc_box.centroid) < 0.5 and abs(g.area - SX.BARCODE_S ** 2) < 0.05]
+    logo_g = unary_union([g for g in regs if not any(g is b for b in bc)])
+    # (a) barcode: exactly one solid square of the barcode size (JLCPCB 'Specify Position' needs a solid square in the silkscreen layer)
+    if len(bc) != 1 or abs(bc[0].area - SX.BARCODE_S ** 2) > 0.05 or not bc[0].equals_exact(bc_box, 0.01) and bc[0].symmetric_difference(bc_box).area > 0.05:
+        FAIL("2D-barcode marker: no solid %.0fx%.0f mm square in F_Silkscreen at (%.2f, %.2f) (run scripts/postprocess_gerbers.py)" % (SX.BARCODE_S, SX.BARCODE_S, *SX.BARCODE_C))
+    else:
+        bz = bc[0]
+        sil_bad = []
+        for it in items:
+            if it.kind in ("pad", "pth", "via", "trace", "pour_x") and (it.layer == "top" or it.kind in ("pth", "via")) and it.geom.distance(bz) < 0.5:
+                sil_bad.append("%s %s" % (it.kind, it.label))
+        for h_ in (x for x in cj if x["type"] == "pcb_hole"):
+            if Point(h_["x"], h_["y"]).buffer(h_.get("hole_diameter", 0.6) / 2).distance(bz) < 0.5:
+                sil_bad.append("NPTH (%.1f,%.1f)" % (h_["x"], h_["y"]))
+        for cid, cg in cut:
+            if cg.distance(bz) < 0.5:
+                sil_bad.append("cutout %s" % cid)
+        for k in keeps:
+            kg = rect_poly(k["center"]["x"], k["center"]["y"], k["width"], k["height"]) if k["shape"] == "rect" else Point(k["center"]["x"], k["center"]["y"]).buffer(k["radius"])
+            if "top" in k["layers"] and kg.intersects(bz):
+                sil_bad.append("keepout (%.1f,%.1f)" % (k["center"]["x"], k["center"]["y"]))
+        for lbl, g in silk_by_layer["top"]:
+            if g.distance(bz) < 0.5:
+                sil_bad.append("silk " + lbl)
+        for e, env, h, st in text_env:
+            if env is not None and e["layer"] == "top" and env.distance(bz) < 0.5:
+                sil_bad.append("silk text '%s'" % e["text"])
+        if not outline_.contains(bz) or outline_.exterior.distance(bz) < 0.5:
+            sil_bad.append("board edge/notch %.2f mm" % (0.0 if not outline_.contains(bz) else outline_.exterior.distance(bz)))
+        if logo_g.distance(bz) < 0.5:
+            sil_bad.append("logo")
+        if sil_bad:
+            FAIL("2D-barcode field (%.0fx%.0f mm at %.1f, %.1f) not free (0.5 mm): %s" % (SX.BARCODE_S, SX.BARCODE_S, SX.BARCODE_C[0], SX.BARCODE_C[1], sorted(set(sil_bad))[:10]))
+        else:
+            under = [it for it in items if it.kind == "pour" and it.layer == "top" and it.geom.intersects(bz)]
+            OK("2D-barcode field: solid %.0fx%.0f mm silk square at (%.1f, %.1f), no pads/vias/holes/slots/traces/keepouts/other silk within 0.5 mm, >= 0.5 mm from the board edge%s" % (
+                SX.BARCODE_S, SX.BARCODE_S, SX.BARCODE_C[0], SX.BARCODE_C[1], " (on %d top pour polygon(s): plain mask over copper, allowed by JLC)" % len(under) if under else ""))
+    # (b) logo: filled, clear of exposed copper / holes / other silk / edge, printable feature size
+    if logo_g.is_empty or logo_g.area < 20:
+        FAIL("logo: no filled swan regions in F_Silkscreen (area %.1f mm2)" % logo_g.area)
+    else:
+        lb, lg_bad = logo_g.bounds, []
+        for it in items:
+            if it.kind in ("pad", "pth", "via") and (it.layer == "top" or it.kind in ("pth", "via")) and it.geom.distance(logo_g) < SX.SILK_CLEAR - 0.005:
+                lg_bad.append("%s %s" % (it.kind, it.label))
+        for h_ in (x for x in cj if x["type"] == "pcb_hole"):
+            if Point(h_["x"], h_["y"]).buffer(h_.get("hole_diameter", 0.6) / 2).distance(logo_g) < SX.SILK_CLEAR:
+                lg_bad.append("NPTH")
+        for cid, cg in cut:
+            if cg.distance(logo_g) < 0.3:
+                lg_bad.append("cutout %s" % cid)
+        for lbl, g in silk_by_layer["top"]:
+            if g.distance(logo_g) < 0.15:
+                lg_bad.append("silk " + lbl)
+        for e, env, h, st in text_env:
+            if env is not None and e["layer"] == "top" and env.distance(logo_g) < 0.15:
+                lg_bad.append("silk text '%s'" % e["text"])
+        if not outline_.contains(logo_g) or outline_.exterior.distance(logo_g) < MIN_SILK_EDGE:
+            lg_bad.append("board edge")
+        thin_ = logo_g.difference(logo_g.buffer(-(SX.MIN_FEAT - 0.01) / 2).buffer((SX.MIN_FEAT - 0.01) / 2))
+        gap_ = logo_g.buffer((SX.MIN_FEAT - 0.01) / 2).buffer(-(SX.MIN_FEAT - 0.01) / 2).difference(logo_g)
+        if thin_.area > 0.05:
+            lg_bad.append("strokes < %.2f mm (%.3f mm2)" % (SX.MIN_FEAT, thin_.area))
+        if gap_.area > 0.05:
+            lg_bad.append("gaps < %.2f mm (%.3f mm2)" % (SX.MIN_FEAT, gap_.area))
+        if lg_bad:
+            FAIL("swan logo: %s" % sorted(set(lg_bad))[:10])
+        else:
+            OK("swan logo: %.2f x %.2f mm filled silk at (%.1f, %.1f), %.1f mm2, clear (>= %.2f mm) of pads/vias/holes/other silk, features/gaps >= %.2f mm" % (
+                lb[2] - lb[0], lb[3] - lb[1], (lb[0] + lb[2]) / 2, (lb[1] + lb[3]) / 2, logo_g.area, SX.SILK_CLEAR, SX.MIN_FEAT))
 # texts over component outlines (warning only)
 tp_warn = []
 for e, env in envs:

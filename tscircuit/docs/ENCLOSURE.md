@@ -92,3 +92,5 @@ Die Höhenlage hängt vom Pfosten (Pfostenhöhe ist in der Hammond-Zeichnung nic
 
 ### Lichtleiter (R5 m8)
 Die Platine liegt auf den Gehäuseposten, die LEDs (0805, Höhe ca. 0,8 mm) sitzen auf der Oberseite; der Abstand LED-Oberfläche zur Innenseite des Deckels beträgt ungefähr Innenhöhe 36 mm (Box + Deckel) - Pfostenhöhe - Platinendicke 1,6 mm - Deckeldicke. Mit den üblichen Postenhöhen ergibt das **ca. 25 mm Lichtleiterlänge** (Ø3 mm Acryl-/PC-Stab oder gedruckter Lichtleiter, Planungswert; nach STEP-Messung der Pfostenhöhe korrigieren). Lichtleiter-Abstand >= 5 mm, Lichtleiterenden auf der LED zentrieren (Toleranz Platine/Posten +-0,3 mm), LD4 (GPIO2) liegt 5 mm neben der Antennenzone: kein Metall.
+
+Hinweis (Silk): Das Black-Swan-Logo (10 x 10 mm, Mitte 20,5 / 0,0) und das 2D-Barcode-Feld (8 x 8 mm, Mitte -50,0 / 11,5) liegen auf der Platinen-Oberseite unter dem Deckel; reine Silkscreen-Flaechen ohne Bauhoehe, der Deckel braucht dort keine Aussparung.
