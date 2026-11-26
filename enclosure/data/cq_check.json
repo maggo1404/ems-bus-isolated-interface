@@ -1,0 +1,179 @@
+{
+ "equivalence": {
+  "bottom": {
+   "vol_stl_mm3": 31737.3,
+   "vol_cq_brep_mm3": 31741.0,
+   "vol_cq_mesh_mm3": 31740.3,
+   "vol_diff_pct": 0.012,
+   "bbox_max_dev_mm": 0.0016,
+   "symdiff_mm3": 6.0,
+   "symdiff_pct_of_stl": 0.019,
+   "cq_valid": true,
+   "cq_solids": 1,
+   "cq_faces": 100,
+   "cq_planar_cyl_faces_pct": 96.0
+  },
+  "lid": {
+   "vol_stl_mm3": 25046.3,
+   "vol_cq_brep_mm3": 25053.4,
+   "vol_cq_mesh_mm3": 25052.4,
+   "vol_diff_pct": 0.028,
+   "bbox_max_dev_mm": 0.0,
+   "symdiff_mm3": 23.3,
+   "symdiff_pct_of_stl": 0.093,
+   "cq_valid": true,
+   "cq_solids": 1,
+   "cq_faces": 731,
+   "cq_planar_cyl_faces_pct": 56.8
+  },
+  "light_pipes": {
+   "vol_stl_mm3": 607.0,
+   "vol_cq_brep_mm3": 608.7,
+   "vol_cq_mesh_mm3": 608.5,
+   "vol_diff_pct": 0.286,
+   "bbox_max_dev_mm": 0.0007,
+   "symdiff_mm3": 1.5,
+   "symdiff_pct_of_stl": 0.247,
+   "cq_valid": true,
+   "cq_solids": 5,
+   "cq_faces": 25,
+   "cq_planar_cyl_faces_pct": 100.0
+  },
+  "buttons": {
+   "vol_stl_mm3": 164.1,
+   "vol_cq_brep_mm3": 164.6,
+   "vol_cq_mesh_mm3": 164.5,
+   "vol_diff_pct": 0.286,
+   "bbox_max_dev_mm": 0.0008,
+   "symdiff_mm3": 0.4,
+   "symdiff_pct_of_stl": 0.247,
+   "cq_valid": true,
+   "cq_solids": 2,
+   "cq_faces": 18,
+   "cq_planar_cyl_faces_pct": 100.0
+  }
+ },
+ "fit_check_cadquery": {
+  "collisions_mm3": {
+   "Unterteil x Platine+Bauteile": -0.0,
+   "Deckel x Platine+Bauteile": -0.0,
+   "Unterteil x Deckel": -0.0,
+   "Unterteil x P1-Stecker": 0.0,
+   "Deckel x P1-Stecker": 0.0,
+   "Lichtleiter x Platine": 0.0,
+   "Lichtleiter x Deckel": -0.0,
+   "Lichtleiter x Unterteil": 0.0,
+   "Stoessel x Deckel": 0.0,
+   "Stoessel x Platine": 0.0,
+   "Schrauben x Platine": 0.0,
+   "Schrauben x Deckel": 0.0,
+   "Schrauben x Unterteil (Kernloch/Einsatz, nur Info)": 0.0
+  },
+  "gaps": {
+   "Unterteil (ohne Posten)<->Platine inkl. THT-Beinchen (mm)": 0.3,
+   "Deckel (ohne Huelsen)<->Bauteile (mm)": 0.4,
+   "Posten/Huelsen<->Platine (Auflage/Klemmung, mm)": 0.0,
+   "Unterteil (ohne Posten)<->nackte Platine (mm)": 0.3
+  }
+ },
+ "threemf_reload": {
+  "bottom": {
+   "objects": [
+    "bottom"
+   ],
+   "volume_cm3": 31.74,
+   "bounds": [
+    [
+     -69.4,
+     -40.4,
+     0.0
+    ],
+    [
+     56.6,
+     40.4,
+     24.1
+    ]
+   ],
+   "watertight": true
+  },
+  "lid": {
+   "objects": [
+    "lid"
+   ],
+   "volume_cm3": 25.052,
+   "bounds": [
+    [
+     -69.4,
+     -32.4,
+     0.0
+    ],
+    [
+     56.6,
+     32.4,
+     18.8
+    ]
+   ],
+   "watertight": true
+  },
+  "light_pipes": {
+   "objects": [
+    "light_pipes"
+   ],
+   "volume_cm3": 0.608,
+   "bounds": [
+    [
+     -2.2,
+     -2.2,
+     -0.0
+    ],
+    [
+     34.2,
+     2.2,
+     17.6
+    ]
+   ],
+   "watertight": true
+  },
+  "buttons": {
+   "objects": [
+    "buttons"
+   ],
+   "volume_cm3": 0.164,
+   "bounds": [
+    [
+     -2.5,
+     -2.5,
+     -0.0
+    ],
+    [
+     10.5,
+     2.5,
+     18.7
+    ]
+   ],
+   "watertight": true
+  },
+  "plate": {
+   "objects": [
+    "bottom",
+    "buttons",
+    "lid",
+    "light_pipes"
+   ],
+   "volume_cm3": 57.566,
+   "bounds": [
+    [
+     5.0,
+     5.0,
+     0.0
+    ],
+    [
+     131.0,
+     167.6,
+     24.1
+    ]
+   ],
+   "watertight": true
+  }
+ }
+}

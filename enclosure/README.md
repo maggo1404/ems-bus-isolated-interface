@@ -10,16 +10,34 @@ dieses Gehäuse ist die 3D-Druck-Alternative aus Abschnitt "3D-Druck-Alternative
 | Datei | Inhalt |
 |---|---|
 | `enclosure.py` | parametrische Quelle (Python + manifold3d + trimesh; OpenSCAD war in der Umgebung nicht installierbar). Alle Maße in `PARAMS` am Dateianfang. |
+| `enclosure_cq.py` | gleiche Geometrie mit CadQuery (echtes B-Rep): erzeugt STEP, 3MF und die STL; importiert `PARAMS` aus `enclosure.py` (eine Parameterquelle) und prüft Äquivalenz und Passung |
 | `render.py` | Vorschaubilder |
 | `data/pcb_parts.json` | Auszug aus `tscircuit/dist/index/circuit.json` (Bauteilpositionen, Umriss, Löcher, Schlitze; tscircuit/ wurde nur gelesen) |
-| `data/fit_check.json` | Ergebnis der Mesh- und Kollisionsprüfung |
+| `data/fit_check.json` | Ergebnis der Mesh- und Kollisionsprüfung (`enclosure.py`) |
+| `data/cq_check.json` | Äquivalenz STL-alt gegen CadQuery und Kollisions-/Abstandsprüfung mit den CadQuery-Teilen, 3MF-Reload |
+| `step/bottom.step`, `lid.step`, `light_pipes.step`, `buttons.step` | Einzelteile als B-Rep (Ebenen/Zylinder), gleiche Lage wie die STL (Deckel mit Außenseite unten, Lichtleiter/Stößel in Druckausrichtung) |
+| `step/assembly.step` | Baugruppe in Einbaulage mit Namen und Farben: Unterteil, Deckel, 5 Lichtleiter, 2 Stößel, Platine (Umriss, Ausschnitte, Löcher, Optokoppler-Schlitze), Bauteile als Quader, THT-Beinchen, P1-Gegenstecker-Platzhalter, 4 Schrauben |
+| `3mf/bottom.3mf`, `lid.3mf`, `light_pipes.3mf`, `buttons.3mf` | je ein Druckteil, Einheit mm, Druckausrichtung |
+| `3mf/plate.3mf` | Druckplatte: Unterteil, Deckel (Außenseite unten), Lichtleiter und Stößel nebeneinander, ca. 131 x 168 mm Belegung, passt auf 180 x 180 mm und größer |
 | `stl/bottom.stl` | Unterteil, Druckausrichtung (offene Seite oben) |
 | `stl/lid.stl` | Deckel, **Druckausrichtung = Oberseite auf dem Druckbett** (Pfosten zeigen nach oben) |
 | `stl/light_pipes.stl` | 5 Lichtleiter-Stäbe (klares PETG), Druckausrichtung: Flansch unten, stehend |
 | `stl/buttons.stl` | 2 optionale Taster-Stößel (RESET, BOOT) |
 | `img/` | `assembly_exploded.png`, `assembly_fit.png`, `assembly_cutaway.png`, `sections.png`, `plan_lid.png`, `plan_bottom.png` |
 
-Neu erzeugen: `python3 enclosure.py` (Abhängigkeiten: `pip install manifold3d trimesh numpy matplotlib scipy networkx shapely`).
+## Welches Format wofür
+
+- **STEP** (`step/`): zum Weiterkonstruieren in Fusion, FreeCAD, Onshape usw. Echte Flächen (Ebenen, Zylinder, Gravurtext als Kantenzüge), keine Dreiecke. `assembly.step` zeigt alles in Einbaulage; die Platine ist nur ein Platzhalter.
+- **3MF** (`3mf/`): zum Slicen in PrusaSlicer, Bambu Studio, Cura. Objekte tragen Namen, Einheit mm. `plate.3mf` ist die fertige Plattenbelegung, die Einzeldateien sind für eigene Anordnung.
+- **STL** (`stl/`): Dreiecksnetz, wird aus derselben CadQuery-Geometrie erzeugt (Auflösung 0,01 mm Sehnenabweichung, Kreise echt rund statt 48-Eck).
+
+## Neu erzeugen
+
+- Alles (STEP, 3MF, STL, Prüfungen, ca. 1 min): `pip install cadquery manifold3d trimesh numpy matplotlib scipy networkx shapely lxml`, dann `python3 enclosure_cq.py`. Ohne STL zu überschreiben: `python3 enclosure_cq.py --no-stl`; nur Prüfungen: `python3 enclosure_cq.py --check`.
+- Parameter weiterhin in `PARAMS` in `enclosure.py` oder per Umgebungsvariable, z. B. `P_INSERT=0 P_MOUNT=keyholes python3 enclosure_cq.py`.
+- Der ursprüngliche Manifold-Pfad bleibt lauffähig: `python3 enclosure.py` (schreibt STL aus manifold3d, überschreibt dann die CadQuery-STL; danach `enclosure_cq.py` erneut laufen lassen, damit STL, STEP und 3MF dieselbe Quelle haben).
+
+Neu erzeugen (alter Pfad): `python3 enclosure.py` (Abhängigkeiten: `pip install manifold3d trimesh numpy matplotlib scipy networkx shapely`).
 Parameter ohne Dateiänderung per Umgebungsvariable, z. B. `P_INSERT=0 P_MOUNT=keyholes P_P2_MODE=open python3 enclosure.py`.
 
 ## Maße (Standardparameter)
@@ -91,6 +109,17 @@ Parameter ohne Dateiänderung per Umgebungsvariable, z. B. `P_INSERT=0 P_MOUNT=k
 - Alle 4 STL: wasserdicht, Windungsrichtung konsistent (trimesh).
 - Volumen-Überschneidung Unterteil / Deckel / Lichtleiter / Stößel / Schrauben mit Platinenmodell (Platine, alle Bauteile als Boxen, THT-Beinchen 2,5 mm unter der Platine, P1-Stecker): **0,0 mm³** überall.
 - Mindestabstände: Unterteil (ohne Posten) zur Platine 0,3 mm (Rippe) / Wand 0,4 mm, Deckel zu Bauteilen >= 0,4 mm, Deckelunterseite zu C12/C14 (12,5 mm) 3,5 mm, zu P1 + Stecker (14,5 mm) 1,5 mm.
+
+## Äquivalenzprüfung CadQuery gegen alte STL (`data/cq_check.json`)
+
+| Teil | Volumen alt / CadQuery (mm³) | Differenz | Bounding Box max. Abw. | symmetrische Differenz |
+|---|---|---|---|---|
+| bottom | 31737 / 31741 | 0,012 % | 0,002 mm | 6 mm³ (0,02 %) |
+| lid | 25046 / 25053 | 0,028 % | 0,000 mm | 23 mm³ (0,09 %) |
+| light_pipes | 607 / 609 | 0,29 % | 0,001 mm | 1,5 mm³ |
+| buttons | 164 / 165 | 0,29 % | 0,001 mm | 0,4 mm³ |
+
+Die Restabweichung stammt vom 48-Eck der alten STL gegenüber echten Kreisen. Kollisions- und Abstandsprüfung mit den CadQuery-Teilen ergibt dasselbe Bild wie oben (0,0 mm³ Überschneidung, Abstände 0,3 / 0,4 / 0,0 mm). `buttons` liegt jetzt mit der Kappe auf z = 0 (vorher 1 mm darunter).
 
 ## Annahmen und offene Punkte
 
