@@ -4,7 +4,7 @@ Zweiteiliges Gehäuse für die Platine aus `tscircuit/` (110 x 70 x 1,6 mm Recht
 bei (±42,25 | ±19,75); die Platine reicht 10 mm weiter nach -Y als frueher, die Bohrungen nicht). FDM, PLA oder PETG, 0,4-mm-Düse, **ohne Stützstrukturen** druckbar.
 Die ursprüngliche Hammond-Variante (1591XXCFLBK, Reichelt) bleibt unverändert in `tscircuit/docs/ENCLOSURE.md` dokumentiert;
 dieses Gehäuse ist die 3D-Druck-Alternative aus Abschnitt "3D-Druck-Alternative" dort.
-Die Platine kommt von JLC als Einzelplatine 110 x 70 mm (kein Panel, keine Abbrech-Schienen). Das Hammond 1591XXCFLBK passt nicht mehr (siehe `tscircuit/docs/ENCLOSURE.md`).
+Die Platine kommt von JLC als Einzelplatine 110 x 70 mm; bei der Panel-Variante (110 x 84 mm, Mouse-Bites) zuerst die Abbrech-Schienen abbrechen und die Stuempfe buendig verschleifen. Das Hammond 1591XXCFLBK passt nicht mehr (siehe `tscircuit/docs/ENCLOSURE.md`).
 
 ## Dateien
 
