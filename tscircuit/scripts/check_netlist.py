@@ -41,6 +41,8 @@ ok = True
 print("== V1 nets (%d) ==" % len(ref["nets"]))
 for n in ref["nets"]:
     exp = {cvt(p) for p in n["pins"]}
+    # V2: the single 2200uF C12 is replaced by C12 + C14 (2 x 1000uF SMD in parallel, same nets)
+    exp |= {"C14." + p.split(".")[1] for p in exp if p.startswith("C12.")}
     name = NAME.get(n["name"], n["name"])
     gs = {pin2grp.get(p) for p in exp}
     if len(gs) != 1 or None in gs:

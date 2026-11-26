@@ -14,7 +14,7 @@ export default () => (
     <McuSide />
 
     {/* 4 x M3 mounting holes (3.2 mm NPTH), >= 6 mm from the other side's copper */}
-    <hole name="MH1" diameter="3.2mm" pcbX={-51} pcbY={26} />
+    <hole name="MH1" diameter="3.2mm" pcbX={-52} pcbY={27.8} />
     <hole name="MH2" diameter="3.2mm" pcbX={-51} pcbY={-26} />
     <hole name="MH3" diameter="3.2mm" pcbX={8} pcbY={26.5} />
     <hole name="MH4" diameter="3.2mm" pcbX={52} pcbY={-26} />
@@ -41,13 +41,13 @@ export default () => (
     ))}
 
     {/* silkscreen */}
-    <silkscreentext text="EMS-ESP Isolated Interface V2.0" pcbX={-27} pcbY={27.5} fontSize="1.6mm" />
+    <silkscreentext text="EMS-ESP Isolated Interface V2.0" pcbX={-27} pcbY={28.2} fontSize="1.6mm" />
     <silkscreentext text="EMS BUS" pcbX={-50} pcbY={-8} fontSize="1.2mm" />
     <silkscreentext text="EMS SIDE (bus powered)" pcbX={-27} pcbY={-27.5} fontSize="1.0mm" />
-    <silkscreentext text="MCU / USB SIDE" pcbX={30} pcbY={-27.5} fontSize="1.0mm" />
+    <silkscreentext text="MCU / USB SIDE" pcbX={41} pcbY={-28.5} fontSize="1.0mm" />
     <silkscreentext text="ISOLATION BARRIER" pcbX={0} pcbY={0} fontSize="0.8mm" />
     <silkscreenpath route={[{ x: 0, y: 3.6 }, { x: 0, y: 30 }]} />
     <silkscreenpath route={[{ x: 0, y: -3.6 }, { x: 0, y: -30 }]} />
-    <silkscreentext text="P2: 1=3V3 2=TX 3=RX 4=GND" pcbX={33} pcbY={-23.5} fontSize="0.8mm" />
+    <silkscreentext text="P2: 1=3V3 2=TX 3=RX 4=GND" pcbX={22} pcbY={-29} fontSize="0.8mm" />
   </board>
 )

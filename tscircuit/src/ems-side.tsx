@@ -12,7 +12,7 @@ import { Mstba2, CapE5_10p5, Inductor3225, Inductor0520, Res2010Footprint } from
 const NETS: Record<string, string[]> = {
   // EMS side
   V5_EMS: ["C6.2", "C8.1", "C11.1", "C13.2", "L3.1", "OC2.8", "R9.2", "R10.2", "R11.2", "R12.2", "R17.2", "U1.8"],
-  GND_EMS: ["C4.1", "C5.1", "C6.1", "C8.2", "C10.1", "C11.2", "C12.2", "C13.1", "D2.2", "D4.2", "D5.2", "D6.1", "LD1.1", "OC2.5", "Q1.2", "R8.1", "R15.1", "U1.4", "U2.2"],
+  GND_EMS: ["C4.1", "C5.1", "C6.1", "C8.2", "C10.1", "C11.2", "C12.2", "C14.2", "C13.1", "D2.2", "D4.2", "D5.2", "D6.1", "LD1.1", "OC2.5", "Q1.2", "R8.1", "R15.1", "U1.4", "U2.2"],
   EMS_N1: ["F2.2", "L2.1"],
   EMS_N10: ["C3.2", "R7.2", "R8.2", "U1.2"],
   EMS_N11: ["R3.2", "R4.1"],
@@ -36,7 +36,7 @@ const NETS: Record<string, string[]> = {
   EMS_N7: ["D6.2", "R5.1", "R6.1", "R7.1", "U1.5"],
   EMS_N8: ["C2.1", "C3.1", "R1.2", "R5.2"],
   EMS_N9: ["C2.2", "R6.2", "U1.3"],
-  EMS_VIN: ["C10.2", "C12.1", "D7.1", "R16.1", "U2.5"],
+  EMS_VIN: ["C10.2", "C12.1", "C14.1", "D7.1", "R16.1", "U2.5"],
   // MCU side (shared with src/mcu-side.tsx through these net names)
   GND: ["C7.1", "OC1.5"],
   MCU_RX: ["LD3.1", "OC1.6", "R13.1"],
@@ -70,7 +70,7 @@ const V1: Record<string, P> = {
   C5: { x: 43.81, y: 4.39, r: 90 }, C6: { x: 35.81, y: 5.71 }, R10: { x: 43.0, y: 24.13 },
   R11: { x: 43.81, y: 8.26, r: 90 }, D7: { x: 16.51, y: 20.32 },
   U2: { x: 34.92, y: 24.77, r: 90 }, R12: { x: 39.6, y: 23.2, r: 90 }, R15: { x: 39.6, y: 19.7, r: 90 },
-  C9: { x: 30.2, y: 24.45, r: 90 }, R16: { x: 35.24, y: 28.89 }, C10: { x: 32.07, y: 28.57, r: 90 }, C11: { x: 21.91, y: 31.43 },
+  C9: { x: 30.2, y: 24.45, r: 90 }, R16: { x: 35.24, y: 28.89 }, C10: { x: 32.07, y: 28.57, r: 90 }, C11: { x: 28.45, y: 34.98 },
   F1: { x: 7.62, y: 19.37, r: 90 }, F2: { x: 7.62, y: 14.29, r: 90 }, R17: { x: 43.0, y: 28.89 },
   L3: { x: 26.99, y: 27.62 }, LD1: { x: 46.67, y: 30.8 }, C12: { x: 14.61, y: 27.62, r: 90 },
   C8: { x: 43.0, y: 26.35 }, C13: { x: 47.62, y: 3.17, r: 90 },
@@ -134,7 +134,9 @@ export const EmsSide = () => (
     {Dio("D4", "BAT42W", "C22466362")}
     {Dio("D5", "BAT42W", "C22466362")}
     {Dio("D7", "B5819W", "C8598")}
-    <CapE5_10p5 name="C12" {...pos("C12")} />
+    {/* C12 + C14: 2 x 1000 uF/25 V SMD electrolytic in parallel (replaces the V1 2200 uF), rotated 90 deg */}
+    <CapE5_10p5 name="C12" pcbX={-47} pcbY={18.2} pcbRotation={90} schX={sch(-47)} schY={sch(18.2)} />
+    <CapE5_10p5 name="C14" pcbX={-36} pcbY={18.2} pcbRotation={90} schX={sch(-36)} schY={sch(18.2) + 3} />
     {Cap("C10", "10uF", "C15850")}
 
     {/* ---- RX comparator (U1A) and TX comparator (U1B), Q1 bus load ---- */}

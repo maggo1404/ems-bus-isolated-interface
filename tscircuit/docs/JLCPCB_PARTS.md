@@ -72,12 +72,12 @@ In tscircuit set the number on the component: `supplierPartNumbers={{ jlcpcb: ["
 | C(EN) | 1u 50V X7R | 0805 | CL21B105KBFNNNE | C28323 | Basic | 3.6M | |
 | C2,C10 (+LDO 10u) | 10u 25V X5R | 0805 | CL21A106KAYNNNE | C15850 | Basic | 9.3M | |
 | C11 (+LDO 22u) | 22u 25V X5R | 1206 | CL31A226KAHNNNE | C12891 | Basic | 2.5M | |
-| C12 | 2200u/25V radial | THT D10 x 17, P5.0 | PA25V2200M10x17 (jieerrui) | C46550439 | Ext | 11k | fits lib `CapE5_10p5` pitch 5.08 (real 5.0, hole 1.0, lead 0.6); body 10 mm dia, 17 mm tall. D12.5 options: Rubycon 25YXJ2200M12.5X25 C111500 (12.7k), D13x20 CX KM228M025 C44598 (40k) |
+| C12, C14 | 2 x 1000u/25V SMD electrolytic (parallel = 2000 uF; replaces the single 2200 uF THT of V1) | SMD D10 x L12 (BD10.0-L10.3-W10.3) | JVJ25V1000M10X12 (JIERR) | C49256851 | Ext | see JLC | pads 4.5 x 1.65 at +-4.5 mm, pad 1 = +, chamfered corner = + side (EasyEDA). Replaces PA25V2200M10x17 C46550439 (THT, hand-soldered). Both on EMS_VIN / GND_EMS near D7/U2 |
 
 ## Extended-part count (extra fees)
 Distinct **Ext** (fee) part numbers: C2913202 (ESP32), C165948 (USB-C), C7519 (USBLC6), C92651 (6N137), C336082 (6N136),
 C371172 (JW5017S), C98021 (L1/L2), C43183 (L3), C53284030 (68R 2010), C17384 (1k3), C107120 (68p), C441236 (P1),
-C32713270 (P2), C46550439 (C12), C910822 (fuses) = **15**; 12 if P1, P2 and C12 are hand-soldered (THT, not assembled).
+C32713270 (P2), C49256851 (C12/C14, one fee for both), C910822 (fuses) = **15**; 13 if P1 and P2 are hand-soldered (THT, not assembled). C12/C14 are now SMD and assembled by JLC.
 Preferred-extended (no fee): C22466362 (BAT42W), C17590 (270R), C1717 (1n5).
 Possible fee savings: C1 68p -> 47p Basic C14857 (-1); LM393 already Basic; no Basic alternative for 2010 68R
 (two 1206/0805 in parallel would need a footprint change); fuses could be Pref if a Pref 0805 PTC is chosen.
@@ -98,6 +98,6 @@ Possible fee savings: C1 68p -> 47p Basic C14857 (-1); LM393 already Basic; no B
 * TLV75733P (C485517, 1 A, SOT-23-5): best, extended.
 
 ## Other JLC notes
-* Hand-solder (not assembled) candidates: P1, C12, P2 (THT). Tactile switches are Basic and SMD: assemble.
+* Hand-solder (not assembled) candidates: P1, P2 (THT). C12/C14 are SMD (C49256851). Tactile switches are Basic and SMD: assemble.
 * 2010/3225/5x5 parts are Extended; each distinct extended part adds a one-time fee.
 * Design in 0805 is fine; 0603 resistors/caps have equal basic coverage and could shrink the board.

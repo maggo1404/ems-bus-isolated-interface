@@ -18,18 +18,22 @@ export const Mstba2 = (props: Partial<ChipProps> & { name: string }) => (
   />
 )
 
-// Electrolytic 2200uF/25V radial D10 x 17, pitch 5.0 (JLC C46550439 PA25V2200M10x17): drill 1.0, pad 1.6
+// SMD aluminium electrolytic 1000uF/25V, JVJ25V1000M10X12 (JLC C49256851), EasyEDA CAP-SMD_BD10.0-L10.3-W10.3-LS11.0-FD:
+// pads 4.5 x 1.65 mm at x = +-4.5; pad 1 = POSITIVE (left, chamfered body corner = + side), pad 2 = NEGATIVE.
 export const CapE5_10p5 = (props: Partial<ChipProps> & { name: string }) => (
   <chip
     pinLabels={{ pin1: ["POS"], pin2: ["NEG"] }}
-    manufacturerPartNumber="PA25V2200M10x17"
-    supplierPartNumbers={{ jlcpcb: ["C46550439"] }}
+    manufacturerPartNumber="JVJ25V1000M10X12"
+    supplierPartNumbers={{ jlcpcb: ["C49256851"] }}
     footprint={
       <footprint>
-        <platedhole portHints={["pin1"]} shape="circle" holeDiameter="1.0mm" outerDiameter="1.6mm" pcbX={-2.5} pcbY={0} />
-        <platedhole portHints={["pin2"]} shape="circle" holeDiameter="1.0mm" outerDiameter="1.6mm" pcbX={2.5} pcbY={0} />
-        <silkscreencircle radius="5.0mm" pcbX={0} pcbY={0} />
-        <silkscreentext text="+" pcbX={-4.3} pcbY={3.5} fontSize="1.5mm" />
+        <smtpad portHints={["pin1"]} shape="rect" width="4.5mm" height="1.65mm" pcbX={-4.5} pcbY={0} />
+        <smtpad portHints={["pin2"]} shape="rect" width="4.5mm" height="1.65mm" pcbX={4.5} pcbY={0} />
+        {/* body outline 10.4 x 10.4, chamfered on the + side (left); side lines stop short of the pads */}
+        <silkscreenpath route={[{ x: -5.2, y: 1.5 }, { x: -5.2, y: 3.1 }, { x: -3.1, y: 5.2 }, { x: 5.2, y: 5.2 }, { x: 5.2, y: 1.5 }]} />
+        <silkscreenpath route={[{ x: -5.2, y: -1.5 }, { x: -5.2, y: -3.1 }, { x: -3.1, y: -5.2 }, { x: 5.2, y: -5.2 }, { x: 5.2, y: -1.5 }]} />
+        <silkscreentext text="+" pcbX={-3.2} pcbY={3.2} fontSize="1.6mm" />
+        <silkscreentext text="+" pcbX={-7.4} pcbY={2.0} fontSize="1.6mm" />
       </footprint>
     }
     {...(props as any)}
