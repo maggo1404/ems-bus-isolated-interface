@@ -32,7 +32,8 @@ def mapname(n):
     return {'+5V':'V5_EMS','GND':'GND_EMS','VIN':'EMS_VIN','MCUGND':'GND','MCUVCC':'V3V3','MCURX':'MCU_RX','MCUTX':'MCU_TX'}.get(n,n)
 def cvt(pin):
     r,pad=pin.split('.')
-    pad={'A':'1','C':'2','+':'1','-':'2'}.get(pad,pad)
+    if r.startswith('D') or r.startswith('LD'): pad={'A':'2','C':'1'}.get(pad,pad)
+    else: pad={'+':'1','-':'2'}.get(pad,pad)
     return f"{r}.{pad}"
 exp={}
 for n in ref['nets']:

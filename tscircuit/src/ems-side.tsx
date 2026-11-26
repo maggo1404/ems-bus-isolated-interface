@@ -6,12 +6,12 @@ import { Mstba2, CapE5_10p5, Inductor3225, Inductor0520, Res2010Footprint } from
 
 // ---------------------------------------------------------------------------
 // Net table: net name -> physical pad connections "Ref.pad" (V1 pad numbers;
-// diode/LED A=1 C=2, C12 +=1 -=2).  Pad N is always port `pinN` in tscircuit.
+// diode/LED: pad 1 = cathode C, pad 2 = anode A; C12 +=1 -=2).  Pad N is always port `pinN` in tscircuit.
 // ---------------------------------------------------------------------------
 const NETS: Record<string, string[]> = {
   // EMS side
   V5_EMS: ["C6.2", "C8.1", "C11.1", "C13.2", "L3.1", "OC2.8", "R9.2", "R10.2", "R11.2", "R12.2", "R17.2", "U1.8"],
-  GND_EMS: ["C4.1", "C5.1", "C6.1", "C8.2", "C10.1", "C11.2", "C12.2", "C13.1", "D2.1", "D4.1", "D5.1", "D6.2", "LD1.2", "OC2.5", "Q1.2", "R8.1", "R15.1", "U1.4", "U2.2"],
+  GND_EMS: ["C4.1", "C5.1", "C6.1", "C8.2", "C10.1", "C11.2", "C12.2", "C13.1", "D2.2", "D4.2", "D5.2", "D6.1", "LD1.1", "OC2.5", "Q1.2", "R8.1", "R15.1", "U1.4", "U2.2"],
   EMS_N1: ["F2.2", "L2.1"],
   EMS_N10: ["C3.2", "R7.2", "R8.2", "U1.2"],
   EMS_N11: ["R3.2", "R4.1"],
@@ -26,24 +26,24 @@ const NETS: Record<string, string[]> = {
   EMS_N23: ["R12.1", "R15.2", "U2.3"],
   EMS_N25: ["C9.1", "U2.1"],
   EMS_N26: ["C9.2", "L3.2", "U2.6"],
-  EMS_N27: ["LD1.1", "R17.1"],
+  EMS_N27: ["LD1.2", "R17.1"],
   EMS_N29: ["R16.2", "U2.4"],
-  EMS_N3: ["C1.1", "D1.1", "D2.2", "L2.2"],
-  EMS_N4: ["C1.2", "D3.1", "D4.2", "L1.2"],
+  EMS_N3: ["C1.1", "D1.2", "D2.1", "L2.2"],
+  EMS_N4: ["C1.2", "D3.2", "D4.1", "L1.2"],
   EMS_N5: ["F2.1", "P1.2"],
-  EMS_N6: ["D1.2", "D3.2", "D5.2", "D7.1", "R1.1", "R2.1"],
-  EMS_N7: ["D6.1", "R5.1", "R6.1", "R7.1", "U1.5"],
+  EMS_N6: ["D1.1", "D3.1", "D5.1", "D7.2", "R1.1", "R2.1"],
+  EMS_N7: ["D6.2", "R5.1", "R6.1", "R7.1", "U1.5"],
   EMS_N8: ["C2.1", "C3.1", "R1.2", "R5.2"],
   EMS_N9: ["C2.2", "R6.2", "U1.3"],
-  EMS_VIN: ["C10.2", "C12.1", "D7.2", "R16.1", "U2.5"],
+  EMS_VIN: ["C10.2", "C12.1", "D7.1", "R16.1", "U2.5"],
   // MCU side (shared with src/mcu-side.tsx through these net names)
   GND: ["C7.1", "OC1.5"],
-  MCU_RX: ["LD3.2", "OC1.6", "R13.1"],
-  MCU_TX: ["LD2.2", "OC2.3"],
+  MCU_RX: ["LD3.1", "OC1.6", "R13.1"],
+  MCU_TX: ["LD2.1", "OC2.3"],
   V3V3: ["C7.2", "OC1.7", "OC1.8", "R13.2", "R14.1", "R18.2", "R19.1"],
   MCU_N19: ["OC2.2", "R14.2"],
-  MCU_N20: ["LD2.1", "R19.2"],
-  MCU_N24: ["LD3.1", "R18.1"],
+  MCU_N20: ["LD2.2", "R19.2"],
+  MCU_N24: ["LD3.2", "R18.1"],
 }
 
 // ---------------------------------------------------------------------------
@@ -66,13 +66,13 @@ const V1: Record<string, P> = {
   U1: { x: 36.83, y: 9.53, r: 90 }, D6: { x: 24.77, y: 3.81, r: 90 },
   R6: { x: 28.57, y: 5.71 }, R7: { x: 28.57, y: 1.91 }, R8: { x: 28.57, y: 13.97 },
   R9: { x: 43.81, y: 12.7, r: 90 }, Q1: { x: 42.7, y: 16.85, r: 90 }, C4: { x: 42.6, y: 20.32 },
-  C5: { x: 43.81, y: 4.39, r: 90 }, C6: { x: 35.81, y: 5.71 }, R10: { x: 42.23, y: 24.13 },
+  C5: { x: 43.81, y: 4.39, r: 90 }, C6: { x: 35.81, y: 5.71 }, R10: { x: 43.0, y: 24.13 },
   R11: { x: 43.81, y: 8.26, r: 90 }, D7: { x: 16.51, y: 20.32 },
-  U2: { x: 34.92, y: 24.77, r: 90 }, R12: { x: 39.6, y: 24.45, r: 90 }, R15: { x: 39.6, y: 20.95, r: 90 },
+  U2: { x: 34.92, y: 24.77, r: 90 }, R12: { x: 39.6, y: 23.2, r: 90 }, R15: { x: 39.6, y: 19.7, r: 90 },
   C9: { x: 30.2, y: 24.45, r: 90 }, R16: { x: 35.24, y: 28.89 }, C10: { x: 32.07, y: 28.57, r: 90 }, C11: { x: 21.91, y: 31.43 },
-  F1: { x: 7.62, y: 19.37, r: 90 }, F2: { x: 7.62, y: 14.29, r: 90 }, R17: { x: 42.23, y: 28.89 },
+  F1: { x: 7.62, y: 19.37, r: 90 }, F2: { x: 7.62, y: 14.29, r: 90 }, R17: { x: 43.0, y: 28.89 },
   L3: { x: 26.99, y: 27.62 }, LD1: { x: 46.67, y: 30.8 }, C12: { x: 14.61, y: 27.62, r: 90 },
-  C8: { x: 42.23, y: 26.35 }, C13: { x: 47.62, y: 3.17, r: 90 },
+  C8: { x: 43.0, y: 26.35 }, C13: { x: 47.62, y: 3.17, r: 90 },
 }
 const pos = (ref: string) => {
   const p = V1[ref]
@@ -102,9 +102,13 @@ const Res = (ref: string, v: string, lcsc?: string, fp: any = "0805") => (
 const Cap = (ref: string, v: string, lcsc?: string, fp: any = "0805") => (
   <capacitor name={ref} capacitance={v} footprint={fp} {...pos(ref)} {...(lcsc ? { supplierPartNumbers: J(lcsc) } : {})} />
 )
-// diodes: pin1 = anode (A), pin2 = cathode (C)
+// diodes: SOD-123 / 0805 LED physical convention: pad 1 = CATHODE (C), pad 2 = ANODE (A)
+// (matches JLC part data; tscircuit <diode>/<led> would map pin1 = anode, so chips are used)
+const DiodeChip = (p: any) => (
+  <chip pinLabels={{ pin1: ["K"], pin2: ["A"] }} schPinArrangement={{ leftSide: { direction: "top-to-bottom", pins: ["A"] }, rightSide: { direction: "top-to-bottom", pins: ["K"] } }} {...p} />
+)
 const Dio = (ref: string, mpn: string, lcsc?: string) => (
-  <diode name={ref} footprint="sod123" manufacturerPartNumber={mpn} {...pos(ref)} {...(lcsc ? { supplierPartNumbers: J(lcsc) } : {})} />
+  <DiodeChip name={ref} footprint="sod123" manufacturerPartNumber={mpn} {...pos(ref)} {...(lcsc ? { supplierPartNumbers: J(lcsc) } : {})} />
 )
 
 const selector = (pin: string) => {
@@ -196,7 +200,7 @@ export const EmsSide = () => (
     {Cap("C8", "100nF", "C49678")}
     {Cap("C13", "100nF", "C49678")}
     {Res("R17", "1.2k", "C17379")}
-    <led name="LD1" footprint="0805" color="red" supplierPartNumbers={J("C84256")} {...pos("LD1")} />
+    <DiodeChip name="LD1" footprint="0805" supplierPartNumbers={J("C84256")} {...pos("LD1")} />
 
     {/* ---- optocouplers on the barrier (x = 0), slot/cutout is added in index.circuit.tsx ---- */}
     {/* OC1 6N137: pins 1-4 (LED, EMS) at x<0, pins 5-8 (MCU) at x>0 */}
@@ -210,8 +214,8 @@ export const EmsSide = () => (
     <resistor name="R14" resistance="270" footprint="0805" supplierPartNumbers={J("C17697")} {...mpos("R14")} />
     <resistor name="R18" resistance="1.2k" footprint="0805" supplierPartNumbers={J("C17379")} {...mpos("R18")} />
     <resistor name="R19" resistance="1.2k" footprint="0805" supplierPartNumbers={J("C17379")} {...mpos("R19")} />
-    <led name="LD2" footprint="0805" color="green" {...mpos("LD2")} />
-    <led name="LD3" footprint="0805" color="green" {...mpos("LD3")} />
+    <DiodeChip name="LD2" footprint="0805" {...mpos("LD2")} />
+    <DiodeChip name="LD3" footprint="0805" {...mpos("LD3")} />
 
     {/* ---- connectivity (V1 netlist) ---- */}
     {Object.entries(NETS).flatMap(([net, pins]) =>

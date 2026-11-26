@@ -57,7 +57,7 @@ export const McuSide = () => (
     {/* status LED GPIO2 (S32S3 profile: LED=GPIO2, active high) */}
     {R("R22", "1k", 50.5, -14, 90, "C17513", -8, -6)}
     <led name="LD4" color="red" footprint="0805" pcbX={50.5} pcbY={-17.5} pcbRotation={90}
-      supplierPartNumbers={J("C84256")} schX={-8} schY={-8} />
+      schX={-8} schY={-8} />
     {T(".U3 > .IO2", ".R22 > .pin1")}
     {T(".R22 > .pin2", ".LD4 > .anode")}{T(".LD4 > .cathode", "net.GND")}
 
@@ -104,9 +104,9 @@ export const McuSide = () => (
     {C("C25", "100nF", 7.5, -22, 90, "C49678", "0805", -20, -18)}
     {T(".C24 > .pin1", "net.VBUS")}{T(".C24 > .pin2", "net.GND")}
     {T(".C25 > .pin1", "net.VBUS")}{T(".C25 > .pin2", "net.GND")}
-    {C("C26", "22uF", 20, -9, 90, "C12891", "1206", -12, -16)}
-    {C("C27", "10uF", 20, -12.5, 90, "C15850", "0805", -12, -18)}
-    {C("C28", "100nF", 20, -15, 90, "C49678", "0805", -12, -20)}
+    {C("C26", "22uF", 20, -8.5, 90, "C12891", "1206", -12, -16)}
+    {C("C27", "10uF", 20, -12.6, 90, "C15850", "0805", -12, -18)}
+    {C("C28", "100nF", 20, -16.0, 90, "C49678", "0805", -12, -20)}
     {["C26", "C27", "C28"].map((c) => [T(`.${c} > .pin1`, "net.V3V3"), T(`.${c} > .pin2`, "net.GND")])}
 
     {/* power LED on V3V3 */}
