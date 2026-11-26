@@ -73,20 +73,36 @@ export const Res2010Footprint = () => (
 )
 
 // Tactile switch SMD 5.1 x 5.1, TS-1187A-B-A-B (JLC C318884), EasyEDA SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5.
-// Pads 1+2 (top row, y=+1.85) are one terminal (A), pads 3+4 (bottom row, y=-1.85) the other (B);
-// pressing the button connects the two rows.
+// Pads 1+2 (top row, y=+1.85) are one terminal (A), pads 3+4 (bottom row, y=-1.85) the other (B); they ARE
+// connected inside the switch, but every pad is its own port (pin1..pin4) and must be tied to the net in the
+// netlist so that every pad gets copper.  Pressing the button connects the two rows.
 export const Tactile5x5 = (props: Partial<ChipProps> & { name: string }) => (
-  <chip pinLabels={{ pin1: ["A"], pin2: ["B"] }}
+  <chip pinLabels={{ pin1: ["A1"], pin2: ["A2"], pin3: ["B1"], pin4: ["B2"] }}
     manufacturerPartNumber="TS-1187A-B-A-B"
     supplierPartNumbers={{ jlcpcb: ["C318884"] }}
     footprint={<footprint>
-      {[-3.0, 3.0].map((x) => (
-        <smtpad key={`a${x}`} portHints={["pin1"]} shape="rect" width="1.0mm" height="0.75mm" pcbX={x} pcbY={1.85} />
-      ))}
-      {[-3.0, 3.0].map((x) => (
-        <smtpad key={`b${x}`} portHints={["pin2"]} shape="rect" width="1.0mm" height="0.75mm" pcbX={x} pcbY={-1.85} />
-      ))}
+      <smtpad portHints={["pin1"]} shape="rect" width="1.0mm" height="0.75mm" pcbX={-3.0} pcbY={1.85} />
+      <smtpad portHints={["pin2"]} shape="rect" width="1.0mm" height="0.75mm" pcbX={3.0} pcbY={1.85} />
+      <smtpad portHints={["pin3"]} shape="rect" width="1.0mm" height="0.75mm" pcbX={-3.0} pcbY={-1.85} />
+      <smtpad portHints={["pin4"]} shape="rect" width="1.0mm" height="0.75mm" pcbX={3.0} pcbY={-1.85} />
       <silkscreenpath route={[{ x: -2.55, y: 2.55 }, { x: 2.55, y: 2.55 }, { x: 2.55, y: -2.55 }, { x: -2.55, y: -2.55 }, { x: -2.55, y: 2.55 }]} />
+    </footprint>}
+    {...(props as any)} />
+)
+
+// Tantalum 100uF/6.3V case B 3528, TAJB107K006RNJ (JLC C16133, Basic). EasyEDA CASE-B_3528: pads 1.5 x 2.4 mm at
+// x = +-1.861; pad 1 = POSITIVE (left; polarity bar + symbol "+" at pin 1, verified in the EasyEDA JSON), pad 2 = negative.
+export const TantalumB = (props: Partial<ChipProps> & { name: string }) => (
+  <chip pinLabels={{ pin1: ["POS"], pin2: ["NEG"] }}
+    manufacturerPartNumber="TAJB107K006RNJ"
+    supplierPartNumbers={{ jlcpcb: ["C16133"] }}
+    footprint={<footprint>
+      <smtpad portHints={["pin1"]} shape="rect" width="1.5mm" height="2.4mm" pcbX={-1.861} pcbY={0} />
+      <smtpad portHints={["pin2"]} shape="rect" width="1.5mm" height="2.4mm" pcbX={1.861} pcbY={0} />
+      <silkscreenpath route={[{ x: -3.4, y: 1.6 }, { x: -3.4, y: -1.6 }]} />
+      <silkscreenpath route={[{ x: -0.8, y: 1.6 }, { x: 2.8, y: 1.6 }]} />
+      <silkscreenpath route={[{ x: -0.8, y: -1.6 }, { x: 2.8, y: -1.6 }]} />
+      <silkscreentext text="+" pcbX={-3.3} pcbY={2.3} fontSize="1.0mm" />
     </footprint>}
     {...(props as any)} />
 )

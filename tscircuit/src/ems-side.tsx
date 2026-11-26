@@ -171,12 +171,12 @@ export const EmsSide = () => (
       {...pos("U1")}
       pcbRotation={0}
     />
-    {/* Q1 MMBT3904 SOT-23: pad 1 = B, 2 = E, 3 = C (chip so pad numbers equal package pins) */}
+    {/* Q1 BC817-40 SOT-23 (EasyEDA C20069155 verified): pad 1 = B, 2 = E, 3 = C (chip so pad numbers equal package pins) */}
     <chip
       name="Q1"
       footprint="sot23"
-      manufacturerPartNumber="MMBT3904"
-      supplierPartNumbers={J("C20526")}
+      manufacturerPartNumber="BC817-40"
+      supplierPartNumbers={J("C20069155")}
       pinLabels={{ pin1: ["B"], pin2: ["E"], pin3: ["C"] }}
       {...pos("Q1")}
     />

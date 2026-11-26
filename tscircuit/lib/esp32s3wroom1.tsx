@@ -1,5 +1,5 @@
 // ESP32-S3-WROOM-1-N16R8 (JLCPCB C2913202), module 18.0 x 25.5 mm.
-// Pad numbering per Espressif datasheet (41 pads): 1-14 left (top->bottom),
+// Pad numbering per Espressif datasheet (40 pads + EPAD, here split in 9 ports pin41..49): 1-14 left (top->bottom),
 // 15-26 bottom (left->right), 27-40 right (bottom->top), 41 = GND thermal pad.
 // Local origin = module centre, antenna end at +Y (top). Land pattern follows
 // the datasheet/KiCad lib (0.9 x 1.5 mm pads, 1.27 mm pitch); EPAD position is
@@ -15,7 +15,10 @@ export const ESP32S3_PINLABELS = {
   pin25: ["IO48"], pin26: ["IO45"], pin27: ["IO0"], pin28: ["IO35"], pin29: ["IO36"],
   pin30: ["IO37"], pin31: ["IO38"], pin32: ["IO39"], pin33: ["IO40"], pin34: ["IO41"],
   pin35: ["IO42"], pin36: ["RXD0"], pin37: ["TXD0"], pin38: ["IO2"], pin39: ["IO1"],
-  pin40: ["GND2"], pin41: ["GND_EP"],
+  pin40: ["GND2"],
+  // EPAD: 9 separate 0.9 mm pads, one port each (pin41..pin49), all tied to GND explicitly in src/mcu-side.tsx
+  pin41: ["GND_EP1"], pin42: ["GND_EP2"], pin43: ["GND_EP3"], pin44: ["GND_EP4"], pin45: ["GND_EP5"],
+  pin46: ["GND_EP6"], pin47: ["GND_EP7"], pin48: ["GND_EP8"], pin49: ["GND_EP9"],
 } as const
 
 const P = 1.27
@@ -46,8 +49,8 @@ export const Esp32S3Footprint = () => {
     <footprint>
       {pads}
       {/* EPAD (pin 41): 3x3 array of 0.9 x 0.9 pads, pitch 1.4, centred at (-1.5, -2.47) (EasyEDA C2913202) */}
-      {[-2.9, -1.5, -0.1].flatMap((x) => [-3.87, -2.47, -1.07].map((y) => (
-        <smtpad key={`e${x}_${y}`} portHints={["pin41"]} shape="rect" width="0.9mm" height="0.9mm" pcbX={x} pcbY={y} />
+      {[-2.9, -1.5, -0.1].flatMap((x, xi) => [-3.87, -2.47, -1.07].map((y, yi) => (
+        <smtpad key={`e${x}_${y}`} portHints={[`pin${41 + xi * 3 + yi}`]} shape="rect" width="0.9mm" height="0.9mm" pcbX={x} pcbY={y} />
       )))}
       {/* antenna keepout: no copper on any layer under/around antenna end */}
       <keepout shape="rect" width="18.6mm" height="7mm" pcbX={0} pcbY={9.25} layers={["top", "bottom"]} />
@@ -68,7 +71,7 @@ export const Esp32S3Wroom1 = (props: Partial<ChipProps> & { name: string }) => (
     schPinArrangement={{
       leftSide: { direction: "top-to-bottom", pins: ["V3V3", "EN", "IO0", "IO4", "IO5", "IO6", "IO7", "IO15", "IO16", "IO17", "IO18", "IO8"] },
       rightSide: { direction: "top-to-bottom", pins: ["IO1", "IO2", "IO3", "IO9", "IO10", "IO11", "IO12", "IO13", "IO14", "IO21", "IO38", "IO39", "IO40", "IO41", "IO42", "IO47", "IO48", "IO45", "IO46", "RXD0", "TXD0", "IO19", "IO20"] },
-      bottomSide: { direction: "left-to-right", pins: ["GND1", "GND2", "GND_EP"] },
+      bottomSide: { direction: "left-to-right", pins: ["GND1", "GND2", "GND_EP1", "GND_EP2", "GND_EP3", "GND_EP4", "GND_EP5", "GND_EP6", "GND_EP7", "GND_EP8", "GND_EP9"] },
     }}
     {...(props as any)}
   />

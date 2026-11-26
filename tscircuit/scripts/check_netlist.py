@@ -44,6 +44,8 @@ for n in ref["nets"]:
     # V2: the single 2200uF C12 is replaced by C12 + C14 (2 x 1000uF SMD in parallel, same nets)
     exp |= {"C14." + p.split(".")[1] for p in exp if p.startswith("C12.")}
     name = NAME.get(n["name"], n["name"])
+    if n["name"] == "MCUVCC":  # V2: P2 pin 1 hangs on net P2_3V3 behind the open solder jumper JP2
+        exp.discard("P2.1")
     gs = {pin2grp.get(p) for p in exp}
     if len(gs) != 1 or None in gs:
         ok = False
@@ -68,19 +70,21 @@ for n in ref["nets"]:
 
 # ---- new MCU nets (DESIGN_SPEC / src/mcu-side.tsx).  pins as Ref.pin number ----
 NEW = {
-    "VBUS": ["J2.2", "U5.3", "C24.1", "C25.1", "U4.5"],
-    "V3V3": ["U3.2", "U5.2", "U5.4", "C22.1", "C23.1", "C26.1", "C27.1", "C28.1", "R20.1", "R21.1", "R26.1", "R27.2", "P2.1"],
-    "GND": ["U3.1", "U3.40", "U3.41", "J2.1", "U4.2", "U5.1", "C20.2", "C22.2", "SW1.2", "SW2.2", "LD4.2", "LD5.2", "R23.2", "R24.2", "R25.2", "C21.2", "P2.4"],
+    "VBUS": ["J2.2", "J2.11", "U5.3", "C24.1", "C25.1", "U4.5"],
+    "V3V3": ["U3.2", "U5.2", "U5.4", "C29.1", "JP2.1", "C22.1", "C23.1", "C26.1", "C27.1", "C28.1", "R20.1", "R21.1", "R26.1", "R27.2"],
+    "GND": ["U3.1", "U3.40"] + ["U3.%d" % i for i in range(41, 50)] + ["J2.1", "J2.12", "U4.2", "U5.1", "C29.2", "C20.2", "C22.2", "SW1.3", "SW1.4", "SW2.3", "SW2.4", "LD4.2", "LD5.2", "R23.2", "R24.2", "R25.2", "C21.2", "P2.4"],
     "MCU_RX": ["U3.5", "OC1.6", "P2.3"],
     "ESP_TX": ["U3.10", "JP1.1"],
     "MCU_TX": ["JP1.2", "R27.1", "OC2.3", "P2.2"],
-    "USB_DP": ["J2.5", "U4.1", "U4.6", "U3.14"],
-    "USB_DN": ["J2.6", "U4.3", "U4.4", "U3.13"],
-    "EN": ["U3.3", "R20.2", "C20.1", "SW1.1"],
-    "BOOT": ["U3.27", "R21.2", "SW2.1"],
-    "CC1": ["J2.3", "R23.1"],
-    "CC2": ["J2.4", "R24.1"],
-    "SHELL": ["J2.9", "R25.1", "C21.1"],
+    "USB_DP": ["J2.5", "J2.7", "U4.1", "U4.6", "U3.14"],
+    "USB_DN": ["J2.6", "J2.8", "U4.3", "U4.4", "U3.13"],
+    "EN": ["U3.3", "R20.2", "C20.1", "SW1.1", "SW1.2"],
+    "BOOT": ["U3.27", "R21.2", "SW2.1", "SW2.2"],
+    "CC1": ["J2.9", "R23.1"],
+    "CC2": ["J2.3", "R24.1"],
+    "SHELL": ["J2.13", "J2.14", "J2.15", "J2.16", "R25.1", "C21.1"],
+    "P2_3V3": ["JP2.2", "P2.1"],
+    "SBU1": [], "SBU2": [],
     "GPIO2_LED": ["U3.38", "R22.1"],
     "LED_R22": ["R22.2", "LD4.1"],
     "PWR_LED": ["R26.2", "LD5.1"],
@@ -90,6 +94,8 @@ print("\n== new MCU nets ==")
 roots = {}
 for name, pins in NEW.items():
     pins = [p for p in pins if p != "GND_ANCHOR"]
+    if not pins:  # SBU1/SBU2 (J2.4, J2.10) are intentionally unconnected
+        continue
     gs = {pin2grp.get(p) for p in pins}
     if len(gs) != 1 or None in gs:
         ok = False
@@ -99,7 +105,7 @@ for name, pins in NEW.items():
     if name in ("UART0_GND",):
         continue
     nm = sorted(c.groups[g]["names"])
-    if name in ("VBUS", "V3V3", "GND", "MCU_RX", "ESP_TX", "MCU_TX", "USB_DP", "USB_DN", "EN", "BOOT") and name not in nm:
+    if name in ("VBUS", "V3V3", "GND", "MCU_RX", "ESP_TX", "MCU_TX", "USB_DP", "USB_DN", "EN", "BOOT", "P2_3V3", "SHELL") and name not in nm:
         ok = False
         print("FAIL %-10s net names %s" % (name, nm))
         continue
@@ -109,7 +115,21 @@ for name, pins in NEW.items():
         continue
     roots[g] = name
     print("OK   %-10s -> %s (%d pins in net)" % (name, nm, len(c.groups[g]["pins"])))
-# GND of TP3 must be on GND
+# parts: LCSC numbers / values of the changed parts, every pad of USB-C / EPAD / tactile / shell on the right net
+src = {x["name"]: x for x in c.cj if x["type"] == "source_component"}
+for ref, mpn, lcsc in [("Q1", "BC817-40", "C20069155"), ("C29", "TAJB107K006RNJ", "C16133")]:
+    comp = src.get(ref)
+    got_l = (comp or {}).get("supplier_part_numbers", {}).get("jlcpcb", [])
+    if not comp or comp.get("manufacturer_part_number") != mpn or lcsc not in got_l:
+        ok = False
+        print("FAIL part %s expected %s %s got %s" % (ref, mpn, lcsc, comp and (comp.get("manufacturer_part_number"), got_l)))
+    else:
+        print("OK   part %s = %s %s" % (ref, mpn, lcsc))
+# JP2: V3V3 <-> P2_3V3 only through the (open) jumper: pins must be on DIFFERENT nets
+if pin2grp.get("JP2.1") == pin2grp.get("JP2.2") or pin2grp.get("JP1.1") == pin2grp.get("JP1.2"):
+    ok = False
+    print("FAIL JP1/JP2 pins on one net (jumper not open)")
+# Q1 pin order B/E/C = 1/2/3 on the V1 nets (checked above via V1 nets EMS_N14=Q1.1 base ... ) ; GND of TP3 must be on GND
 if pin2grp.get("TP3.1") != pin2grp.get("U3.1"):
     ok = False
     print("FAIL TP3 not on GND")

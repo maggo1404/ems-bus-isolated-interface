@@ -48,6 +48,6 @@ export default () => (
     <silkscreentext text="ISOLATION BARRIER" pcbX={0} pcbY={0} fontSize="0.8mm" />
     <silkscreenpath route={[{ x: 0, y: 3.6 }, { x: 0, y: 30 }]} />
     <silkscreenpath route={[{ x: 0, y: -3.6 }, { x: 0, y: -30 }]} />
-    <silkscreentext text="P2: 1=3V3 2=TX 3=RX 4=GND" pcbX={22} pcbY={-29} fontSize="0.8mm" />
+    <silkscreentext text="P2: 1=3V3(JP2) 2=TX 3=RX 4=GND" pcbX={22} pcbY={-29} fontSize="0.8mm" />
   </board>
 )

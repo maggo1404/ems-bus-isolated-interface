@@ -1,7 +1,8 @@
 // 6N137 / 6N136 in SMD-8 gull-wing 300 mil ("SO8-GW300" in Eagle EMSinterface_V1.0.lbr).
 // Verified (docs/FOOTPRINT_CHECK.md): rows at x = +-4.75 mm (9.5 mm centre-to-centre), pitch 2.54 mm
 // (y = +-1.27, +-3.81), pads 1.8 (across) x 1.4 (along) mm; covers JLC C92651 / C336082 (9.09 mm rows).
-// Pin1 top-left.
+// Pin1 top-left, pins 1-4 down the left column, 5-8 UP the right column (pin5 opposite pin4, pin8 opposite pin1;
+// counter-clockwise like the EasyEDA C92651/C336082 footprint: pin1 (-3.81,-4.545) .. pin8 (-3.81,+4.545) in its frame).
 import type { ChipProps } from "tscircuit"
 
 export const OptoSo8Gw300Footprint = () => {
@@ -12,7 +13,7 @@ export const OptoSo8Gw300Footprint = () => {
         <smtpad key={`l${i}`} portHints={[`pin${i + 1}`]} shape="rect" width="1.8mm" height="1.4mm" pcbX={-4.75} pcbY={y} />
       ))}
       {ys.map((y, i) => (
-        <smtpad key={`r${i}`} portHints={[`pin${8 - i}`]} shape="rect" width="1.8mm" height="1.4mm" pcbX={4.75} pcbY={-y} />
+        <smtpad key={`r${i}`} portHints={[`pin${8 - i}`]} shape="rect" width="1.8mm" height="1.4mm" pcbX={4.75} pcbY={y} />
       ))}
       <silkscreenpath route={[{ x: -3.0, y: 4.5 }, { x: 3.0, y: 4.5 }, { x: 3.0, y: -4.5 }, { x: -3.0, y: -4.5 }, { x: -3.0, y: 4.5 }]} />
       <silkscreentext text="1" pcbX={-2.3} pcbY={3.9} fontSize="0.8mm" />
