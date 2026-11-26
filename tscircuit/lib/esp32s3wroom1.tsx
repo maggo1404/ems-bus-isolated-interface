@@ -72,8 +72,10 @@ export const Esp32S3Wroom1 = (props: Partial<ChipProps> & { name: string }) => (
     pinLabels={ESP32S3_PINLABELS as any}
     footprint={<Esp32S3Footprint />}
     schPinArrangement={{
-      leftSide: { direction: "top-to-bottom", pins: ["V3V3", "EN", "IO0", "IO4", "IO5", "IO6", "IO7", "IO15", "IO16", "IO17", "IO18", "IO8"] },
-      rightSide: { direction: "top-to-bottom", pins: ["IO1", "IO2", "IO3", "IO9", "IO10", "IO11", "IO12", "IO13", "IO14", "IO21", "IO38", "IO39", "IO40", "IO41", "IO42", "IO47", "IO48", "IO45", "IO46", "RXD0", "TXD0", "IO19", "IO20"] },
+      // grouped by function: left = pins used on this board (power, reset/boot strapping, EMS UART, status LED, UART0 test pads, USB),
+      // right = unused GPIOs (all left open), bottom = ground pads
+      leftSide: { direction: "top-to-bottom", pins: ["V3V3", "EN", "IO0", "IO5", "IO17", "IO2", "TXD0", "RXD0", "IO19", "IO20"] },
+      rightSide: { direction: "top-to-bottom", pins: ["IO1", "IO3", "IO4", "IO6", "IO7", "IO8", "IO9", "IO10", "IO11", "IO12", "IO13", "IO14", "IO15", "IO16", "IO18", "IO21", "IO35", "IO36", "IO37", "IO38", "IO39", "IO40", "IO41", "IO42", "IO45", "IO46", "IO47", "IO48"] },
       bottomSide: { direction: "left-to-right", pins: ["GND1", "GND2", "GND_EP1", "GND_EP2", "GND_EP3", "GND_EP4", "GND_EP5", "GND_EP6", "GND_EP7", "GND_EP8", "GND_EP9"] },
     }}
     {...(props as any)}

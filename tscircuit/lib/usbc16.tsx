@@ -50,8 +50,10 @@ export const UsbC16 = (props: Partial<ChipProps> & { name: string }) => (
     }}
     footprint={<UsbC16Footprint />}
     schPinArrangement={{
-      leftSide: { direction: "top-to-bottom", pins: ["VBUS_L", "VBUS_R", "DP_L", "DP_R", "DN_L", "DN_R", "CC1", "CC2"] },
-      rightSide: { direction: "top-to-bottom", pins: ["SBU1", "SBU2", "SH1", "SH2", "SH3", "SH4", "GND_L", "GND_R"] },
+      // signals leave to the right (towards ESD / MCU), the unused SBU pins sit on the left, grounds + shell at the bottom
+      leftSide: { direction: "top-to-bottom", pins: ["SBU1", "SBU2"] },
+      rightSide: { direction: "top-to-bottom", pins: ["VBUS_L", "VBUS_R", "DP_L", "DP_R", "DN_L", "DN_R", "CC1", "CC2"] },
+      bottomSide: { direction: "left-to-right", pins: ["GND_L", "GND_R", "SH1", "SH2", "SH3", "SH4"] },
     }}
     {...(props as any)}
   />

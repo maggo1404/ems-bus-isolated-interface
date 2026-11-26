@@ -41,7 +41,8 @@ export const Opto6N136 = (props: Partial<ChipProps> & { name: string }) => (
     supplierPartNumbers={{ jlcpcb: ["C336082"] }}
     pinLabels={{ pin1: ["NC1"], pin2: ["ANODE"], pin3: ["CATHODE"], pin4: ["NC4"], pin5: ["GND"], pin6: ["VO"], pin7: ["VB"], pin8: ["VCC"] }}
     footprint={<OptoSo8Gw300Footprint />}
-    schPinArrangement={{ leftSide: { direction: "top-to-bottom", pins: ["ANODE", "CATHODE"] }, rightSide: { direction: "top-to-bottom", pins: ["VCC", "VB", "VO", "GND"] } }}
+    // EMS side (VCC/VB/VO/GND) on the left, LED (MCU side) on the right: the symbol straddles the barrier, OC2 is mirrored w.r.t. OC1
+    schPinArrangement={{ leftSide: { direction: "top-to-bottom", pins: ["VCC", "VB", "VO", "GND"] }, rightSide: { direction: "top-to-bottom", pins: ["ANODE", "CATHODE"] } }}
     {...(props as any)}
   />
 )

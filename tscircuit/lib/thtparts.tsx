@@ -8,6 +8,7 @@ export const Mstba2 = (props: Partial<ChipProps> & { name: string }) => (
     manufacturerPartNumber="KF2EDGRC-5.08-2P"
     supplierPartNumbers={{ jlcpcb: ["C441236"] }}
     pinLabels={{ pin1: ["P1"], pin2: ["P2"] }}
+    schPinArrangement={{ rightSide: { direction: "top-to-bottom", pins: ["P1", "P2"] } }}
     footprint={
       <footprint>
         <platedhole portHints={["pin1"]} shape="circle" holeDiameter="1.8mm" outerDiameter="2.5mm" pcbX={-2.54} pcbY={0} />

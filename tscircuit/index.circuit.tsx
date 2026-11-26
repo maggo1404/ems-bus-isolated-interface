@@ -5,6 +5,7 @@ import { EmsSide } from "./src/ems-side"
 import { McuSide } from "./src/mcu-side"
 import { NetDefs } from "./lib/netdefs"
 import { FS } from "./lib/silk"
+import { SchAnnotations } from "./lib/schannot"
 
 const W = 110, H = 60
 const NX = 5.5, NY = 8.0, NR = 3.5 // corner notch (X, Y) for the lid-screw bosses, R3.5 on the inner corner
@@ -97,6 +98,7 @@ export default () => (
     <NetDefs />
     <EmsSide />
     <McuSide />
+    <SchAnnotations />
 
     {/* 4 x mounting holes 3.5 mm NPTH (84.5 x 39.5 grid of the Hammond 1591XX posts) + copper/part keepout 8 mm (screw head) */}
     {([[-1, 1, "MH1"], [-1, -1, "MH2"], [1, 1, "MH3"], [1, -1, "MH4"]] as const).map(([sx, sy, n]) => (

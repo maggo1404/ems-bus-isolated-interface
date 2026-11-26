@@ -4,6 +4,7 @@
 import { Opto6N137, Opto6N136 } from "../lib/opto_so8_gw300"
 import { DiodeKA, DiodeAK, LedRed, LedYellow } from "../lib/diodes"
 import { traceWidth } from "../lib/netclass"
+import { sch } from "../lib/schlayout"
 import { Soic8Lm393Footprint } from "../lib/soic8_lm393"
 import { PartDot, CathodeBar } from "../lib/silk"
 import { Mstba2, CapE5_10p5, Inductor3225, Inductor0520, Res2010Footprint } from "../lib/thtparts"
@@ -56,7 +57,6 @@ const NETS: Record<string, string[]> = {
 // ---------------------------------------------------------------------------
 const tx = (x: number) => +((x - 7.62) * 0.88 - 40.5).toFixed(2)
 const ty = (y: number) => +((y - 16.83) * 1.35).toFixed(2)
-const sch = (v: number) => +(v * 0.3).toFixed(2)
 
 type P = { x: number; y: number; r?: number }
 // V1 (x, y, rot) per ref
@@ -86,11 +86,11 @@ const OVR: Record<string, P> = {
   R16: { x: -14.6, y: 16.3, r: 0 },
   C13: { x: -7.0, y: -8.3, r: 90 }, R11: { x: -9.0, y: -11.57, r: 90 }, LD1: { x: -8, y: 24, r: 0 }, R17: { x: -14, y: 24, r: 0 },
 }
-const pos = (ref: string) => {
+const pos = (ref: string, pair?: [string, string]) => {
   const o = OVR[ref]
   const p = V1[ref]
   const x = o ? o.x : tx(p.x), y = o ? o.y : ty(p.y), r = o ? o.r ?? 0 : p.r ?? 0
-  return { pcbX: x, pcbY: y, pcbRotation: r, schX: sch(x), schY: sch(y) }
+  return { pcbX: x, pcbY: y, pcbRotation: r, ...sch(ref, pair) }
 }
 
 // MCU-side opto helpers (x in [6, 18]); explicit absolute coordinates
@@ -103,9 +103,9 @@ const MCU_POS: Record<string, { pcbX: number; pcbY: number; pcbRotation: number 
   R19: { pcbX: 12.5, pcbY: -9.5, pcbRotation: 90 },
   LD2: { pcbX: 12.5, pcbY: -13.8, pcbRotation: 90 },
 }
-const mpos = (ref: string) => {
+const mpos = (ref: string, pair?: [string, string]) => {
   const p = MCU_POS[ref]
-  return { ...p, schX: sch(p.pcbX) + 8, schY: sch(p.pcbY) }
+  return { ...p, ...sch(ref, pair) }
 }
 
 const GND_VIAS: [number, number][] = [[-19.0, 10.0], [-12.6, 16.6], [-27.4, 22.4], [-12.4, 1.2], [-10.6, 6.7], [-10.9, 11.25]]
@@ -126,7 +126,7 @@ const Cap = (ref: string, v: string, lcsc?: string, fp: any = "0805", extra: any
 const PAD_SWAP = new Set(["D1", "D2", "D3", "D4", "D5", "LD2", "LD3"])
 const Dio = (ref: string, mpn: string, lcsc: string) => {
   const D = PAD_SWAP.has(ref) ? DiodeAK : DiodeKA
-  const p = pos(ref)
+  const p = pos(ref, ["A", "K"])
   // cathode bar between the pads: SOD-123 pad 1 is at local -x, pad 2 at +x; D1-D5 (BAT42W) cathode = pad 2, D6/D7 cathode = pad 1
   return (
     <>
@@ -143,12 +143,12 @@ const selector = (pin: string) => {
 }
 
 export const EmsSide = () => (
-  <group name="ems" pcbX={0} pcbY={0}>
+  <group name="ems" pcbX={0} pcbY={0} schX={0} schY={0}>
     {/* ---- bus terminal, fuses, input filter (L1/L2), bridge D1-D4, clamp D5 ---- */}
-    <Mstba2 name="P1" pcbX={-44.1} pcbY={0} pcbRotation={270} schX={-12} schY={0} />
+    <Mstba2 name="P1" pcbX={-44.1} pcbY={0} pcbRotation={270} {...sch("P1")} />
     {/* fuses: 2-pad 0805 chips, pad1 = bus side, pad2 = inductor side */}
-    <chip name="F1" pcbStyle={NOREF} footprint="0805" pcbX={tx(7.62)} pcbY={ty(19.37)} pcbRotation={90} schX={-9} schY={3} manufacturerPartNumber="BSMD0805-050-24V" supplierPartNumbers={J("C910822")} />
-    <chip name="F2" pcbStyle={NOREF} footprint="0805" pcbX={tx(7.62)} pcbY={ty(14.29)} pcbRotation={270} schX={-9} schY={-3} manufacturerPartNumber="BSMD0805-050-24V" supplierPartNumbers={J("C910822")} />
+    <chip name="F1" pcbStyle={NOREF} footprint="0805" pcbX={tx(7.62)} pcbY={ty(19.37)} pcbRotation={90} {...sch("F1")} manufacturerPartNumber="BSMD0805-050-24V" supplierPartNumbers={J("C910822")} />
+    <chip name="F2" pcbStyle={NOREF} footprint="0805" pcbX={tx(7.62)} pcbY={ty(14.29)} pcbRotation={270} {...sch("F2")} manufacturerPartNumber="BSMD0805-050-24V" supplierPartNumbers={J("C910822")} />
     <Inductor3225 name="L1" {...pos("L1")} />
     <Inductor3225 name="L2" {...pos("L2")} />
     {Cap("C1", "68pF", "C107120")}
@@ -159,8 +159,8 @@ export const EmsSide = () => (
     {Dio("D5", "BAT42W", "C22466362")}
     {Dio("D7", "B5819W", "C8598")}
     {/* C12 + C14: 2 x 1000 uF/25 V SMD electrolytic in parallel (replaces the V1 2200 uF), rotated 90 deg */}
-    <CapE5_10p5 name="C12" {...pos("C12")} />
-    <CapE5_10p5 name="C14" {...pos("C14")} schY={sch(-24.3) + 3} />
+    <CapE5_10p5 name="C12" {...pos("C12", ["POS", "NEG"])} />
+    <CapE5_10p5 name="C14" {...pos("C14", ["POS", "NEG"])} />
     {/* the hand-routed VIN pin -> C10 trace (1.5 mm) is longer than tscircuit's automatic 1 mm decoupling limit; its GND leg is routed to the pour (R5 M2) */}
     {Cap("C10", "10uF", "C15850", "0805", { maxDecouplingTraceLength: 20 })}
     {Cap("C30", "100nF", "C49678", "0805", {})}
@@ -191,8 +191,9 @@ export const EmsSide = () => (
       supplierPartNumbers={J("C7955")}
       pinLabels={{ pin1: ["OUTA"], pin2: ["INA_N"], pin3: ["INA_P"], pin4: ["GND"], pin5: ["INB_P"], pin6: ["INB_N"], pin7: ["OUTB"], pin8: ["VCC"] }}
       schPinArrangement={{
-        leftSide: { direction: "top-to-bottom", pins: ["INA_P", "INA_N", "INB_P", "INB_N"] },
-        rightSide: { direction: "top-to-bottom", pins: ["VCC", "OUTA", "OUTB", "GND"] },
+        // comparator A (RX) flows left -> right, comparator B (TX) right -> left (inputs from OC2 on the right, output to Q1 on the left)
+        leftSide: { direction: "top-to-bottom", pins: ["INA_P", "INA_N", "OUTB", "GND"] },
+        rightSide: { direction: "top-to-bottom", pins: ["VCC", "OUTA", "INB_P", "INB_N"] },
       }}
       {...pos("U1")}
       pcbRotation={270}
@@ -206,6 +207,7 @@ export const EmsSide = () => (
       manufacturerPartNumber="BC817-40"
       supplierPartNumbers={J("C20069155")}
       pinLabels={{ pin1: ["B"], pin2: ["E"], pin3: ["C"] }}
+      schPinArrangement={{ leftSide: { direction: "top-to-bottom", pins: ["C"] }, rightSide: { direction: "top-to-bottom", pins: ["B"] }, bottomSide: { direction: "left-to-right", pins: ["E"] } }}
       {...pos("Q1")}
     />
 
@@ -220,13 +222,13 @@ export const EmsSide = () => (
       supplierPartNumbers={J("C371172")}
       pinLabels={{ pin1: ["BST"], pin2: ["GND"], pin3: ["FB"], pin4: ["EN"], pin5: ["VIN"], pin6: ["SW"] }}
       schPinArrangement={{
-        leftSide: { direction: "top-to-bottom", pins: ["VIN", "EN", "BST"] },
-        rightSide: { direction: "top-to-bottom", pins: ["SW", "FB", "GND"] },
+        leftSide: { direction: "top-to-bottom", pins: ["VIN", "EN", "GND"] },
+        rightSide: { direction: "top-to-bottom", pins: ["BST", "SW", "FB"] },
       }}
       {...pos("U2")}
       pcbRotation={0}
     />
-    <Inductor0520 name="L3" {...pos("L3")} />
+    <Inductor0520 name="L3" {...pos("L3", ["A", "B"])} />
     {Res("R12", "6.8k", "C17772")}
     {Res("R15", "1.3k", "C17384")}
     {Res("R16", "100k", "C149504")}
@@ -235,13 +237,13 @@ export const EmsSide = () => (
     {Cap("C8", "100nF", "C49678")}
     {Cap("C13", "100nF", "C49678")}
     {Res("R17", "1.2k", "C17379")}
-    <LedRed name="LD1" {...pos("LD1")} />
+    <LedRed name="LD1" {...pos("LD1", ["A", "K"])} />
 
     {/* ---- optocouplers on the barrier (x = 0), slot/cutout is added in index.circuit.tsx ---- */}
     {/* OC1 6N137: pins 1-4 (LED, EMS) at x<0, pins 5-8 (MCU) at x>0 */}
-    <Opto6N137 name="OC1" pcbX={0} pcbY={8} schX={sch(0)} schY={sch(8) + 2} />
+    <Opto6N137 name="OC1" pcbX={0} pcbY={8} {...sch("OC1")} />
     {/* OC2 6N136: LED side (2,3) is MCU side, output side (5,6,8) is EMS -> rotated 180 deg */}
-    <Opto6N136 name="OC2" pcbX={0} pcbY={-8} pcbRotation={180} schX={sch(0)} schY={sch(-8) - 2} />
+    <Opto6N136 name="OC2" pcbX={0} pcbY={-8} pcbRotation={180} {...sch("OC2")} />
 
     {/* ---- MCU-side opto helpers ---- */}
     <capacitor name="C7" pcbStyle={NOREF} capacitance="100nF" footprint="0805" supplierPartNumbers={J("C49678")} {...mpos("C7")} />
@@ -249,8 +251,8 @@ export const EmsSide = () => (
     <resistor name="R14" pcbStyle={NOREF} resistance="150" footprint="0805" supplierPartNumbers={J("C17471")} {...mpos("R14")} />
     <resistor name="R18" pcbStyle={NOREF} resistance="330" footprint="0805" supplierPartNumbers={J("C17630")} {...mpos("R18")} />
     <resistor name="R19" pcbStyle={NOREF} resistance="330" footprint="0805" supplierPartNumbers={J("C17630")} {...mpos("R19")} />
-    <LedYellow name="LD2" {...mpos("LD2")} />
-    <LedYellow name="LD3" {...mpos("LD3")} />
+    <LedYellow name="LD2" {...mpos("LD2", ["A", "K"])} />
+    <LedYellow name="LD3" {...mpos("LD3", ["A", "K"])} />
 
     {/* GND_EMS stitching vias next to the buck / feedback pads: the router connects the pad to the via, the via drops into the
         bottom GND_EMS pour (keeps the congested bus/buck area routable, FIX_LIST #10) */}
