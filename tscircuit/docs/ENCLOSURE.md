@@ -57,3 +57,30 @@ ASA/PETG (kein PLA), 2 mm Wand, exakt zur Platine mit Domen, USB-C-Ausschnitt, L
 ## Quellen
 - https://www.reichelt.de/de/de/shop/produkt/x-221253 (1591XXCFLBK), -221272, -221271, -121042, -221256
 - https://www.hammfg.com/files/parts/pdf/1591XXCFLGY.pdf, https://www.hammfg.com/files/parts/pdf/1591CFLBK.pdf, https://www.hammfg.com/files/parts/pdf/1591CTCL.pdf, https://www.hammfg.com/files/parts/pdf/1591XXBFLGY.pdf, https://www.hammfg.com/files/parts/pdf/1591XXDFLGY.pdf
+
+## Platinenlayout V2.0 im Gehäuse 1591XXCFLBK (Stand Layout AP7b)
+Koordinaten: Platinen-Mitte = (0|0), X nach rechts, Y nach oben (Maße in mm). Für "unten links = Ursprung" (Hammond-Zeichnung): X + 55, Y + 30.
+
+| Objekt | Lage (Mitte) | Lage ab unten links | Bemerkung |
+|---|---|---|---|
+| Umriss | 110,0 x 60,0, 4 Eckausschnitte je 5,5 (X) x 8,0 (Y), Innenecke R3,5 | | `index.circuit.tsx` (`board outline`) |
+| Montagebohrungen MH1..MH4 | (-42,25 / +19,75), (-42,25 / -19,75), (+42,25 / +19,75), (+42,25 / -19,75) | (12,75 / 49,75), (12,75 / 10,25), (97,25 / 49,75), (97,25 / 10,25) | Ø3,5 NPTH; Kupfer-/Bauteil-Sperrzone Ø8 (Schraubenkopf) um jede Bohrung, Pour-Abstand >= 2,25 mm zum Loch |
+| P1 Klemme (KF2EDGRC-5.08-2P, rechtwinklig) | Stiftachse x = -44,1, Pins bei y = +-2,54, Steckseite bündig an der linken Kante (x = -55) | Kabelloch Ø6..7 bei (0 / 30) in der linken kurzen Wand | Steckerrichtung nach außen (EasyEDA-Körper -10,9 .. +1,3 mm um die Pinachse, Drehung 270); Körper 11,8 x 12,2 mm überdeckt nur den freien Streifen x -55 .. -42,8 |
+| ESP32-S3-WROOM-1 (U3) | Mitte (42,25 / 0), Antenne zeigt nach +X, endet bündig an x = +55 | | Antennenzone x >= 48, \|y\| <= 24 (= 9 mm halbe Modulbreite + 15 mm): auf beiden Lagen weder Kupfer noch Bauteile (Keepout, geprüft von `check_fab.py`) |
+| USB-C J2 | Mitte Steckeröffnung (33,0 / +30,0), Öffnung bündig an der oberen langen Kante, Breite 9 mm | (88,0 / 60,0) | Gehäuseausschnitt ca. 10 x 4 mm in der langen Wand, 22 mm von der rechten Wand; nur zum Flashen |
+| Tasten SW1 (RESET) / SW2 (BOOT) | (33,5 / -23,5) / (34,0 / -14,8) | | intern, durch Deckel nicht bedienbar (Büroklammer/Stift durch ein Ø2-Loch falls gewünscht: Loch im Boden der Box unter SW1/SW2 oder Deckel bei (88,5 / 6,5) / (89,0 / 15,2)) |
+| Isolationsschlitze | 2 x 12 mm, x = 0 (Breite 2 mm), y = +2 .. +14 und -2 .. -14 | | nur unter den Optokopplern, enden nicht an der Platinenkante |
+
+### Leuchtdioden für Lichtleiter im Deckel (Bohrungen Ø3 oder Lichtleiter-Ø3..5)
+Alle LEDs 0805 (Seite oben), Lichtleiter-Abstand >= 5 mm. Koordinaten = LED-Mitte; Deckelbohrung bei gleichen X/Y (Deckel mit gleicher Außenmaß-Orientierung auflegen, X/Y wie Platine).
+
+| LED | Funktion | Mitte (Platinenmitte = 0|0) | ab unten links | Farbe |
+|---|---|---|---|---|
+| LD1 | EMS-Seite Betriebsspannung (5 V Buck) | (-8,0 / +24,0) | (47,0 / 54,0) | rot |
+| LD3 | RX (EMS-Bus -> ESP) | (+16,0 / +13,6) | (71,0 / 43,6) | grün |
+| LD2 | TX (ESP -> EMS-Bus) | (+12,5 / -13,8) | (67,5 / 16,2) | grün |
+| LD5 | 3,3 V Betriebsspannung MCU-Seite | (+28,0 / +8,5) | (83,0 / 38,5) | grün |
+| LD4 | Status GPIO2 | (+47,0 / -16,5) | (102,0 / 13,5) | grün |
+
+Hinweis LD4: liegt 5 mm neben der Antennenzone (x < 48) und 0,3 mm neben der Sperrzone des Schraubenkopfes (Hole 42,25 / -19,75); Lichtleiter dort bitte nicht aus Metall.
+Silkscreen auf der Platine: "PWR" (LD1), "RX" (LD3), "TX" (LD2), "3V3" (LD5).

@@ -77,3 +77,9 @@ Does the autorouter honour them? (measured with scripts/check_fab.py on the rout
 * `<solderpaste>`: pads take `noSolderPaste` (used in lib/jumper.tsx -> no paste aperture, verified in F_Paste.gbr).
 * Gerber export: `npx tsci export dist/index/circuit.json -f gerbers -o <ABSOLUTE zip path>` (relative -o is resolved inside dist/index/). Exporting index.circuit.tsx directly re-runs without autorouting. Full flow: `scripts/export_fab.sh` (build ~20-40 s incl. autorouter), check: `scripts/check_fab.py [zip] [circuit.json]` (use `-` as zip for geometry-only).
 * Documented checks worth running (skill CHECKLIST.md): `tsci check netlist`, `tsci check placement`, `tsci check shorts`.
+
+## Autorouter-Erkenntnisse (AP7b, tscircuit 0.0.3296 / capacity-autorouter 0.0.1156)
+* Breiten: `<net name="X" nominalTraceWidth=...>` + `thickness` pro `<trace>` setzen die Nennbreite; der Router schnuert Zweige von Mehrpin-Netzen (MST-Kanten) auf `min(board.minTraceWidth, kleinste Verbindungsbreite)` ein. Garantiert breit: `<trace from to thickness pcbPath={[...]}>`. `pcbPath`-Punkte sind im Rahmen des `from`-Bauteils (Drehung beachten) oder Strings `"D3.pin1"` (Port-Position).
+* `routingPhaseIndex` auf `<net>` (mehrere Durchlaeufe) fuehrte hier zu ueberlappenden Bahnen; ein Durchlauf ist robuster. `autorouterEffortLevel` hat nichts geaendert.
+* Board-Umriss mit Eckausschnitten: `<board outline={[{x,y},...]}>` (ccw, auch Bogenpunkte). Pour: `<copperpour outline=[...] boardEdgeMargin cutoutMargin clearance>`; Kreis-Keepouts werden vom Router nicht beachtet (Pour schon), Rechteck-Keepouts nur annaehernd.
+* Handplatzierte `<via connectsTo="net.X">` verbinden einen Pour der anderen Lage (ohne Via wird ein Pour ohne Verbindung entfernt).

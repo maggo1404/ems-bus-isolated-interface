@@ -5,10 +5,13 @@ JLCPCB BOM:  Comment, Designator, Footprint, LCSC Part #   (grouped by LCSC numb
 JLCPCB CPL:  Designator, Mid X, Mid Y, Layer, Rotation       (only parts that are in the BOM)
 Parts without LCSC number (test pads TP1-3, solder jumper JP1) are not assembled and are dropped.
 Usage: python3 scripts/jlc_bom_cpl.py [fab/EMSinterface_V2.0-gerbers.zip] [outprefix]
-NOTE: rotations are those of tscircuit; JLC applies per-part rotation offsets, so verify in JLC's 3D/2D preview
-(tsci reports 'cannot verify jlcpcb pick-and-place rotation' for several parts, see docs/FAB_NOTES.md).
+CPL origin/rotation are NOT those of tscircuit: scripts/cpl_check.py derives, per part, the EasyEDA footprint origin and rotation
+(JLCPCB convention) by matching the EasyEDA pads to our footprint pads (details/table: docs/CPL_CHECK.md).
+Usage: python3 scripts/jlc_bom_cpl.py [gerbers.zip] [outprefix] [dist/index/circuit.json]
 """
-import csv, io, sys, zipfile, collections, re
+import csv, io, os, sys, zipfile, collections, re
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import cpl_check
 
 zp = sys.argv[1] if len(sys.argv) > 1 else "fab/EMSinterface_V2.0-gerbers.zip"
 prefix = sys.argv[2] if len(sys.argv) > 2 else "fab/EMSinterface_V2.0"
@@ -56,9 +59,10 @@ keep = {d for ds in groups.values() for d in ds}
 with open(prefix + "-CPL_JLCPCB.csv", "w", newline="") as f:
     w = csv.writer(f)
     w.writerow(["Designator", "Mid X", "Mid Y", "Layer", "Rotation"])
-    for r in cpl:
-        if r["Designator"] in keep:
-            w.writerow([r["Designator"], r["Mid X"] + "mm", r["Mid Y"] + "mm", r["Layer"].capitalize(), r["Rotation"]])
+    cjp = sys.argv[3] if len(sys.argv) > 3 else "dist/index/circuit.json"
+    for r in sorted(cpl_check.cpl_rows(cjp), key=lambda r: cpl_check.key(r["ref"])):
+        if r["ref"] in keep:
+            w.writerow([r["ref"], "%.3fmm" % r["mid"][0], "%.3fmm" % r["mid"][1], r["layer"].capitalize(), int(round(r["rot"])) % 360])
 print("BOM lines:", len(groups), "parts:", len(keep), "CPL rows:", len(keep), "dropped (no LCSC):", sorted({r["Designator"] for r in bom} - keep))
 missing = [lc for lc in groups if lc not in INFO]
 print("no INFO for:", missing)

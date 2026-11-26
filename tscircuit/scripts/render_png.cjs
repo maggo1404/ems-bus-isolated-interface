@@ -5,7 +5,8 @@ const fs = require('fs'), path = require('path')
   const out = process.argv[2] || 'docs/img'
   fs.mkdirSync(out, { recursive: true })
   const b = await chromium.launch()
-  for (const [name, f] of [['pcb', 'dist/index/pcb.svg'], ['schematic', 'dist/index/schematic.svg']]) {
+  for (const [name, f] of [['pcb', 'dist/index/pcb.svg'], ['pcb_bottom', 'dist/index/pcb_bottom.svg'], ['schematic', 'dist/index/schematic.svg'], ['assembly', 'dist/index/assembly.svg']]) {
+    if (!fs.existsSync(f)) continue
     let svg = fs.readFileSync(f, 'utf8')
     const m = svg.match(/viewBox="([^"]+)"/) ; const w = +(svg.match(/<svg[^>]*\swidth="(\d+)/)||[])[1] || 1200, h = +(svg.match(/<svg[^>]*\sheight="(\d+)/)||[])[1] || 800
     const K = 2 // CSS scale-up of the SVG (no viewBox in tscircuit output)

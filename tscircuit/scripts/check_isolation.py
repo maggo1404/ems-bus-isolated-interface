@@ -122,8 +122,13 @@ for t in traces.values():
                 g = LineString([(a["x"], a["y"]), (b["x"], b["y"])]).buffer(w / 2)
             add(side, [a["layer"]], g, "trace")
 for v in (p for p in cj if p["type"] == "pcb_via"):
-    t = traces.get(v["pcb_trace_id"])
-    side = trace_side(t) if t else ("EMS" if v["x"] < 0 else "MCU")
+    t = traces.get(v.get("pcb_trace_id"))
+    if t:
+        side = trace_side(t)
+    elif v.get("source_net_id") and c.root_of_net(v["source_net_id"]) is not None:
+        side = side_of_root(c.root_of_net(v["source_net_id"]))
+    else:
+        side = "EMS" if v["x"] < 0 else "MCU"
     add(side, ["top", "bottom"], Point(v["x"], v["y"]).buffer(v["outer_diameter"] / 2), "via")
 for p in (p for p in cj if p["type"] == "pcb_copper_pour"):
     r = c.root_of_net(p["source_net_id"])
@@ -179,9 +184,15 @@ for s in ("EMS", "MCU"):
         print("     pour %s %-6s x-range [%.2f, %.2f]" % (s, layer, b[0], b[2]))
 # antenna keepout
 for k in (p for p in cj if p["type"] == "pcb_keepout"):
-    kg = box(k["center"]["x"] - k["width"] / 2, k["center"]["y"] - k["height"] / 2, k["center"]["x"] + k["width"] / 2, k["center"]["y"] + k["height"] / 2)
-    inside = [(s, l, tg) for s, l, g, tg in items if g.intersects(kg) and l in k["layers"]]
-    print("%s copper in keepout (%.1f x %.1f at %.1f,%.1f): %d %s" % ("OK  " if not inside else "FAIL", k["width"], k["height"], k["center"]["x"], k["center"]["y"], len(inside), sorted({i[2] for i in inside})))
+    if k["shape"] == "circle":
+        kg = Point(k["center"]["x"], k["center"]["y"]).buffer(k["radius"])
+        dims = "r%.1f" % k["radius"]
+    else:
+        kg = box(k["center"]["x"] - k["width"] / 2, k["center"]["y"] - k["height"] / 2, k["center"]["x"] + k["width"] / 2, k["center"]["y"] + k["height"] / 2)
+        dims = "%.1f x %.1f" % (k["width"], k["height"])
+    # pours are polygonised (faceted circles): ignore intersections shallower than 0.1 mm
+    inside = [(s, l, tg) for s, l, g, tg in items if l in k["layers"] and g.intersects(kg.buffer(-0.1) if tg == "pour" else kg) and not (k.get("pcb_component_id") and tg == "pad" and False)]
+    print("%s copper in keepout (%s at %.1f,%.1f): %d %s" % ("OK  " if not inside else "FAIL", dims, k["center"]["x"], k["center"]["y"], len(inside), sorted({i[2] for i in inside})))
     ok &= not inside
 # mounting holes vs other side copper (>= 6 mm)
 for h in (p for p in cj if p["type"] == "pcb_hole" and p.get("hole_diameter", 0) > 3):

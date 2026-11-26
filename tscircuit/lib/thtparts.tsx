@@ -11,7 +11,10 @@ export const Mstba2 = (props: Partial<ChipProps> & { name: string }) => (
       <footprint>
         <platedhole portHints={["pin1"]} shape="circle" holeDiameter="1.8mm" outerDiameter="2.5mm" pcbX={-2.54} pcbY={0} />
         <platedhole portHints={["pin2"]} shape="circle" holeDiameter="1.8mm" outerDiameter="2.5mm" pcbX={2.54} pcbY={0} />
-        <silkscreenpath route={[{ x: -5.0, y: 4.6 }, { x: 5.0, y: 4.6 }, { x: 5.0, y: -4.6 }, { x: -5.0, y: -4.6 }, { x: -5.0, y: 4.6 }]} />
+        {/* right-angle body (EasyEDA C441236): x +-5.88, y -10.9 ... +1.3 about the pin axis; wire opening / plug face at local -Y
+            (the board edge when placed with pcbRotation 270 at x = edge + 10.9) */}
+        <silkscreenpath route={[{ x: -5.88, y: 1.3 }, { x: 5.88, y: 1.3 }, { x: 5.88, y: -10.9 }, { x: -5.88, y: -10.9 }, { x: -5.88, y: 1.3 }]} />
+        <silkscreentext text="EMS BUS" pcbX={0} pcbY={-5.5} fontSize="1.0mm" />
       </footprint>
     }
     {...(props as any)}

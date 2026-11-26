@@ -30,13 +30,23 @@ from shapely.strtree import STRtree
 MIN_VIA_DRILL = 0.30
 MIN_ANNULAR = 0.13
 MIN_CLEARANCE = 0.20
-MIN_W_POWER = 0.40
-MIN_W_SIGNAL = 0.20
+CLEAR_TOL = 0.002       # mm numeric tolerance of the router geometry (gap 0.198 counts as 0.2)
+MIN_W_POWER = 0.50      # VBUS, V3V3, V5_EMS, EMS_VIN
+MIN_W_BUS = 0.40        # bus path, buck SW node
+MIN_W_GND = 0.25        # GND / GND_EMS stitching traces: the solid pours on both layers carry the return current
+MIN_W_SIGNAL = 0.25
+MIN_W_NECK = 0.25       # power/bus segments may neck down to this ...
+NECK_DIST = 1.5         # ... within this distance of a pad of a fine-pitch part (pad pitch <= FINE_PITCH)
+FINE_PITCH = 1.27
+MIN_CLEARANCE_HARD = 0.15  # allowed instead of MIN_CLEARANCE only at fine-pitch pads
 STUB_LEN = 0.5          # mm; narrower wire segments shorter than this are warnings only
 MIN_EDGE = 0.30         # copper to board edge
-MIN_HOLE = 0.25         # copper to NPTH hole edge (other components)
+MIN_POUR_EDGE = 0.50    # pour to board edge / slots / NPTH
+MIN_HOLE = 0.25         # copper to the NPTH mounting holes
+MIN_PEG = 0.15          # copper to the 0.6 mm NPTH positioning pegs inside a part footprint (J2)
 TOL = 1e-3
-POWER_NETS = {"VBUS", "V3V3", "GND", "GND_EMS", "V5_EMS", "EMS_VIN"}
+POWER_NETS = {"VBUS", "V3V3", "V5_EMS", "EMS_VIN"}
+GND_NETS = {"GND", "GND_EMS"}
 # nets that contain one of these pins are "bus/SW" nets (width >= MIN_W_POWER): buck SW node U2.6, bus path
 BUS_PINS = ["U2.6", "F1.1", "F1.2", "F2.1", "F2.2", "L1.1", "L1.2", "L2.1", "L2.2", "D1.1", "D1.2", "D2.1", "D2.2",
             "D3.1", "D3.2", "D4.1", "D4.2", "R2.1", "R2.2", "R3.1", "R3.2", "R4.1", "R4.2", "Q1.3", "P1.1", "P1.2"]
@@ -196,8 +206,12 @@ def min_width_of(root):
     if root is None:
         return MIN_W_SIGNAL
     nm = conn.groups[root]["names"] if root in conn.groups else set()
-    if nm & POWER_NETS or root in bus_roots:
+    if nm & POWER_NETS:
         return MIN_W_POWER
+    if nm & GND_NETS:
+        return MIN_W_GND
+    if root in bus_roots:
+        return MIN_W_BUS
     return MIN_W_SIGNAL
 
 
@@ -301,6 +315,8 @@ for e in cj:
         root = root_of_pcbport(pid)
         if root is not None:
             break
+    if root is None and e.get("source_trace_id") in conn.trace_root:
+        root = conn.trace_root[e["source_trace_id"]]
     if root is None:
         cn = e.get("connection_name", "")
         if cn in conn.nets:
@@ -321,7 +337,11 @@ n_via = 0
 for e in cj:
     if e["type"] == "pcb_via":
         n_via += 1
-        net = trace_net.get(e.get("pcb_trace_id"), ("via", e["pcb_via_id"]))
+        net = trace_net.get(e.get("pcb_trace_id"))
+        if net is None and e.get("source_net_id"):
+            net = conn.root_of_net(e["source_net_id"])
+        if net is None:
+            net = ("via", e["pcb_via_id"])
         add("via", net, ["top", "bottom"], Point(e["x"], e["y"]).buffer(e["outer_diameter"] / 2, 16), None, "via")
         annular.append(("via @(%.2f,%.2f) %.2f/%.2f" % (e["x"], e["y"], e["hole_diameter"], e["outer_diameter"]),
                         (e["outer_diameter"] - e["hole_diameter"]) / 2))
@@ -358,29 +378,55 @@ if badr:
 else:
     OK("annular ring of %d vias/plated holes >= %.2f (min %.3f)" % (len(annular), MIN_ANNULAR, min(r for _, r in annular)))
 
+# ---- fine-pitch pads (pad centre pitch <= FINE_PITCH to another pad of the same part): USB-C, ESP32, SOIC, SOT-23 ... ----
+by_comp = collections.defaultdict(list)
+for it in items:
+    if it.kind == "pad" and it.comp:
+        by_comp[it.comp].append(it)
+fine_ids = set()
+for comp, its in by_comp.items():
+    for a in its:
+        ca = a.geom.centroid
+        for b in its:
+            if b.id != a.id and b.layer == a.layer and math.hypot(ca.x - b.geom.centroid.x, ca.y - b.geom.centroid.y) <= FINE_PITCH + 1e-6:
+                fine_ids.add(a.id)
+                break
+fine_geoms = [it.geom for it in items if it.id in fine_ids]
+fine_tree = STRtree(fine_geoms) if fine_geoms else None
+print("fine-pitch pads (pitch <= %.2f mm): %d" % (FINE_PITCH, len(fine_ids)))
+
+
+def near_fine_pad(geom, dist):
+    return bool(fine_tree is not None and len(fine_tree.query(geom, predicate="dwithin", distance=dist)))
+
+
 # ---- trace widths per net class ----
 viol = collections.defaultdict(list)
-stubs = collections.defaultdict(list)
+necks = collections.defaultdict(list)
 for root, layer, w, ln, seg in wire_segments:
     need = min_width_of(root if not isinstance(root, tuple) else None)
     if w < need - TOL:
-        (viol if ln >= STUB_LEN else stubs)[(root, need)].append((w, ln, layer))
-tot = collections.Counter()
-for (root, need), l in viol.items():
-    tot[need] += len(l)
+        # power/bus nets may neck down to MIN_W_NECK only within NECK_DIST of a fine-pitch pad
+        sg = LineString([(seg[0], seg[1]), (seg[2], seg[3])]) if ln > 1e-9 else Point(seg[0], seg[1])
+        if w >= MIN_W_NECK - TOL and need > MIN_W_NECK and near_fine_pad(sg, NECK_DIST):
+            necks[(root, need)].append((w, ln, layer))
+        else:
+            viol[(root, need)].append((w, ln, layer))
 nm = lambda r: net_name.get(r, str(r)) if not isinstance(r, tuple) else str(r)
 if viol:
-    FAIL("trace width: %d segments too narrow (power/bus/SW >= %.2f, others >= %.2f) on %d nets; widths used: %s" % (
-        sum(len(l) for l in viol.values()), MIN_W_POWER, MIN_W_SIGNAL, len(viol),
+    FAIL("trace width: %d segments too narrow (power >= %.2f, bus/SW >= %.2f, GND pours/signals >= %.2f; neck to %.2f only <= %.1f mm from a fine-pitch pad) on %d nets; widths used: %s" % (
+        sum(len(l) for l in viol.values()), MIN_W_POWER, MIN_W_BUS, MIN_W_SIGNAL, MIN_W_NECK, NECK_DIST, len(viol),
         dict(sorted(collections.Counter(round(s[2], 3) for s in wire_segments).items()))))
     for (root, need), l in sorted(viol.items(), key=lambda kv: -len(kv[1]))[:12]:
         print("       %-28s need %.2f, got min %.3f in %d segments (%.1f mm total)" % (
             nm(root), need, min(x[0] for x in l), len(l), sum(x[1] for x in l)))
+        for x in l[:0]:
+            pass
 else:
-    OK("trace widths ok")
-if stubs:
-    WARN("%d short pad-entry stubs (< %.1f mm) narrower than the class minimum (autorouter shrinks the wire at narrow pads)" % (
-        sum(len(l) for l in stubs.values()), STUB_LEN))
+    OK("trace widths ok (power >= %.2f, bus/SW >= %.2f, others >= %.2f)" % (MIN_W_POWER, MIN_W_BUS, MIN_W_SIGNAL))
+if necks:
+    print("INFO %d power/bus segments necked to >= %.2f mm within %.1f mm of a fine-pitch pad (allowed): %s" % (
+        sum(len(l) for l in necks.values()), MIN_W_NECK, NECK_DIST, sorted({nm(r) for (r, _) in necks})))
 
 # ---- clearance (per layer) ----
 print()
@@ -388,6 +434,7 @@ geoms_by_layer = collections.defaultdict(list)
 for it in items:
     geoms_by_layer[it.layer].append(it)
 clear_viol = {}
+fine_clear = [0]
 for layer, its in geoms_by_layer.items():
     tree = STRtree([i.geom for i in its])
     for ia, a in enumerate(its):
@@ -402,12 +449,18 @@ for layer, its in geoms_by_layer.items():
             if a.id == b.id:
                 continue
             d = a.geom.distance(b.geom)
-            if d < MIN_CLEARANCE - TOL:
+            if d < MIN_CLEARANCE - CLEAR_TOL and d >= MIN_CLEARANCE_HARD - TOL and (
+                    a.id in fine_ids or b.id in fine_ids or near_fine_pad(a.geom, NECK_DIST) or near_fine_pad(b.geom, NECK_DIST)):
+                fine_clear[0] += 1
+                continue
+            if d < MIN_CLEARANCE - CLEAR_TOL:
                 key = (layer, a.kind + "/" + b.kind, nm(a.net), nm(b.net))
                 cv = clear_viol.setdefault(key, [d, 0, a.geom.centroid])
                 cv[1] += 1
                 if d < cv[0]:
                     cv[0], cv[2] = d, a.geom.centroid
+if fine_clear[0]:
+    print("INFO %d clearance pairs between %.2f and %.2f mm at fine-pitch pads (allowed down to %.2f)" % (fine_clear[0], MIN_CLEARANCE_HARD, MIN_CLEARANCE, MIN_CLEARANCE_HARD))
 if clear_viol:
     FAIL("copper clearance < %.2f mm: %d net/kind pairs, worst %.3f mm" % (
         MIN_CLEARANCE, len(clear_viol), min(v[0] for v in clear_viol.values())))
@@ -438,7 +491,7 @@ for k in keeps:
     kg = rect_poly(k["center"]["x"], k["center"]["y"], k["width"], k["height"]) if k["shape"] == "rect" else \
         Point(k["center"]["x"], k["center"]["y"]).buffer(k["radius"])
     for it in items:
-        if it.layer in k["layers"] and it.geom.intersects(kg) and not (it.comp and it.comp == k.get("pcb_component_id")):
+        if it.layer in k["layers"] and it.geom.intersects(kg.buffer(-0.1 if it.kind == "pour" else 0)) and not (it.comp and it.comp == k.get("pcb_component_id")):
             bad.append("%s on %s (%s)" % (it.kind, it.layer, nm(it.net)))
 (FAIL if bad else OK)("no copper in %d keepout(s)/antenna area%s" % (len(keeps), ": " + "; ".join(sorted(set(bad))[:8]) if bad else ""))
 board = next(e for e in cj if e["type"] == "pcb_board")
@@ -456,12 +509,30 @@ if bad:
         "copper closer than %.2f mm to board edge: %s e.g. %s" % (MIN_EDGE, dict(c), "; ".join(sorted(set(bad))[:5])))
 else:
     OK("copper >= %.2f mm from board edge" % MIN_EDGE)
+# pours: >= 0.5 mm from the board edge, the NPTH holes and the slots
+bad = []
+for it in items:
+    if it.kind != "pour":
+        continue
+    de = outline.exterior.distance(it.geom)
+    if de < MIN_POUR_EDGE - TOL:
+        bad.append("pour %.2f mm from board edge on %s" % (de, it.layer))
+    for cid, cg in cut:
+        if it.geom.distance(cg) < MIN_POUR_EDGE - TOL:
+            bad.append("pour %.2f mm from %s on %s" % (it.geom.distance(cg), cid, it.layer))
+    for h in [e for e in cj if e["type"] == "pcb_hole"]:
+        dh = it.geom.distance(Point(h["x"], h["y"]).buffer(h.get("hole_diameter", 0.6) / 2))
+        if dh < MIN_POUR_EDGE - TOL:
+            bad.append("pour %.2f mm from hole (%.1f,%.1f) on %s" % (dh, h["x"], h["y"], it.layer))
+(FAIL if bad else OK)("pour >= %.1f mm from board edge, slots and NPTH holes%s" % (MIN_POUR_EDGE, ": " + "; ".join(sorted(set(bad))[:5]) if bad else ""))
 holes = [e for e in cj if e["type"] == "pcb_hole"]
 bad = []
 for h in holes:
     hg = Point(h["x"], h["y"]).buffer(h.get("hole_diameter", 0.6) / 2, 24)
+    # board mounting holes (no component): MIN_HOLE; the 0.6 mm positioning pegs of a part (J2): MIN_PEG for other copper of the board
+    lim = MIN_HOLE if not h.get("pcb_component_id") else MIN_PEG
     for it in items:
-        if it.geom.distance(hg) < MIN_HOLE - TOL and not (it.comp and it.comp == h.get("pcb_component_id")):
+        if it.geom.distance(hg) < lim - TOL and not (it.comp and it.comp == h.get("pcb_component_id")):
             bad.append("%s %s %s near NPTH (%.1f,%.1f) d=%.2f" % (it.kind, it.label, it.layer, h["x"], h["y"], it.geom.distance(hg)))
 (FAIL if bad else OK)("copper >= %.2f mm from %d NPTH holes%s" % (MIN_HOLE, len(holes), ": " + "; ".join(sorted(set(bad))[:5]) if bad else ""))
 

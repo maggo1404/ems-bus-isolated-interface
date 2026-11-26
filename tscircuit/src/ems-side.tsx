@@ -52,14 +52,14 @@ const NETS: Record<string, string[]> = {
 // Placement: V1 board coordinates (docs/netlist_v1.md "Layout V1") mapped to the
 // V2 board (centre 0,0, Y up): OC at x = 0, x stretched 0.95, y stretched 1.35.
 // ---------------------------------------------------------------------------
-const tx = (x: number) => +((x - 1.4) * 0.95 - 50.7).toFixed(2)
+const tx = (x: number) => +((x - 7.62) * 0.88 - 40.5).toFixed(2)
 const ty = (y: number) => +((y - 16.83) * 1.35).toFixed(2)
 const sch = (v: number) => +(v * 0.3).toFixed(2)
 
 type P = { x: number; y: number; r?: number }
 // V1 (x, y, rot) per ref
 const V1: Record<string, P> = {
-  L1: { x: 10.79, y: 20.0, r: 90 }, L2: { x: 10.79, y: 12.38, r: 90 },
+  L1: { x: 10.79, y: 20.0, r: 270 }, L2: { x: 10.79, y: 12.38, r: 270 },
   C1: { x: 14.76, y: 9.54, r: 90 },
   D1: { x: 16.51, y: 5.71, r: 180 }, D2: { x: 16.51, y: 1.91 }, D3: { x: 16.51, y: 13.34, r: 180 }, D4: { x: 16.51, y: 17.14 },
   D5: { x: 21.59, y: 3.81, r: 90 },
@@ -76,26 +76,34 @@ const V1: Record<string, P> = {
   L3: { x: 26.99, y: 27.62 }, LD1: { x: 46.67, y: 30.8 }, C12: { x: 14.61, y: 27.62, r: 90 },
   C8: { x: 43.0, y: 26.35 }, C13: { x: 47.62, y: 3.17, r: 90 },
 }
+// layout overrides (enclosure layout, FIX_LIST #22/#10): absolute board coordinates
+const OVR: Record<string, P> = {
+  C12: { x: -32.5, y: 22.5, r: 90 }, C14: { x: -13.5, y: -24.3, r: 0 }, C11: { x: -25.0, y: 19.0, r: 90 }, C1: { x: -28.0, y: -10.5, r: 90 }, C10: { x: -13.4, y: 14.2, r: 90 },
+  C13: { x: -7.0, y: -8.3, r: 90 }, LD1: { x: -8, y: 24, r: 0 }, R17: { x: -14, y: 24, r: 0 },
+}
 const pos = (ref: string) => {
+  const o = OVR[ref]
   const p = V1[ref]
-  return { pcbX: tx(p.x), pcbY: ty(p.y), pcbRotation: p.r ?? 0, schX: sch(tx(p.x)), schY: sch(ty(p.y)) }
+  const x = o ? o.x : tx(p.x), y = o ? o.y : ty(p.y), r = o ? o.r ?? 0 : p.r ?? 0
+  return { pcbX: x, pcbY: y, pcbRotation: r, schX: sch(x), schY: sch(y) }
 }
 
 // MCU-side opto helpers (x in [6, 18]); explicit absolute coordinates
 const MCU_POS: Record<string, { pcbX: number; pcbY: number; pcbRotation: number }> = {
-  C7: { pcbX: 9, pcbY: 15.5, pcbRotation: 90 },
-  R13: { pcbX: 13, pcbY: 15.5, pcbRotation: 90 },
-  R18: { pcbX: 17, pcbY: 15.5, pcbRotation: 90 },
-  LD3: { pcbX: 17, pcbY: 19.5, pcbRotation: 90 },
-  R14: { pcbX: 9, pcbY: -15.5, pcbRotation: 90 },
-  R19: { pcbX: 13, pcbY: -15.5, pcbRotation: 90 },
-  LD2: { pcbX: 13, pcbY: -19.5, pcbRotation: 90 },
+  C7: { pcbX: 8.5, pcbY: 8.0, pcbRotation: 90 },
+  R13: { pcbX: 12.5, pcbY: 8.2, pcbRotation: 90 },
+  R18: { pcbX: 16.0, pcbY: 8.2, pcbRotation: 90 },
+  LD3: { pcbX: 16.0, pcbY: 13.6, pcbRotation: 90 },
+  R14: { pcbX: 9.0, pcbY: -9.5, pcbRotation: 90 },
+  R19: { pcbX: 12.5, pcbY: -9.5, pcbRotation: 90 },
+  LD2: { pcbX: 12.5, pcbY: -13.8, pcbRotation: 90 },
 }
 const mpos = (ref: string) => {
   const p = MCU_POS[ref]
   return { ...p, schX: sch(p.pcbX) + 8, schY: sch(p.pcbY) }
 }
 
+const GND_VIAS: [number, number][] = [[-19.0, 10.0], [-12.6, 16.6], [-27.4, 22.4], [-12.4, 1.2], [-10.6, 6.7]]
 const J = (...c: string[]) => ({ jlcpcb: c })
 
 const Res = (ref: string, v: string, lcsc?: string, fp: any = "0805") => (
@@ -122,10 +130,10 @@ const selector = (pin: string) => {
 export const EmsSide = () => (
   <group name="ems" pcbX={0} pcbY={0}>
     {/* ---- bus terminal, fuses, input filter (L1/L2), bridge D1-D4, clamp D5 ---- */}
-    <Mstba2 name="P1" pcbX={-51} pcbY={0} pcbRotation={90} schX={-12} schY={0} />
+    <Mstba2 name="P1" pcbX={-44.1} pcbY={0} pcbRotation={270} schX={-12} schY={0} />
     {/* fuses: 2-pad 0805 chips, pad1 = bus side, pad2 = inductor side */}
     <chip name="F1" footprint="0805" pcbX={tx(7.62)} pcbY={ty(19.37)} pcbRotation={90} schX={-9} schY={3} manufacturerPartNumber="BSMD0805-050-24V" supplierPartNumbers={J("C910822")} />
-    <chip name="F2" footprint="0805" pcbX={tx(7.62)} pcbY={ty(14.29)} pcbRotation={90} schX={-9} schY={-3} manufacturerPartNumber="BSMD0805-050-24V" supplierPartNumbers={J("C910822")} />
+    <chip name="F2" footprint="0805" pcbX={tx(7.62)} pcbY={ty(14.29)} pcbRotation={270} schX={-9} schY={-3} manufacturerPartNumber="BSMD0805-050-24V" supplierPartNumbers={J("C910822")} />
     <Inductor3225 name="L1" {...pos("L1")} />
     <Inductor3225 name="L2" {...pos("L2")} />
     {Cap("C1", "68pF", "C107120")}
@@ -136,8 +144,8 @@ export const EmsSide = () => (
     {Dio("D5", "BAT42W", "C22466362")}
     {Dio("D7", "B5819W", "C8598")}
     {/* C12 + C14: 2 x 1000 uF/25 V SMD electrolytic in parallel (replaces the V1 2200 uF), rotated 90 deg */}
-    <CapE5_10p5 name="C12" pcbX={-47} pcbY={18.2} pcbRotation={90} schX={sch(-47)} schY={sch(18.2)} />
-    <CapE5_10p5 name="C14" pcbX={-36} pcbY={18.2} pcbRotation={90} schX={sch(-36)} schY={sch(18.2) + 3} />
+    <CapE5_10p5 name="C12" {...pos("C12")} />
+    <CapE5_10p5 name="C14" {...pos("C14")} schY={sch(-24.3) + 3} />
     {Cap("C10", "10uF", "C15850")}
 
     {/* ---- RX comparator (U1A) and TX comparator (U1B), Q1 bus load ---- */}
@@ -222,6 +230,28 @@ export const EmsSide = () => (
     <resistor name="R19" resistance="1.2k" footprint="0805" supplierPartNumbers={J("C17379")} {...mpos("R19")} />
     <LedGreen name="LD2" {...mpos("LD2")} />
     <LedGreen name="LD3" {...mpos("LD3")} />
+
+    {/* GND_EMS stitching vias next to the buck / feedback pads: the router connects the pad to the via, the via drops into the
+        bottom GND_EMS pour (keeps the congested bus/buck area routable, FIX_LIST #10) */}
+    {GND_VIAS.map(([x, y], i) => (
+      <via key={`gv${i}`} name={`VG${i}`} pcbX={x} pcbY={y} fromLayer="top" toLayer="bottom" holeDiameter="0.3mm" outerDiameter="0.6mm" connectsTo="net.GND_EMS" />
+    ))}
+
+    {/* bridge rectifier: hand-routed 0.4 mm runs (FIX_LIST #8; the autorouter necks branches of multi-pin nets to 0.25 mm).
+        pcbPath points are in the frame of the `from` part (D4/D2 are unrotated, centre x = -32.68):
+        N4 = D4.K - D3.A - C1.2, N3 = D2.K - D1.A - C1.1 (right column x = -31.03), N6 = D3.K - D1.K (left column x = -34.33) */}
+    <trace from="D4.pin2" to="C1.pin2" thickness="0.4mm" pcbPath={["D3.pin1", { x: 1.65, y: -10.01 }]} />
+    <trace from="D2.pin2" to="C1.pin1" thickness="0.4mm" pcbPath={["D1.pin1", { x: 1.65, y: 8.73 }]} />
+    <trace from="D3.pin2" to="D1.pin2" thickness="0.4mm" pcbPath={["D3.pin2"]} />
+    <trace from="L1.pin2" to="D4.pin2" thickness="0.4mm" pcbPath={[{ x: 1.4, y: 5.31 }, { x: 3.86, y: 5.31 }]} />
+    {/* N6 (rectified bus +): R1.1 - R2.1 and D7.K - R2.1;  N13 (Q1 collector): R4.2 - C4.2 - Q1.C (frame of R4: rot 90, centre -21.5/3.0);
+        N26 (buck switch node): C9.2 - L3.2 - U2.SW */}
+    <trace from="R1.pin1" to="R2.pin1" thickness="0.4mm" pcbPath={["R1.pin1"]} />
+    <trace from="D7.pin2" to="R2.pin1" thickness="0.4mm" pcbPath={[{ x: 1.65, y: -1.41 }, { x: 3.88, y: -2.11 }]} />
+    <trace from="R4.pin2" to="Q1.pin3" thickness="0.4mm"
+      pcbPath={[{ x: 3.0, y: -0.7 }, { x: 3.0, y: -12.69 }, "C4.pin2", { x: 0, y: -12.69 }, { x: -0.6, y: -11.87 }]} />
+    <trace from="C9.pin2" to="L3.pin2" thickness="0.4mm" pcbPath={["C9.pin2"]} />
+    <trace from="U2.pin6" to="L3.pin2" thickness="0.4mm" pcbPath={[{ x: 1.3, y: 2.28 }, { x: -4.97, y: 2.28 }]} />
 
     {/* ---- connectivity (V1 netlist) ---- */}
     {Object.entries(NETS).flatMap(([net, pins]) =>

@@ -13,7 +13,7 @@ npx tsci build index.circuit.tsx --svgs --ignore-placement-drc --autorouter-time
 echo "== 2/5 gerbers from dist/index/circuit.json"
 npx tsci export dist/index/circuit.json -f gerbers -o "$PWD/$ZIP"
 echo "== 3/5 BOM / CPL (JLCPCB format)"
-python3 scripts/jlc_bom_cpl.py "$ZIP" fab/EMSinterface_V2.0
+python3 scripts/jlc_bom_cpl.py "$ZIP" fab/EMSinterface_V2.0 dist/index/circuit.json
 echo "== 4/5 netlist check"
 python3 scripts/check_netlist.py dist/index/circuit.json
 echo "== 5/5 fab check (traces/vias/widths/clearance/keepouts/USB-C)"
