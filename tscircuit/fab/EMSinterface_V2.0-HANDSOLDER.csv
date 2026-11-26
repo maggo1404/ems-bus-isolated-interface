@@ -1,0 +1,2 @@
+Designator,Part,LCSC Part #,Reason
+U3,ESP32-S3-WROOM-1-N16R8,C2913202,"DNP: JLC PCBA type ""Standard Only"" (not assemblable with Economic PCBA); order the part separately and hand-solder (footprint: extended pads, EPAD holes, no paste)"

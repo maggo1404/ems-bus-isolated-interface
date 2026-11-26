@@ -1,0 +1,1 @@
+Source: https://github.com/tscircuit/skill @ a1c8ef7 (MIT). Update: npx skills add tscircuit/skill

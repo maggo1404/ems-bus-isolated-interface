@@ -1,0 +1,92 @@
+{
+ "bottom": {
+  "size": [
+   126.0,
+   80.8,
+   24.1
+  ],
+  "watertight": true,
+  "winding": true,
+  "volume_cm3": 31.74,
+  "manifold_status": "Error.NoError",
+  "euler": -10
+ },
+ "lid": {
+  "size": [
+   126.0,
+   64.8,
+   18.8
+  ],
+  "watertight": true,
+  "winding": true,
+  "volume_cm3": 25.05,
+  "manifold_status": "Error.NoError",
+  "euler": -24
+ },
+ "light_pipes": {
+  "size": [
+   36.4,
+   4.4,
+   17.6
+  ],
+  "watertight": true,
+  "winding": true,
+  "volume_cm3": 0.61,
+  "manifold_status": "Error.NoError",
+  "euler": 10
+ },
+ "buttons": {
+  "size": [
+   13.0,
+   5.0,
+   18.7
+  ],
+  "watertight": true,
+  "winding": true,
+  "volume_cm3": 0.16,
+  "manifold_status": "Error.NoError",
+  "euler": 4
+ },
+ "collisions_mm3": {
+  "Unterteil x Platine+Bauteile": -0.0,
+  "Deckel x Platine+Bauteile": 0.0,
+  "Unterteil x Deckel": -0.0,
+  "Unterteil x P1-Stecker": 0.0,
+  "Deckel x P1-Stecker": 0.0,
+  "Lichtleiter x Platine": 0.0,
+  "Lichtleiter x Deckel": -0.0,
+  "Lichtleiter x Unterteil": 0.0,
+  "Stoessel x Deckel": 0.0,
+  "Stoessel x Platine": 0.0,
+  "Schrauben x Platine": 0.0,
+  "Schrauben x Deckel": -0.0,
+  "Schrauben x Unterteil (Kernloch/Einsatz, nur Info)": 0.0
+ },
+ "gaps": {
+  "Unterteil (ohne Posten)<->Platine inkl. THT-Beinchen (mm)": 0.3,
+  "Deckel (ohne Huelsen)<->Bauteile (mm)": 0.4,
+  "Posten/Huelsen<->Platine (Auflage/Klemmung, mm)": 0.0,
+  "Deckel<->hoechstes Bauteil C12/C14 (mm)": 3.5,
+  "Deckel<->P1-Stecker (mm)": 1.5,
+  "Unterteil (ohne Posten)<->nackte Platine (mm)": 0.3
+ },
+ "dims": {
+  "outer_xyz": [
+   126.0,
+   64.8,
+   26.9
+  ],
+  "inner_cavity": [
+   122.8,
+   60.8
+  ],
+  "z": {
+   "pcb_bottom": 6.5,
+   "pcb_top": 8.1,
+   "lid_underside": 24.1,
+   "lid_top": 26.900000000000002
+  },
+  "rod_length": 17.6,
+  "usb_centre_z": 9.73
+ }
+}
