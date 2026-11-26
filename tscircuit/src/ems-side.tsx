@@ -2,6 +2,7 @@
 // Contains everything of V1 except P2, incl. OC1/OC2 and the MCU-side opto helpers
 // (R13, R14, R18, R19, LD2, LD3, C7).  Net names follow docs/DESIGN_SPEC.md.
 import { Opto6N137, Opto6N136 } from "../lib/opto_so8_gw300"
+import { DiodeKA, DiodeAK, LedRed, LedGreen } from "../lib/diodes"
 import { Mstba2, CapE5_10p5, Inductor3225, Inductor0520, Res2010Footprint } from "../lib/thtparts"
 
 // ---------------------------------------------------------------------------
@@ -102,47 +103,48 @@ const Res = (ref: string, v: string, lcsc?: string, fp: any = "0805") => (
 const Cap = (ref: string, v: string, lcsc?: string, fp: any = "0805") => (
   <capacitor name={ref} capacitance={v} footprint={fp} {...pos(ref)} {...(lcsc ? { supplierPartNumbers: J(lcsc) } : {})} />
 )
-// diodes: SOD-123 / 0805 LED physical convention: pad 1 = CATHODE (C), pad 2 = ANODE (A)
-// (matches JLC part data; tscircuit <diode>/<led> would map pin1 = anode, so chips are used)
-const DiodeChip = (p: any) => (
-  <chip pinLabels={{ pin1: ["K"], pin2: ["A"] }} schPinArrangement={{ leftSide: { direction: "top-to-bottom", pins: ["A"] }, rightSide: { direction: "top-to-bottom", pins: ["K"] } }} {...p} />
-)
-const Dio = (ref: string, mpn: string, lcsc?: string) => (
-  <DiodeChip name={ref} footprint="sod123" manufacturerPartNumber={mpn} {...pos(ref)} {...(lcsc ? { supplierPartNumbers: J(lcsc) } : {})} />
-)
+// Diodes: D1-D5 BAT42W (JLC pad 1 = ANODE), D6/D7 pad 1 = cathode; LD1 red pad 1 = K, LD2/LD3 green pad 1 = A.
+// The NETS table keeps the V1 convention pad 1 = cathode, pad 2 = anode; the pads of the parts whose
+// JLC footprint is numbered the other way round are swapped in selector().
+const PAD_SWAP = new Set(["D1", "D2", "D3", "D4", "D5", "LD2", "LD3"])
+const Dio = (ref: string, mpn: string, lcsc: string) => {
+  const D = PAD_SWAP.has(ref) ? DiodeAK : DiodeKA
+  return <D name={ref} manufacturerPartNumber={mpn} supplierPartNumbers={J(lcsc)} {...pos(ref)} />
+}
 
 const selector = (pin: string) => {
-  const [ref, pad] = pin.split(".")
+  const [ref, pad0] = pin.split(".")
+  const pad = PAD_SWAP.has(ref) ? { "1": "2", "2": "1" }[pad0] : pad0
   return `.${ref} > .pin${pad}`
 }
 
 export const EmsSide = () => (
-  <group name="ems">
+  <group name="ems" pcbX={0} pcbY={0}>
     {/* ---- bus terminal, fuses, input filter (L1/L2), bridge D1-D4, clamp D5 ---- */}
-    <Mstba2 name="P1" pcbX={-50} pcbY={0} pcbRotation={90} schX={-12} schY={0} />
+    <Mstba2 name="P1" pcbX={-51} pcbY={0} pcbRotation={90} schX={-12} schY={0} />
     {/* fuses: 2-pad 0805 chips, pad1 = bus side, pad2 = inductor side */}
-    <chip name="F1" footprint="0805" pcbX={tx(7.62)} pcbY={ty(19.37)} pcbRotation={90} schX={-9} schY={3} manufacturerPartNumber="FUSE 0805" />
-    <chip name="F2" footprint="0805" pcbX={tx(7.62)} pcbY={ty(14.29)} pcbRotation={90} schX={-9} schY={-3} manufacturerPartNumber="FUSE 0805" />
+    <chip name="F1" footprint="0805" pcbX={tx(7.62)} pcbY={ty(19.37)} pcbRotation={90} schX={-9} schY={3} manufacturerPartNumber="BSMD0805-050-24V" supplierPartNumbers={J("C910822")} />
+    <chip name="F2" footprint="0805" pcbX={tx(7.62)} pcbY={ty(14.29)} pcbRotation={90} schX={-9} schY={-3} manufacturerPartNumber="BSMD0805-050-24V" supplierPartNumbers={J("C910822")} />
     <Inductor3225 name="L1" {...pos("L1")} />
     <Inductor3225 name="L2" {...pos("L2")} />
-    {Cap("C1", "68pF")}
-    {Dio("D1", "BAT42")}
-    {Dio("D2", "BAT42")}
-    {Dio("D3", "BAT42")}
-    {Dio("D4", "BAT42")}
-    {Dio("D5", "BAT42")}
+    {Cap("C1", "68pF", "C107120")}
+    {Dio("D1", "BAT42W", "C22466362")}
+    {Dio("D2", "BAT42W", "C22466362")}
+    {Dio("D3", "BAT42W", "C22466362")}
+    {Dio("D4", "BAT42W", "C22466362")}
+    {Dio("D5", "BAT42W", "C22466362")}
     {Dio("D7", "B5819W", "C8598")}
     <CapE5_10p5 name="C12" {...pos("C12")} />
     {Cap("C10", "10uF", "C15850")}
 
     {/* ---- RX comparator (U1A) and TX comparator (U1B), Q1 bus load ---- */}
     {Res("R1", "10k", "C17414")}
-    {Res("R2", "68", undefined, <Res2010Footprint />)}
-    {Res("R3", "68", undefined, <Res2010Footprint />)}
-    {Res("R4", "68", undefined, <Res2010Footprint />)}
+    {Res("R2", "68", "C53284030", <Res2010Footprint />)}
+    {Res("R3", "68", "C53284030", <Res2010Footprint />)}
+    {Res("R4", "68", "C53284030", <Res2010Footprint />)}
     {Cap("C2", "10uF", "C15850")}
     {Cap("C3", "1nF", "C46653")}
-    {Cap("C4", "1.5nF")}
+    {Cap("C4", "1.5nF", "C1717")}
     {Cap("C5", "10nF", "C1710")}
     {Cap("C6", "100nF", "C49678")}
     {Res("R5", "390", "C17655")}
@@ -183,6 +185,7 @@ export const EmsSide = () => (
       name="U2"
       footprint="sot23_6"
       manufacturerPartNumber="JW5017S"
+      supplierPartNumbers={J("C371172")}
       pinLabels={{ pin1: ["BST"], pin2: ["GND"], pin3: ["FB"], pin4: ["EN"], pin5: ["VIN"], pin6: ["SW"] }}
       schPinArrangement={{
         leftSide: { direction: "top-to-bottom", pins: ["VIN", "EN", "BST"] },
@@ -193,14 +196,14 @@ export const EmsSide = () => (
     />
     <Inductor0520 name="L3" {...pos("L3")} />
     {Res("R12", "6.8k", "C17772")}
-    {Res("R15", "1.3k")}
+    {Res("R15", "1.3k", "C17384")}
     {Res("R16", "100k", "C149504")}
     {Cap("C9", "100nF", "C49678")}
     {Cap("C11", "22uF", "C12891", "1206")}
     {Cap("C8", "100nF", "C49678")}
     {Cap("C13", "100nF", "C49678")}
     {Res("R17", "1.2k", "C17379")}
-    <DiodeChip name="LD1" footprint="0805" supplierPartNumbers={J("C84256")} {...pos("LD1")} />
+    <LedRed name="LD1" {...pos("LD1")} />
 
     {/* ---- optocouplers on the barrier (x = 0), slot/cutout is added in index.circuit.tsx ---- */}
     {/* OC1 6N137: pins 1-4 (LED, EMS) at x<0, pins 5-8 (MCU) at x>0 */}
@@ -211,11 +214,11 @@ export const EmsSide = () => (
     {/* ---- MCU-side opto helpers ---- */}
     <capacitor name="C7" capacitance="100nF" footprint="0805" supplierPartNumbers={J("C49678")} {...mpos("C7")} />
     <resistor name="R13" resistance="4.7k" footprint="0805" supplierPartNumbers={J("C17673")} {...mpos("R13")} />
-    <resistor name="R14" resistance="270" footprint="0805" supplierPartNumbers={J("C17697")} {...mpos("R14")} />
+    <resistor name="R14" resistance="270" footprint="0805" supplierPartNumbers={J("C17590")} {...mpos("R14")} />
     <resistor name="R18" resistance="1.2k" footprint="0805" supplierPartNumbers={J("C17379")} {...mpos("R18")} />
     <resistor name="R19" resistance="1.2k" footprint="0805" supplierPartNumbers={J("C17379")} {...mpos("R19")} />
-    <DiodeChip name="LD2" footprint="0805" {...mpos("LD2")} />
-    <DiodeChip name="LD3" footprint="0805" {...mpos("LD3")} />
+    <LedGreen name="LD2" {...mpos("LD2")} />
+    <LedGreen name="LD3" {...mpos("LD3")} />
 
     {/* ---- connectivity (V1 netlist) ---- */}
     {Object.entries(NETS).flatMap(([net, pins]) =>

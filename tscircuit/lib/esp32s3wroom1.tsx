@@ -3,7 +3,7 @@
 // 15-26 bottom (left->right), 27-40 right (bottom->top), 41 = GND thermal pad.
 // Local origin = module centre, antenna end at +Y (top). Land pattern follows
 // the datasheet/KiCad lib (0.9 x 1.5 mm pads, 1.27 mm pitch); EPAD position is
-// approximate: VERIFY against the datasheet "recommended PCB land pattern".
+// verified against EasyEDA C2913202 (docs/FOOTPRINT_CHECK.md): 3x3 EPAD at (-1.5,-2.47), bottom row y=-12.54.
 import type { ChipProps } from "tscircuit"
 
 export const ESP32S3_PINLABELS = {
@@ -32,21 +32,23 @@ export const Esp32S3Footprint = () => {
   for (let i = 0; i < 12; i++) {
     pads.push(
       <smtpad key={`b${i}`} portHints={[`pin${15 + i}`]} shape="rect" width="0.9mm" height="1.5mm"
-        pcbX={-6.985 + i * P} pcbY={-12.0} />,
+        pcbX={-6.985 + i * P} pcbY={-12.54} />,
     )
   }
   // right: pins 27..40 bottom->top
   for (let i = 0; i < 14; i++) {
     pads.push(
       <smtpad key={`r${i}`} portHints={[`pin${27 + i}`]} shape="rect" width="1.5mm" height="0.9mm"
-        pcbX={8.75} pcbY={-11.25 + i * P} />,
+        pcbX={8.75} pcbY={-11.26 + i * P} />,
     )
   }
   return (
     <footprint>
       {pads}
-      {/* thermal pad 3.9 x 3.9 (single pad; datasheet splits paste into 3x3) */}
-      <smtpad portHints={["pin41"]} shape="rect" width="3.9mm" height="3.9mm" pcbX={0} pcbY={-3.0} />
+      {/* EPAD (pin 41): 3x3 array of 0.9 x 0.9 pads, pitch 1.4, centred at (-1.5, -2.47) (EasyEDA C2913202) */}
+      {[-2.9, -1.5, -0.1].flatMap((x) => [-3.87, -2.47, -1.07].map((y) => (
+        <smtpad key={`e${x}_${y}`} portHints={["pin41"]} shape="rect" width="0.9mm" height="0.9mm" pcbX={x} pcbY={y} />
+      )))}
       {/* antenna keepout: no copper on any layer under/around antenna end */}
       <keepout shape="rect" width="18.6mm" height="7mm" pcbX={0} pcbY={9.25} layers={["top", "bottom"]} />
       <silkscreenpath route={[
