@@ -1,0 +1,2 @@
+Designator,Part,LCSC Part #,Reason
+DevKit1,"ESP32-S3-DevKitC-1-N16R8 (v1.1, 25.4 x 62.86 mm + antenna, headers pre-soldered, pins DOWN)",C20626143 (LCSC DevKit board; verify variant),"BUY SEPARATELY, plug into J1 (left row, GPIO5/17/3V3) and J3 (right row), USB end towards the bottom board edge, antenna beyond the top edge. Espressif ESP32-S3-DevKitC-1-N16R8; Reichelt/Mouser/DigiKey/Amazon also stock it (no verified Reichelt number). NOT in the JLC BOM/CPL"

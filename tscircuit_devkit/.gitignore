@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.tsci/
+.tscircuit/
+node_modules
+.tscircuit-build-history/
+.tscircuit-build-history/
+node_modules

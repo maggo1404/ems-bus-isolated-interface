@@ -1,0 +1,1039 @@
+{
+ "source": "EMSinterface_V1.0.sch (Eagle 7.7); schematic and .brd signals agree exactly",
+ "notes": [
+  "Pins use physical pad numbers; 6N136/6N137 pads 1,4 NC; OC2.7 (VB) unconnected; GND symbols GND1-3 and +5V symbols P+1..3 are not parts",
+  "U1 schematic value LMV393IDR (BOM says LM393); LM393 pads: 1 OUTA,2 IN-A,3 IN+A,4 GND,5 IN+B,6 IN-B,7 OUTB,8 VCC",
+  "Q1 SOT23: 1=B 2=E 3=C; U2 JW5017S: 1 BST,2 GND,3 FB,4 EN,5 VIN,6 SW",
+  "C12 pads are \"+\" and \"-\"; D diodes pads A/C; LEDs pads A/C; P2: 1=MCUVCC 2=MCUTX 3=MCURX 4=MCUGND; P1: 1,2 bus"
+ ],
+ "parts": [
+  {
+   "ref": "C1",
+   "value": "68p",
+   "bomValue": "68p",
+   "device": "C-EUC0805K",
+   "package": "C0805K",
+   "description": "CAPACITOR, European symbol"
+  },
+  {
+   "ref": "C2",
+   "value": "10u",
+   "bomValue": "10u",
+   "device": "C-EUC0805K",
+   "package": "C0805K",
+   "description": "CAPACITOR, European symbol"
+  },
+  {
+   "ref": "C3",
+   "value": "1n",
+   "bomValue": "1n",
+   "device": "C-EUC0805K",
+   "package": "C0805K",
+   "description": "CAPACITOR, European symbol"
+  },
+  {
+   "ref": "C4",
+   "value": "1n5",
+   "bomValue": "1n5",
+   "device": "C-EUC0805K",
+   "package": "C0805K",
+   "description": "CAPACITOR, European symbol"
+  },
+  {
+   "ref": "C5",
+   "value": "10n",
+   "bomValue": "10n",
+   "device": "C-EUC0805K",
+   "package": "C0805K",
+   "description": "CAPACITOR, European symbol"
+  },
+  {
+   "ref": "C6",
+   "value": "100n",
+   "bomValue": "100n",
+   "device": "C-EUC0805K",
+   "package": "C0805K",
+   "description": "CAPACITOR, European symbol"
+  },
+  {
+   "ref": "C7",
+   "value": "100n",
+   "bomValue": "100n",
+   "device": "C-EUC0805K",
+   "package": "C0805K",
+   "description": "CAPACITOR, European symbol"
+  },
+  {
+   "ref": "C8",
+   "value": "100n",
+   "bomValue": "100n",
+   "device": "C-EUC0805K",
+   "package": "C0805K",
+   "description": "CAPACITOR, European symbol"
+  },
+  {
+   "ref": "C9",
+   "value": "100n",
+   "bomValue": "100n",
+   "device": "C-EUC0805K",
+   "package": "C0805K",
+   "description": "CAPACITOR, European symbol"
+  },
+  {
+   "ref": "C10",
+   "value": "10u",
+   "bomValue": "10u",
+   "device": "C-EUC0805K",
+   "package": "C0805K",
+   "description": "CAPACITOR, European symbol"
+  },
+  {
+   "ref": "C11",
+   "value": "22u",
+   "bomValue": "22u",
+   "device": "C-EUC1206",
+   "package": "C1206",
+   "description": "CAPACITOR, European symbol"
+  },
+  {
+   "ref": "C12",
+   "value": "2200u/25V",
+   "bomValue": "2200u/25V",
+   "device": "CPOL-EUE5-10.5",
+   "package": "E5-10,5",
+   "description": "POLARIZED CAPACITOR, European symbol"
+  },
+  {
+   "ref": "C13",
+   "value": "100n",
+   "bomValue": "100n",
+   "device": "C-EUC0805K",
+   "package": "C0805K",
+   "description": "CAPACITOR, European symbol"
+  },
+  {
+   "ref": "D1",
+   "value": "BAT42",
+   "bomValue": "BAT42",
+   "device": "SCHOTTKYSOD123",
+   "package": "SOD123",
+   "description": "Schottky Power Rectifier"
+  },
+  {
+   "ref": "D2",
+   "value": "BAT42",
+   "bomValue": "BAT42",
+   "device": "SCHOTTKYSOD123",
+   "package": "SOD123",
+   "description": "Schottky Power Rectifier"
+  },
+  {
+   "ref": "D3",
+   "value": "BAT42",
+   "bomValue": "BAT42",
+   "device": "SCHOTTKYSOD123",
+   "package": "SOD123",
+   "description": "Schottky Power Rectifier"
+  },
+  {
+   "ref": "D4",
+   "value": "BAT42",
+   "bomValue": "BAT42",
+   "device": "SCHOTTKYSOD123",
+   "package": "SOD123",
+   "description": "Schottky Power Rectifier"
+  },
+  {
+   "ref": "D5",
+   "value": "BAT42",
+   "bomValue": "BAT42",
+   "device": "SCHOTTKYSOD123",
+   "package": "SOD123",
+   "description": "Schottky Power Rectifier"
+  },
+  {
+   "ref": "D6",
+   "value": "1N4148",
+   "bomValue": "1N4148",
+   "device": "1N4148",
+   "package": "SOD123",
+   "description": "DIODE"
+  },
+  {
+   "ref": "D7",
+   "value": "PMEG3020EGW",
+   "bomValue": "PMEG3020EGW",
+   "device": "SCHOTTKYSOD123",
+   "package": "SOD123",
+   "description": "Schottky Power Rectifier"
+  },
+  {
+   "ref": "F1",
+   "value": "FUSE0805R0805",
+   "bomValue": "FUSE0805R0805",
+   "device": "FUSE0805R0805",
+   "package": "R0805",
+   "description": "Fuse"
+  },
+  {
+   "ref": "F2",
+   "value": "FUSE0805R0805",
+   "bomValue": "FUSE0805R0805",
+   "device": "FUSE0805R0805",
+   "package": "R0805",
+   "description": "Fuse"
+  },
+  {
+   "ref": "L1",
+   "value": "4R7",
+   "bomValue": "4R7",
+   "device": "INDUCTORL3225M",
+   "package": "L3225M",
+   "description": ""
+  },
+  {
+   "ref": "L2",
+   "value": "4R7",
+   "bomValue": "4R7",
+   "device": "INDUCTORL3225M",
+   "package": "L3225M",
+   "description": ""
+  },
+  {
+   "ref": "L3",
+   "value": "4R7",
+   "bomValue": "4R7",
+   "device": "INDUCTOR",
+   "package": "INDUCTOR_0520",
+   "description": ""
+  },
+  {
+   "ref": "LD1",
+   "value": "RED",
+   "bomValue": "RED",
+   "device": "LED0805CHIP-LED0805",
+   "package": "CHIP-LED0805",
+   "description": "LED"
+  },
+  {
+   "ref": "LD2",
+   "value": "GREEN",
+   "bomValue": "GREEN",
+   "device": "LED0805CHIP-LED0805",
+   "package": "CHIP-LED0805",
+   "description": "LED"
+  },
+  {
+   "ref": "LD3",
+   "value": "GREEN",
+   "bomValue": "GREEN",
+   "device": "LED0805CHIP-LED0805",
+   "package": "CHIP-LED0805",
+   "description": "LED"
+  },
+  {
+   "ref": "OC1",
+   "value": "6N137",
+   "bomValue": "6N137",
+   "device": "6N137SSMD",
+   "package": "SO8-GW300",
+   "description": "MOTOROLA OPTO COUPLER"
+  },
+  {
+   "ref": "OC2",
+   "value": "6N136",
+   "bomValue": "6N136",
+   "device": "6N136SSMD",
+   "package": "SO8-GW300",
+   "description": ""
+  },
+  {
+   "ref": "P1",
+   "value": "MSTBA2",
+   "bomValue": "MSTBA2",
+   "device": "MSTBA2",
+   "package": "MSTBA2",
+   "description": ""
+  },
+  {
+   "ref": "P2",
+   "value": "CON-LSTB_0408",
+   "bomValue": "CON-LSTB_0408",
+   "device": "CON-LSTB_0408",
+   "package": "CON-LSTB_04",
+   "description": ""
+  },
+  {
+   "ref": "Q1",
+   "value": "BC847B",
+   "bomValue": "BC847B",
+   "device": "BC847BBSMD",
+   "package": "SOT23",
+   "description": "NPN Transistor"
+  },
+  {
+   "ref": "R1",
+   "value": "10k",
+   "bomValue": "10k",
+   "device": "R-EUR0805",
+   "package": "R0805",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R2",
+   "value": "68R",
+   "bomValue": "68R",
+   "device": "R-EUR2010",
+   "package": "R2010",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R3",
+   "value": "68R",
+   "bomValue": "68R",
+   "device": "R-EUR2010",
+   "package": "R2010",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R4",
+   "value": "68R",
+   "bomValue": "68R",
+   "device": "R-EUR2010",
+   "package": "R2010",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R5",
+   "value": "390R",
+   "bomValue": "390R",
+   "device": "R-EUR0805",
+   "package": "R0805",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R6",
+   "value": "47k",
+   "bomValue": "47k",
+   "device": "R-EUR0805",
+   "package": "R0805",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R7",
+   "value": "10k",
+   "bomValue": "10k",
+   "device": "R-EUR0805",
+   "package": "R0805",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R8",
+   "value": "100k",
+   "bomValue": "100k",
+   "device": "R-EUR0805",
+   "package": "R0805",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R9",
+   "value": "4k7",
+   "bomValue": "4k7",
+   "device": "R-EUR0805",
+   "package": "R0805",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R10",
+   "value": "470R",
+   "bomValue": "470R",
+   "device": "R-EUR0805",
+   "package": "R0805",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R11",
+   "value": "4k7",
+   "bomValue": "4k7",
+   "device": "R-EUR0805",
+   "package": "R0805",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R12",
+   "value": "6k8",
+   "bomValue": "6k8",
+   "device": "R-EUR0805",
+   "package": "R0805",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R13",
+   "value": "4k7",
+   "bomValue": "4k7",
+   "device": "R-EUR0805",
+   "package": "R0805",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R14",
+   "value": "270R",
+   "bomValue": "270R",
+   "device": "R-EUR0805",
+   "package": "R0805",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R15",
+   "value": "1k3",
+   "bomValue": "1k3",
+   "device": "R-EUR0805",
+   "package": "R0805",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R16",
+   "value": "100k",
+   "bomValue": "100k",
+   "device": "R-EUR0805",
+   "package": "R0805",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R17",
+   "value": "1k2",
+   "bomValue": "1k2",
+   "device": "R-EUR0805",
+   "package": "R0805",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R18",
+   "value": "1k2",
+   "bomValue": "1k2",
+   "device": "R-EUR0805",
+   "package": "R0805",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "R19",
+   "value": "1k2",
+   "bomValue": "1k2",
+   "device": "R-EUR0805",
+   "package": "R0805",
+   "description": "RESISTOR, European symbol"
+  },
+  {
+   "ref": "U1",
+   "value": "LMV393IDR",
+   "bomValue": "LM393",
+   "device": "LM393",
+   "package": "LM393",
+   "description": ""
+  },
+  {
+   "ref": "U2",
+   "value": "JW5017S",
+   "bomValue": "JW5017S",
+   "device": "JW5017S",
+   "package": "SOT23-6",
+   "description": ""
+  }
+ ],
+ "nets": [
+  {
+   "name": "N$1",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "F2.2",
+    "L2.1"
+   ],
+   "pinNames": {
+    "F2.2": "2",
+    "L2.1": "1"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$2",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "F1.2",
+    "L1.1"
+   ],
+   "pinNames": {
+    "F1.2": "2",
+    "L1.1": "1"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$3",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "C1.1",
+    "D1.A",
+    "D2.C",
+    "L2.2"
+   ],
+   "pinNames": {
+    "C1.1": "1",
+    "D1.A": "A",
+    "D2.C": "C",
+    "L2.2": "2"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$4",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "C1.2",
+    "D3.A",
+    "D4.C",
+    "L1.2"
+   ],
+   "pinNames": {
+    "C1.2": "2",
+    "D3.A": "A",
+    "D4.C": "C",
+    "L1.2": "2"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$6",
+   "side": "EMS",
+   "role": "Rectified bus rail (D1/D3/D5 cathodes, D7 anode, R1, R2)",
+   "pins": [
+    "D1.C",
+    "D3.C",
+    "D5.C",
+    "D7.A",
+    "R1.1",
+    "R2.1"
+   ],
+   "pinNames": {
+    "D1.C": "C",
+    "D3.C": "C",
+    "D5.C": "C",
+    "D7.A": "A",
+    "R1.1": "1",
+    "R2.1": "1"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$7",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "D6.A",
+    "R5.1",
+    "R6.1",
+    "R7.1",
+    "U1.5"
+   ],
+   "pinNames": {
+    "D6.A": "A",
+    "R5.1": "1",
+    "R6.1": "1",
+    "R7.1": "1",
+    "U1.5": "IN+"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$8",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "C2.1",
+    "C3.1",
+    "R1.2",
+    "R5.2"
+   ],
+   "pinNames": {
+    "C2.1": "1",
+    "C3.1": "1",
+    "R1.2": "2",
+    "R5.2": "2"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$9",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "C2.2",
+    "R6.2",
+    "U1.3"
+   ],
+   "pinNames": {
+    "C2.2": "2",
+    "R6.2": "2",
+    "U1.3": "IN+"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$10",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "C3.2",
+    "R7.2",
+    "R8.2",
+    "U1.2"
+   ],
+   "pinNames": {
+    "C3.2": "2",
+    "R7.2": "2",
+    "R8.2": "2",
+    "U1.2": "IN-"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$11",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "R3.2",
+    "R4.1"
+   ],
+   "pinNames": {
+    "R3.2": "2",
+    "R4.1": "1"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$12",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "R2.2",
+    "R3.1"
+   ],
+   "pinNames": {
+    "R2.2": "2",
+    "R3.1": "1"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$13",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "C4.2",
+    "Q1.3",
+    "R4.2"
+   ],
+   "pinNames": {
+    "C4.2": "2",
+    "Q1.3": "C",
+    "R4.2": "2"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$14",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "Q1.1",
+    "R9.1",
+    "U1.7"
+   ],
+   "pinNames": {
+    "Q1.1": "B",
+    "R9.1": "1",
+    "U1.7": "OUT"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$15",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "C5.2",
+    "OC2.6",
+    "R11.1",
+    "U1.6"
+   ],
+   "pinNames": {
+    "C5.2": "2",
+    "OC2.6": "VO",
+    "R11.1": "1",
+    "U1.6": "IN-"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "+5V",
+   "side": "EMS",
+   "role": "EMS-side 5V rail from JW5017S buck (U2) via L3",
+   "pins": [
+    "C6.2",
+    "C8.1",
+    "C11.1",
+    "C13.2",
+    "L3.1",
+    "OC2.8",
+    "R9.2",
+    "R10.2",
+    "R11.2",
+    "R12.2",
+    "R17.2",
+    "U1.8"
+   ],
+   "pinNames": {
+    "C11.1": "1",
+    "C13.2": "2",
+    "C6.2": "2",
+    "C8.1": "1",
+    "L3.1": "1",
+    "OC2.8": "VCC",
+    "R10.2": "2",
+    "R11.2": "2",
+    "R12.2": "2",
+    "R17.2": "2",
+    "R9.2": "2",
+    "U1.8": "VCC"
+   },
+   "supplySymbols": [
+    "P+1",
+    "P+2",
+    "P+3"
+   ]
+  },
+  {
+   "name": "GND",
+   "side": "EMS",
+   "role": "EMS bus-side ground (EMS GND)",
+   "pins": [
+    "C4.1",
+    "C5.1",
+    "C6.1",
+    "C8.2",
+    "C10.1",
+    "C11.2",
+    "C12.-",
+    "C13.1",
+    "D2.A",
+    "D4.A",
+    "D5.A",
+    "D6.C",
+    "LD1.C",
+    "OC2.5",
+    "Q1.2",
+    "R8.1",
+    "R15.1",
+    "U1.4",
+    "U2.2"
+   ],
+   "pinNames": {
+    "C10.1": "1",
+    "C11.2": "2",
+    "C12.-": "-",
+    "C13.1": "1",
+    "C4.1": "1",
+    "C5.1": "1",
+    "C6.1": "1",
+    "C8.2": "2",
+    "D2.A": "A",
+    "D4.A": "A",
+    "D5.A": "A",
+    "D6.C": "C",
+    "LD1.C": "C",
+    "OC2.5": "GND",
+    "Q1.2": "E",
+    "R15.1": "1",
+    "R8.1": "1",
+    "U1.4": "GND",
+    "U2.2": "GND"
+   },
+   "supplySymbols": [
+    "GND1",
+    "GND2",
+    "GND3"
+   ]
+  },
+  {
+   "name": "MCUGND",
+   "side": "MCU",
+   "role": "MCU-side isolated ground (P2.4)",
+   "pins": [
+    "C7.1",
+    "OC1.5",
+    "P2.4"
+   ],
+   "pinNames": {
+    "C7.1": "1",
+    "OC1.5": "GND",
+    "P2.4": "5"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$19",
+   "side": "MCU",
+   "role": "",
+   "pins": [
+    "OC2.2",
+    "R14.2"
+   ],
+   "pinNames": {
+    "OC2.2": "A",
+    "R14.2": "2"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "MCURX",
+   "side": "MCU",
+   "role": "MCU Rx output to P2.3 (OC1 VO, R13 pull-up, LD3 cathode)",
+   "pins": [
+    "LD3.C",
+    "OC1.6",
+    "P2.3",
+    "R13.1"
+   ],
+   "pinNames": {
+    "LD3.C": "C",
+    "OC1.6": "VO",
+    "P2.3": "4",
+    "R13.1": "1"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$5",
+   "side": "EMS",
+   "role": "P1.2 (bus terminal 2)",
+   "pins": [
+    "F2.1",
+    "P1.2"
+   ],
+   "pinNames": {
+    "F2.1": "1",
+    "P1.2": "1"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$17",
+   "side": "EMS",
+   "role": "P1.1 after fuse side (bus terminal 1)",
+   "pins": [
+    "F1.1",
+    "P1.1"
+   ],
+   "pinNames": {
+    "F1.1": "1",
+    "P1.1": "1"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "VIN",
+   "side": "EMS",
+   "role": "Rectified bus after D7 (buck input, C12/C10 bulk)",
+   "pins": [
+    "C10.2",
+    "C12.+",
+    "D7.C",
+    "R16.1",
+    "U2.5"
+   ],
+   "pinNames": {
+    "C10.2": "2",
+    "C12.+": "+",
+    "D7.C": "C",
+    "R16.1": "1",
+    "U2.5": "VIN"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$23",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "R12.1",
+    "R15.2",
+    "U2.3"
+   ],
+   "pinNames": {
+    "R12.1": "1",
+    "R15.2": "2",
+    "U2.3": "FB"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$25",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "C9.1",
+    "U2.1"
+   ],
+   "pinNames": {
+    "C9.1": "1",
+    "U2.1": "BST"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$26",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "C9.2",
+    "L3.2",
+    "U2.6"
+   ],
+   "pinNames": {
+    "C9.2": "2",
+    "L3.2": "2",
+    "U2.6": "SW"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$29",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "R16.2",
+    "U2.4"
+   ],
+   "pinNames": {
+    "R16.2": "2",
+    "U2.4": "EN"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$27",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "LD1.A",
+    "R17.1"
+   ],
+   "pinNames": {
+    "LD1.A": "A",
+    "R17.1": "1"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$24",
+   "side": "MCU",
+   "role": "",
+   "pins": [
+    "LD3.A",
+    "R18.1"
+   ],
+   "pinNames": {
+    "LD3.A": "A",
+    "R18.1": "1"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$16",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "OC1.2",
+    "R10.1"
+   ],
+   "pinNames": {
+    "OC1.2": "A",
+    "R10.1": "1"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$18",
+   "side": "EMS",
+   "role": "",
+   "pins": [
+    "OC1.3",
+    "U1.1"
+   ],
+   "pinNames": {
+    "OC1.3": "C",
+    "U1.1": "OUT"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "MCUTX",
+   "side": "MCU",
+   "role": "MCU Tx input from P2.2 (OC2 LED cathode, LD2 cathode)",
+   "pins": [
+    "LD2.C",
+    "OC2.3",
+    "P2.2"
+   ],
+   "pinNames": {
+    "LD2.C": "C",
+    "OC2.3": "C",
+    "P2.2": "3"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "MCUVCC",
+   "side": "MCU",
+   "role": "MCU-side 3.3V from P2.1",
+   "pins": [
+    "C7.2",
+    "OC1.7",
+    "OC1.8",
+    "P2.1",
+    "R13.2",
+    "R14.1",
+    "R18.2",
+    "R19.1"
+   ],
+   "pinNames": {
+    "C7.2": "2",
+    "OC1.7": "VE",
+    "OC1.8": "VCC",
+    "P2.1": "2",
+    "R13.2": "2",
+    "R14.1": "1",
+    "R18.2": "2",
+    "R19.1": "1"
+   },
+   "supplySymbols": []
+  },
+  {
+   "name": "N$20",
+   "side": "MCU",
+   "role": "",
+   "pins": [
+    "LD2.A",
+    "R19.2"
+   ],
+   "pinNames": {
+    "LD2.A": "A",
+    "R19.2": "2"
+   },
+   "supplySymbols": []
+  }
+ ]
+}
