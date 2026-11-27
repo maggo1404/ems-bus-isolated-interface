@@ -1,0 +1,160 @@
+{
+ "equivalence": {
+  "bottom": {
+   "vol_stl_mm3": 38366.0,
+   "vol_cq_brep_mm3": 38370.5,
+   "vol_cq_mesh_mm3": 38369.6,
+   "vol_diff_pct": 0.012,
+   "bbox_max_dev_mm": 0.0016,
+   "symdiff_mm3": 6.9,
+   "symdiff_pct_of_stl": 0.018,
+   "cq_valid": true,
+   "cq_solids": 1,
+   "cq_faces": 123,
+   "cq_planar_cyl_faces_pct": 96.7
+  },
+  "lid": {
+   "vol_stl_mm3": 27979.9,
+   "vol_cq_brep_mm3": 27987.5,
+   "vol_cq_mesh_mm3": 27986.4,
+   "vol_diff_pct": 0.027,
+   "bbox_max_dev_mm": 0.0,
+   "symdiff_mm3": 19.6,
+   "symdiff_pct_of_stl": 0.07,
+   "cq_valid": true,
+   "cq_solids": 1,
+   "cq_faces": 507,
+   "cq_planar_cyl_faces_pct": 63.7
+  },
+  "light_pipes": {
+   "vol_stl_mm3": 455.0,
+   "vol_cq_brep_mm3": 456.3,
+   "vol_cq_mesh_mm3": 456.1,
+   "vol_diff_pct": 0.286,
+   "bbox_max_dev_mm": 0.0007,
+   "symdiff_mm3": 1.1,
+   "symdiff_pct_of_stl": 0.247,
+   "cq_valid": true,
+   "cq_solids": 4,
+   "cq_faces": 20,
+   "cq_planar_cyl_faces_pct": 100.0
+  }
+ },
+ "fit_check_cadquery": {
+  "collisions_mm3": {
+   "Unterteil x Platine+Bauteile": 0.0,
+   "Deckel x Platine+Bauteile": 0.0,
+   "Unterteil x DevKitC (Platine, Leisten, Modul, Antenne, USB-C)": 0.0,
+   "Deckel x DevKitC (inkl. Niederhalter)": 0.0,
+   "Unterteil x Deckel": 0.0,
+   "Unterteil x P1-Stecker": 0.0,
+   "Deckel x P1-Stecker": 0.0,
+   "Platine x DevKitC": 0.0,
+   "USB-C-Stecker-Overmould (dx +0.0, dz +0.0) x Unterteil": 0.0,
+   "USB-C-Stecker-Overmould x Deckel": 0.0,
+   "USB-C-Stecker-Overmould (dx -1.5, dz +0.0) x Unterteil": 0.0,
+   "USB-C-Stecker-Overmould (dx +1.5, dz +0.0) x Unterteil": 0.0,
+   "USB-C-Stecker-Overmould (dx +0.0, dz +0.7) x Unterteil": 0.0,
+   "USB-C-Stecker-Overmould (dx +0.0, dz -0.7) x Unterteil": 0.0,
+   "Lichtleiter x Platine+DevKitC": 0.0,
+   "Lichtleiter x Deckel": 0.0,
+   "Lichtleiter x Unterteil": 0.0,
+   "Schrauben x Platine+DevKitC": 0.0,
+   "Schrauben x Deckel": 0.0,
+   "Schrauben x Unterteil (Kernloch/Einsatz, nur Info)": 0.0
+  },
+  "gaps": {
+   "Unterteil (ohne Posten)<->Platine inkl. THT-Beinchen (mm)": 0.25,
+   "Deckel (ohne Huelsen, ohne Niederhalter)<->Bauteile (mm)": 0.447,
+   "Posten/Huelsen<->Platine (Auflage/Klemmung, mm)": 0.0,
+   "Unterteil (ohne Posten)<->nackte Platine (mm)": 0.25,
+   "Unterteil (ohne Posten)<->DevKitC (mm)": 0.918,
+   "Deckel (ohne Huelsen, ohne Niederhalter)<->DevKitC (mm)": 0.2,
+   "Niederhalter-Rippen<->Modul-Schirmblech (mm; 0 = Beruehrung)": 0.0,
+   "Antenne<->naechstes Gehaeuseteil (Taschenwand/Deckel/Boden, mm, Suche bis 8)": 5.0,
+   "Deckel<->Modul-Oberkante (Luft, mm)": 5.2,
+   "Deckel<->hoechstes Bauteil C12/C14 (mm)": 8.5,
+   "Deckel<->P1-Stecker (mm)": 6.5
+  }
+ },
+ "threemf_reload": {
+  "bottom": {
+   "objects": [
+    "bottom"
+   ],
+   "volume_cm3": 38.37,
+   "bounds": [
+    [
+     -69.4,
+     -43.4,
+     0.0
+    ],
+    [
+     57.4,
+     42.46,
+     29.1
+    ]
+   ],
+   "watertight": true
+  },
+  "lid": {
+   "objects": [
+    "lid"
+   ],
+   "volume_cm3": 27.986,
+   "bounds": [
+    [
+     -69.4,
+     -42.46,
+     0.0
+    ],
+    [
+     57.4,
+     35.4,
+     23.8
+    ]
+   ],
+   "watertight": true
+  },
+  "light_pipes": {
+   "objects": [
+    "light_pipes"
+   ],
+   "volume_cm3": 0.456,
+   "bounds": [
+    [
+     -2.2,
+     -2.2,
+     -0.0
+    ],
+    [
+     26.2,
+     2.2,
+     22.6
+    ]
+   ],
+   "watertight": true
+  },
+  "plate": {
+   "objects": [
+    "bottom",
+    "lid",
+    "light_pipes"
+   ],
+   "volume_cm3": 66.812,
+   "bounds": [
+    [
+     5.0,
+     5.0,
+     0.0
+    ],
+    [
+     166.2,
+     174.72,
+     29.1
+    ]
+   ],
+   "watertight": true
+  }
+ }
+}

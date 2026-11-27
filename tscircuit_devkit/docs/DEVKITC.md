@@ -22,6 +22,8 @@ all their support parts are replaced by two 1x22 female sockets (J1, J3) for a h
 | USB | two **Micro-USB** receptacles at the lower end: left "UART" (x about 2.1..9.9 -> centre 6.0), right "USB" (ESP32-S3 native USB, centre about 19.4), front shell flush with the end of the PCB |
 | Height (not in the drawing, typical values, verify with the real board) | PCB 1.6 mm; module 3.2 mm (WROOM-1 datasheet) on top; micro-USB about 2.8 mm; male header plastic body 2.5 mm below the PCB, pins about 6 mm below that |
 
+**The user's board is a USB-C clone** (ESP32-S3-DevKitC-1-N16R8 clone with two USB-C receptacles at the -Y end, centres about x = 17.0 and 30.4, instead of the Micro-USB ports of the official v1.1 drawn above; positions may vary by 1-2 mm between clones): see `../../enclosure_devkit/` (USB openings are a PARAMS item there).
+
 ## Pin assignment (user guide "Header Block"; J1 / J3 pin number -> name / function)
 J1: 1 3V3, 2 3V3, 3 RST(EN), 4 GPIO4, **5 GPIO5**, 6 GPIO6, 7 GPIO7, 8 GPIO15, 9 GPIO16, **10 GPIO17**, 11 GPIO18, 12 GPIO8, 13 GPIO3, 14 GPIO46, 15 GPIO9, 16 GPIO10, 17 GPIO11, 18 GPIO12, 19 GPIO13, 20 GPIO14, 21 5V, 22 G.
 J3: 1 G, 2 TX (GPIO43/U0TXD), 3 RX (GPIO44/U0RXD), 4 GPIO1, **5 GPIO2**, 6 GPIO42, 7 GPIO41, 8 GPIO40, 9 GPIO39, 10 GPIO38 (RGB LED, v1.1), 11 GPIO37, 12 GPIO36, 13 GPIO35, 14 GPIO0 (BOOT), 15 GPIO45, 16 GPIO48, 17 GPIO47, 18 GPIO21, 19 GPIO20 (USB D+), 20 GPIO19 (USB D-), 21 G, 22 G.

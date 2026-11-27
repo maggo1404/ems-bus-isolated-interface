@@ -1,0 +1,128 @@
+{
+ "bottom": {
+  "size": [
+   126.8,
+   85.86,
+   29.1
+  ],
+  "watertight": true,
+  "winding": true,
+  "volume_cm3": 38.37,
+  "manifold_status": "Error.NoError",
+  "euler": -10
+ },
+ "lid": {
+  "size": [
+   126.8,
+   77.86,
+   23.8
+  ],
+  "watertight": true,
+  "winding": true,
+  "volume_cm3": 27.98,
+  "manifold_status": "Error.NoError",
+  "euler": -16
+ },
+ "light_pipes": {
+  "size": [
+   28.4,
+   4.4,
+   22.6
+  ],
+  "watertight": true,
+  "winding": true,
+  "volume_cm3": 0.46,
+  "manifold_status": "Error.NoError",
+  "euler": 8
+ },
+ "collisions_mm3": {
+  "Unterteil x Platine+Bauteile": 0.0,
+  "Deckel x Platine+Bauteile": 0.0,
+  "Unterteil x DevKitC (Platine, Leisten, Modul, Antenne, USB-C)": 0.0,
+  "Deckel x DevKitC (inkl. Niederhalter)": 0.0,
+  "Unterteil x Deckel": 0.0,
+  "Unterteil x P1-Stecker": 0.0,
+  "Deckel x P1-Stecker": 0.0,
+  "Platine x DevKitC": 0.0,
+  "USB-C-Stecker-Overmould (dx +0.0, dz +0.0) x Unterteil": 0.0,
+  "USB-C-Stecker-Overmould x Deckel": 0.0,
+  "USB-C-Stecker-Overmould (dx -1.5, dz +0.0) x Unterteil": 0.0,
+  "USB-C-Stecker-Overmould (dx +1.5, dz +0.0) x Unterteil": 0.0,
+  "USB-C-Stecker-Overmould (dx +0.0, dz +0.7) x Unterteil": 0.0,
+  "USB-C-Stecker-Overmould (dx +0.0, dz -0.7) x Unterteil": 0.0,
+  "Lichtleiter x Platine+DevKitC": 0.0,
+  "Lichtleiter x Deckel": 0.0,
+  "Lichtleiter x Unterteil": 0.0,
+  "Schrauben x Platine+DevKitC": 0.0,
+  "Schrauben x Deckel": 0.0,
+  "Schrauben x Unterteil (Kernloch/Einsatz, nur Info)": 0.0
+ },
+ "gaps": {
+  "Unterteil (ohne Posten)<->Platine inkl. THT-Beinchen (mm)": 0.25,
+  "Deckel (ohne Huelsen, ohne Niederhalter)<->Bauteile (mm)": 0.447,
+  "Posten/Huelsen<->Platine (Auflage/Klemmung, mm)": 0.0,
+  "Unterteil (ohne Posten)<->nackte Platine (mm)": 0.25,
+  "Unterteil (ohne Posten)<->DevKitC (mm)": 0.918,
+  "Deckel (ohne Huelsen, ohne Niederhalter)<->DevKitC (mm)": 0.2,
+  "Niederhalter-Rippen<->Modul-Schirmblech (mm; 0 = Beruehrung)": 0.0,
+  "Antenne<->naechstes Gehaeuseteil (Taschenwand/Deckel/Boden, mm, Suche bis 8)": 5.0,
+  "Deckel<->Modul-Oberkante (Luft, mm)": 5.2,
+  "Deckel<->hoechstes Bauteil C12/C14 (mm)": 8.5,
+  "Deckel<->P1-Stecker (mm)": 6.5
+ },
+ "dims": {
+  "outer_xyz": [
+   126.8,
+   77.86,
+   31.9
+  ],
+  "outer_main_xy": [
+   126.8,
+   67.8
+  ],
+  "outer_x_range": [
+   -69.4,
+   57.4
+  ],
+  "outer_y_range": [
+   -35.4,
+   42.46
+  ],
+  "inner_cavity": [
+   122.8,
+   63.8
+  ],
+  "antenna_pocket_inner": {
+   "x": [
+    9.75,
+    37.75
+   ],
+   "y_to": 41.26
+  },
+  "z": {
+   "pcb_bottom": 6.5,
+   "pcb_top": 8.1,
+   "devkit_bottom": 19.1,
+   "devkit_top": 20.7,
+   "module_top": 23.9,
+   "lid_underside": 29.1,
+   "lid_top": 31.900000000000002
+  },
+  "rod_length": 22.6,
+  "usb_centre_z": 22.33,
+  "usb_slots": [
+   {
+    "x_mid": 23.7,
+    "w": 28.4,
+    "h": 8.0,
+    "x0": 9.5,
+    "x1": 37.9
+   }
+  ],
+  "usb_slot_z": [
+   18.33,
+   26.33
+  ],
+  "rebate_start_z": 27.1
+ }
+}
