@@ -132,3 +132,29 @@ Risiken bei Mouser: J2 hat anderen Footprint, U2 (JW5017S) und P1 (KF2EDGRC) gib
 * Preise [S] (C1, F1/F2, F3, L1/L2, L3, P1, P2, R2-R4, R15, U2, C4) sind Schaetzungen; Teile TYPE-C-31-M-12, SWPA5020S4R7MT, JVJ25V1000M10X12, KF2EDGRC-5.08-2P, JW5017S, BSMD0805-050-24V, SMD1206B110TFT, LQH32PN4R7NN0L nicht bei Mouser belegt.
 * Versandschwelle (ca. 50 EUR) und Pauschale, MwSt-Anzeige (netto auf mouser.de).
 * Quellen: Mouser-Seiten via Websuche (mouser.de/.com/eu.mouser.com, 2026-11-28), JLC-API `selectSmtComponentList` (2026-11-28), `docs/BASIC_PARTS_RESEARCH.md`, `docs/JLCPCB_PARTS.md`, `docs/JLC_ECONOMIC.md`.
+
+## Nachprüfung mit pcbparts.dev (Mouser-Daten, Cache vom 25.11.2026)
+
+Abfrage über das MCP `pcbparts.dev` (`mouser_get_part`). Die Preise kommen aus dem Mouser-Katalog, teils in CAD (mouser.ca), teils in USD. Umrechnung grob: 1 USD ≈ 0,86 EUR, 1 CAD ≈ 0,62 EUR (Annahme, Kurs nicht geprüft). Netto, ohne MwSt.
+
+| Ref | Mouser-Nr. / MPN | Lager | Staffelpreis für Bedarf (5 Platinen) | Summe ≈ EUR | Bemerkung |
+|---|---|---|---|---|---|
+| U3 | 356-ESP32S3WRM1N16R8 | 29.648 | 5 × 9,68 CAD | 30,0 | identische MPN |
+| C1 | 603-CC805JRNPO9BN680 | 1.647 | 10 × 0,096 CAD | 0,6 | identische MPN |
+| C12, C14 | 667-EEV-FK1E102V (Panasonic, 10 × 10,2 mm) | 6.376 | 10 × 1,80 USD | 15,5 | Ersatz; Footprint gegen unser 10×12-Land prüfen |
+| F3 | 603-SMD1206B110TFT | 11.638 | 5 × 0,158 CAD | 0,5 | identische MPN |
+| J2 | 640-USB4105-GF-A (GCT) | 370.736 | 5 × 0,80 USD | 3,4 | Ersatz, **anderer Footprint** |
+| L1, L2 | 81-LQH32PN4R7NN0L | 18.432 | 10 × 0,219 USD | 1,9 | identische MPN |
+| OC1 | 859-6N137STA1 | 47.088 | 5 × 0,88 USD | 3,8 | ohne „-L“, sonst gleich |
+| OC2 | 859-6N136STA1 | 23.848 | 5 × 0,88 USD | 3,8 | ohne „-L“, sonst gleich |
+| U4 | 511-USBLC6-2SC6 | 93.014 | 10 × 0,239 USD (10 billiger als 5) | 2,1 | identische MPN |
+| D1–D5 | 621-BAT42W-F (BAT42W-7-F) | 2.115 | 25 × 0,191 USD | 4,1 | identische Funktion |
+| Q1 | 771-BC817-40-T/R | 701.317 | 10 × 0,121 CAD | 0,8 | identische MPN |
+| R15 | 603-RC0805FR-071K3L | 41.562 | 10 × 0,018 USD | 0,2 | identische MPN |
+| P1 | 651-1757242 (Phoenix MSTBA 2,5/2-G-5,08) | 21.733 | 5 × 0,806 CAD | 2,5 | Ersatz; Gegenstecker nicht abgefragt |
+| P2 | 710-61300411121 (Würth 1×4) | 113.438 | 5 × 0,274 CAD | 0,9 | Ersatz, gleicher Raster |
+| R2–R4 | 71-CRCW201068R0FKEF | **0** | – | – | nicht lieferbar |
+| C4 | 603-CC805KRX7R9BB152 | **0** | – | – | nicht lieferbar |
+| J2 orig., U2 JW5017S, L3 SWPA5020S4R7MT, F1/F2 BSMD0805-050-24V | – | – | – | – | **bei Mouser nicht gefunden** |
+
+Summe der lieferbaren Positionen: **ca. 70 EUR netto** (ca. 83 EUR brutto), davon ESP32 ca. 30 EUR; ohne ESP32 ca. 40 EUR netto. Fehlend: R2–R4, C4, U2, L3, F1/F2 (diese müssten weiter von JLC kommen). Versandkostenfrei-Grenze von Mouser DE nicht geprüft.
